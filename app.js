@@ -15,8 +15,8 @@ const state = {
 window.onload = async function() {
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
+    await loadActiveCarousel();
     
-    // Auto advance carousel every 4 seconds
     setInterval(() => {
         nextSlide();
     }, 4000);
@@ -26,15 +26,71 @@ window.onload = async function() {
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
-    state.currentSlide = (state.currentSlide + 1) % 3;
+    const slidesCount = carousel.children.length || 1;
+    state.currentSlide = (state.currentSlide + 1) % slidesCount;
     carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
 }
 
 function prevSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
-    state.currentSlide = (state.currentSlide - 1 + 3) % 3;
+    const slidesCount = carousel.children.length || 1;
+    state.currentSlide = (state.currentSlide - 1 + slidesCount) % slidesCount;
     carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
+}
+
+async function loadActiveCarousel() {
+    const { data, error } = await _supabase.from('carousel_images').select('*').eq('is_active', true).order('display_order');
+    if (!error && data && data.length > 0) {
+        const carousel = document.getElementById('about-carousel');
+        if (!carousel) return;
+        carousel.innerHTML = data.map(slide => `
+            <div class="w-full h-full shrink-0 relative">
+                <img src="${slide.image_url}" class="w-full h-full object-cover opacity-50" alt="${slide.title}">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                    <div>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">GTech Admissions</span>
+                        <h4 class="text-xl sm:text-2xl font-black text-white mt-1">${slide.title}</h4>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+}
+
+async function handleUploadCarousel(slideNum) {
+    const fileInput = document.getElementById(`carousel-file-${slideNum}`);
+    const titleInput = document.getElementById(`carousel-title-${slideNum}`);
+    
+    if (!fileInput.files || !fileInput.files[0]) {
+        alert(`Please select an image file for Photo ${slideNum}.`);
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const fileName = `carousel_${slideNum}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+
+    const { error: uploadError } = await _supabase.storage.from('universities').upload(fileName, file);
+    if (uploadError) {
+        alert('Carousel upload failed: ' + uploadError.message);
+        return;
+    }
+
+    const { data: publicURLData } = _supabase.storage.from('universities').getPublicUrl(fileName);
+    const imageUrl = publicURLData.publicUrl;
+    const titleText = titleInput.value.trim() || `Carousel Slide ${slideNum}`;
+
+    const { error: dbError } = await _supabase.from('carousel_images').upsert([
+        { id: slideNum, image_url: imageUrl, title: titleText, is_active: true, display_order: slideNum }
+    ]);
+
+    if (dbError) {
+        alert('Error saving carousel slide to database: ' + dbError.message);
+        return;
+    }
+
+    alert(`Carousel Photo ${slideNum} uploaded and updated successfully!`);
+    loadActiveCarousel();
 }
 
 async function fetchUniversitiesFromSupabase() {
@@ -75,6 +131,8 @@ function renderUniversities() {
         let matchesState = true;
         if (state.stateFilter === 'Entrance Exams') {
             matchesState = uni.admission_type === 'Entrance Exam Required';
+        } else if (state.stateFilter === 'Application Only') {
+            matchesState = uni.admission_type === 'Application Only';
         } else if (state.stateFilter !== 'ALL') {
             matchesState = uni.state === state.stateFilter;
         }
@@ -110,7 +168,10 @@ function renderUniversities() {
             `;
         }
 
-        const isExamReq = uni.admission_type === 'Entrance Exam Required';
+        const badgeType = uni.admission_type || 'Direct Admission Open';
+        let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        if (badgeType === 'Entrance Exam Required') badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+        if (badgeType === 'Application Only') badgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/40';
 
         return `
             <div class="bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-indigo-500/40 transition duration-300 flex flex-col justify-between">
@@ -121,7 +182,7 @@ function renderUniversities() {
                         <span class="absolute top-3 left-3 px-3 py-1 rounded-xl text-[10px] font-bold bg-slate-950/80 backdrop-blur-md text-indigo-300 border border-slate-800">${uni.state}</span>
                         <div class="absolute top-3 right-3 flex gap-1.5">
                             <span class="text-[10px] font-mono font-bold text-white bg-slate-950/80 backdrop-blur-md px-2 py-1 rounded-lg border border-slate-800">NIRF #${uni.nirf || 50}</span>
-                            <span class="text-[10px] font-bold px-2 py-1 rounded-lg border ${isExamReq ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}">${uni.admission_type || 'Direct Admission Open'}</span>
+                            <span class="text-[10px] font-bold px-2 py-1 rounded-lg border ${badgeClass}">${badgeType}</span>
                         </div>
                     </div>
 
@@ -154,7 +215,7 @@ function renderUniversities() {
 
                 <div class="p-5 pt-0">
                     <button type="button" onclick="selectUniForScholarship('${uni.name}')" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition">
-                        <i class="fa-solid fa-graduation-cap"></i> Get a scholarship from top universities
+                        <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Expert Call
                     </button>
                 </div>
             </div>
@@ -188,7 +249,6 @@ async function handleScholarshipInquiry(e) {
         email,
         address,
         jee_score: jee,
-        tenth: 'Verified',
         inter,
         pcm,
         uni,
@@ -203,11 +263,10 @@ async function handleScholarshipInquiry(e) {
     }
 
     state.inquiries.unshift(inquiry);
-    alert(`Application Submitted Successfully! Our team will review your application and reach out via WhatsApp within 10 minutes.`);
+    alert('Application Submitted Successfully! Our team will review your application and reach out via WhatsApp within 10 minutes.');
     e.target.reset();
 }
 
-// Referral Code based on GTECH-5001 sequence
 function generateReferralCode(e) {
     e.preventDefault();
     const name = document.getElementById('ref-name').value.trim().toUpperCase().replace(/\s+/g, '');
@@ -233,174 +292,6 @@ function shareWhatsApp() {
     const code = document.getElementById('generated-code-display').textContent;
     const text = encodeURIComponent(`Hey! Use my referral code *${code}* on GTech Admissions to get instant fee concessions and free campus visits!`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-}
-
-// --- STUDENT AUTHENTICATION LOGIC (OTP & Forgot Password) ---
-let authMode = 'login'; // login, signup, verify_otp, forgot
-
-function openStudentLoginModal() {
-    document.getElementById('student-login-modal').classList.remove('hidden');
-    document.getElementById('student-login-modal').classList.add('flex');
-    switchAuthMode('login');
-}
-
-function switchAuthMode(mode) {
-    authMode = mode;
-    const title = document.getElementById('auth-modal-title');
-    const subtitle = document.getElementById('auth-modal-subtitle');
-    const subBtn = document.getElementById('auth-submit-btn');
-    const tabLogin = document.getElementById('tab-login');
-    const tabSignup = document.getElementById('tab-signup');
-    const tabForgot = document.getElementById('tab-forgot');
-    const nameBox = document.getElementById('name-field-box');
-    const mobileBox = document.getElementById('mobile-field-box');
-    const refBox = document.getElementById('referral-field-box');
-    const passBox = document.getElementById('password-field-box');
-    const otpBox = document.getElementById('otp-field-box');
-
-    tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
-    tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
-    tabForgot.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
-
-    if (mode === 'signup') {
-        tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        title.textContent = 'Register Student Account';
-        subtitle.textContent = 'Sign up with email OTP verification.';
-        subBtn.textContent = 'Send Verification OTP';
-        nameBox.classList.remove('hidden');
-        mobileBox.classList.remove('hidden');
-        refBox.classList.remove('hidden');
-        passBox.classList.remove('hidden');
-        otpBox.classList.add('hidden');
-    } else if (mode === 'verify_otp') {
-        title.textContent = 'Verify Email OTP';
-        subtitle.textContent = 'Enter the 6-digit code sent to your email.';
-        subBtn.textContent = 'Verify OTP & Complete Registration';
-        nameBox.classList.add('hidden');
-        mobileBox.classList.add('hidden');
-        refBox.classList.add('hidden');
-        passBox.classList.add('hidden');
-        otpBox.classList.remove('hidden');
-    } else if (mode === 'forgot') {
-        tabForgot.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        title.textContent = 'Forgot Password';
-        subtitle.textContent = 'Enter your email to receive a password reset link.';
-        subBtn.textContent = 'Send Password Reset Link';
-        nameBox.classList.add('hidden');
-        mobileBox.classList.add('hidden');
-        refBox.classList.add('hidden');
-        passBox.classList.add('hidden');
-        otpBox.classList.add('hidden');
-    } else {
-        tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        title.textContent = 'Student Portal Login';
-        subtitle.textContent = 'Login with your Email ID and Password.';
-        subBtn.textContent = 'Login to Dashboard';
-        nameBox.classList.add('hidden');
-        mobileBox.classList.add('hidden');
-        refBox.classList.add('hidden');
-        passBox.classList.remove('hidden');
-        otpBox.classList.add('hidden');
-    }
-}
-
-async function handleStudentAuth(e) {
-    e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
-
-    if (authMode === 'signup') {
-        const name = document.getElementById('auth-name').value.trim();
-        const mobile = document.getElementById('auth-mobile').value.trim();
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        await _supabase.from('email_otps').insert([{ email, otp_code: otpCode, purpose: 'REGISTRATION', verified: false }]);
-        alert(`[DEV SIMULATION EMAIL] Your Email Verification OTP is: ${otpCode}`);
-        switchAuthMode('verify_otp');
-    } 
-    else if (authMode === 'verify_otp') {
-        const enteredOtp = document.getElementById('auth-otp').value.trim();
-        const name = document.getElementById('auth-name').value.trim();
-        const mobile = document.getElementById('auth-mobile').value.trim();
-
-        const { data: otpRecord } = await _supabase.from('email_otps').select('*').eq('email', email).eq('otp_code', enteredOtp).eq('verified', false).single();
-        if (!otpRecord) {
-            alert('Invalid or expired OTP. Please check and try again.');
-            return;
-        }
-
-        await _supabase.from('email_otps').update({ verified: true }).eq('id', otpRecord.id);
-        const { data: authData, error } = await _supabase.auth.signUp({ email, password });
-        if (error) {
-            alert('Registration Error: ' + error.message);
-            return;
-        }
-
-        state.currentStudentName = name;
-        await _supabase.from('student_profiles').insert([{ id: authData.user?.id || Date.now(), full_name: name, mobile, email, address: 'Ongole' }]);
-
-        alert('Registration Successful! Your account has been created successfully.');
-        document.getElementById('student-login-modal').classList.add('hidden');
-        openStudentLoginModal();
-    }
-    else if (authMode === 'forgot') {
-        alert(`Password reset secure link has been dispatched to ${email}. Check your inbox.`);
-        switchAuthMode('login');
-    }
-    else {
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            alert('Login Failed: ' + error.message);
-            return;
-        }
-
-        const { data: profile } = await _supabase.from('student_profiles').select('*').eq('email', email).single();
-        if (profile) state.currentStudentName = profile.full_name;
-
-        document.getElementById('student-login-modal').classList.add('hidden');
-        document.getElementById('student-dashboard-modal').classList.remove('hidden');
-        document.getElementById('student-dashboard-modal').classList.add('flex');
-        
-        // Personalized welcome greeting requirement
-        document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudentName}! Welcome Back.`;
-        
-        loadStudentDashboardData();
-        alert('Login Successful! Welcome to Your Student Dashboard.');
-    }
-}
-
-function loadStudentDashboardData() {
-    const appContainer = document.getElementById('student-applications-list');
-    const voucherContainer = document.getElementById('student-vouchers-list');
-
-    if (state.inquiries.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found. Submit your scholarship application from the form.</p>`;
-    } else {
-        appContainer.innerHTML = state.inquiries.slice(0, 3).map(inq => `
-            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
-                <div>
-                    <strong class="text-white">${inq.uni} (${inq.branch})</strong>
-                    <p class="text-slate-400 text-[10px]">Student: ${inq.name} | PCM: ${inq.pcm}/600</p>
-                </div>
-                <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">${inq.status}</span>
-            </div>
-        `).join('');
-    }
-
-    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
-    if (vouchers.length === 0) {
-        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral discount vouchers active yet.</p>`;
-    } else {
-        voucherContainer.innerHTML = vouchers.map(v => `
-            <div class="p-3 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex justify-between items-center">
-                <div>
-                    <span class="font-mono font-bold text-amber-400 text-sm tracking-wider">${v.code}</span>
-                    <p class="text-slate-400 text-[10px]">Generated for ${v.name} | Worth ₹1,500 Discount</p>
-                </div>
-                <button onclick="copyText('${v.code}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px]">Copy</button>
-            </div>
-        `).join('');
-    }
 }
 
 // --- ADMIN LOGIN LOGIC (User ID: GTECH9347, Password: HARSHA@123) ---
@@ -493,7 +384,7 @@ function loadAdminUnisTable() {
                     <span class="text-[9px] text-slate-400">${uni.location}</span>
                 </div>
             </td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${uni.admission_type === 'Entrance Exam Required' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'}">${uni.admission_type || 'Direct Admission Open'}</span></td>
+            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">${uni.admission_type || 'Direct Admission Open'}</span></td>
             <td class="p-3 text-amber-400 font-bold">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</td>
             <td class="p-3 text-indigo-300 font-bold">₹${Number(uni.application_fee).toLocaleString('en-IN')}</td>
             <td class="p-3 text-right space-x-1.5">
@@ -513,7 +404,7 @@ function openAddUniModal() {
     document.getElementById('modal-uni-hostelfee').value = '';
     document.getElementById('modal-uni-appfee').value = '1000';
     document.getElementById('modal-uni-admission').value = 'Direct Admission Open';
-    document.getElementById('modal-uni-image').value = '';
+    document.getElementById('modal-uni-image-url').value = '';
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
 }
@@ -530,7 +421,17 @@ function openEditUniModal(id) {
     document.getElementById('modal-uni-hostelfee').value = uni.hostel_fee;
     document.getElementById('modal-uni-appfee').value = uni.application_fee;
     document.getElementById('modal-uni-admission').value = uni.admission_type || 'Direct Admission Open';
-    document.getElementById('modal-uni-image').value = uni.image;
+    document.getElementById('modal-uni-image-url').value = uni.image;
+
+    const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
+    document.getElementById('fee-ece').value = branches['ECE'] || 190000;
+    document.getElementById('fee-cseaiml').value = branches['CSE AI & ML'] || 230000;
+    document.getElementById('fee-aiandds').value = branches['AI & DS'] || 225000;
+    document.getElementById('fee-ds').value = branches['Data Science'] || 215000;
+    document.getElementById('fee-cse').value = branches['CSE'] || 210000;
+    document.getElementById('fee-cseit').value = branches['CSE IT'] || 200000;
+    document.getElementById('fee-eee').value = branches['EEE'] || 175000;
+    document.getElementById('fee-mech').value = branches['Mechanical'] || 160000;
 
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
@@ -546,7 +447,32 @@ async function handleSaveUni(e) {
     const hostelFee = Number(document.getElementById('modal-uni-hostelfee').value);
     const applicationFee = Number(document.getElementById('modal-uni-appfee').value);
     const admissionType = document.getElementById('modal-uni-admission').value;
-    const image = document.getElementById('modal-uni-image').value.trim();
+    
+    const fileInput = document.getElementById('modal-uni-file');
+    let imageUrl = document.getElementById('modal-uni-image-url').value;
+
+    if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileName = `uni_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        const { error: uploadError } = await _supabase.storage.from('universities').upload(fileName, file);
+        if (uploadError) {
+            alert('Image upload failed: ' + uploadError.message);
+            return;
+        }
+        const { data: publicURLData } = _supabase.storage.from('universities').getPublicUrl(fileName);
+        imageUrl = publicURLData.publicUrl;
+    }
+
+    const branches = {
+        'ECE': Number(document.getElementById('fee-ece').value),
+        'CSE AI & ML': Number(document.getElementById('fee-cseaiml').value),
+        'AI & DS': Number(document.getElementById('fee-aiandds').value),
+        'Data Science': Number(document.getElementById('fee-ds').value),
+        'CSE': Number(document.getElementById('fee-cse').value),
+        'CSE IT': Number(document.getElementById('fee-cseit').value),
+        'EEE': Number(document.getElementById('fee-eee').value),
+        'Mechanical': Number(document.getElementById('fee-mech').value)
+    };
 
     const uniPayload = {
         name,
@@ -556,9 +482,9 @@ async function handleSaveUni(e) {
         hostel_fee: hostelFee,
         application_fee: applicationFee,
         admission_type: admissionType,
-        image,
+        image: imageUrl || 'https://images.unsplash.com/photo-1523050854058',
         nirf: Math.floor(Math.random() * 80) + 20,
-        branches: { 'ECE': 190000, 'CSE': 210000, 'AI and DS': 225000 }
+        branches: branches
     };
 
     if (editId) {

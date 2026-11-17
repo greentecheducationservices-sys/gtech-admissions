@@ -1,4 +1,4 @@
-// Supabase Configuration with Publishable Key
+// Supabase Configuration
 const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -7,13 +7,34 @@ const state = {
     stateFilter: 'ALL',
     universities: [],
     inquiries: [],
-    currentStudentEmail: null
+    currentStudentPhone: null,
+    currentSlide: 0
 };
 
 window.onload = async function() {
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
+    
+    // Auto advance carousel every 4 seconds
+    setInterval(() => {
+        nextSlide();
+    }, 4000);
 };
+
+// Carousel Functions
+function nextSlide() {
+    const carousel = document.getElementById('about-carousel');
+    if (!carousel) return;
+    state.currentSlide = (state.currentSlide + 1) % 3;
+    carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
+}
+
+function prevSlide() {
+    const carousel = document.getElementById('about-carousel');
+    if (!carousel) return;
+    state.currentSlide = (state.currentSlide - 1 + 3) % 3;
+    carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
+}
 
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
@@ -176,7 +197,6 @@ async function handleScholarshipInquiry(e) {
     const { error } = await _supabase.from('inquiries').insert([inquiry]);
     if (error) {
         alert('Error submitting application: ' + error.message);
-        console.error(error);
         return;
     }
 
@@ -185,11 +205,12 @@ async function handleScholarshipInquiry(e) {
     e.target.reset();
 }
 
+// Referral Code based on GTECH-5001
 function generateReferralCode(e) {
     e.preventDefault();
     const name = document.getElementById('ref-name').value.trim().toUpperCase().replace(/\s+/g, '');
     const phone = document.getElementById('ref-phone').value.trim();
-    const code = `GTECH-${name}-${phone.slice(-4)}`;
+    const code = `GTECH-5001-${name}-${phone.slice(-4)}`;
 
     document.getElementById('generated-code-display').textContent = code;
     document.getElementById('generated-code-box').classList.remove('hidden');
@@ -234,7 +255,7 @@ function switchAuthMode(mode) {
 
     if (isSignupMode) {
         title.textContent = 'Create Student Account';
-        subtitle.textContent = 'Register with your name, mobile, email, and password.';
+        subtitle.textContent = 'Register with your name, mobile, email and password.';
         subBtn.textContent = 'Register & Open Dashboard';
         tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
@@ -246,7 +267,7 @@ function switchAuthMode(mode) {
         document.getElementById('auth-confirm-password').required = true;
     } else {
         title.textContent = 'Student Portal Login';
-        subtitle.textContent = 'Enter your email ID and password to login.';
+        subtitle.textContent = 'Login with your Email ID and Password.';
         subBtn.textContent = 'Login to Dashboard';
         tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
@@ -286,8 +307,8 @@ async function handleStudentAuth(e) {
             alert('Registration Error: ' + error.message);
             return;
         }
+        state.currentStudentPhone = mobile;
         alert('Account created successfully! You are now logged in.');
-        state.currentStudentEmail = email;
     } else {
         const { data, error } = await _supabase.auth.signInWithPassword({
             email: email,
@@ -295,12 +316,10 @@ async function handleStudentAuth(e) {
         });
 
         if (error) {
-            if (!error.message.includes('Email not confirmed')) {
-                alert('Login Failed: ' + error.message);
-                return;
-            }
+            alert('Login Failed: ' + error.message);
+            return;
         }
-        state.currentStudentEmail = email;
+        state.currentStudentPhone = data.user?.user_metadata?.mobile_number || '';
     }
 
     document.getElementById('student-login-modal').classList.add('hidden');
@@ -313,13 +332,13 @@ async function handleStudentAuth(e) {
 }
 
 function loadStudentDashboardData() {
-    const email = state.currentStudentEmail;
+    const phone = state.currentStudentPhone;
     const appContainer = document.getElementById('student-applications-list');
     const voucherContainer = document.getElementById('student-vouchers-list');
 
-    const myInquiries = state.inquiries.filter(i => (email && i.email && i.email.toLowerCase() === email.toLowerCase()));
+    const myInquiries = state.inquiries.filter(i => (phone && i.phone.includes(phone)) || (i.parent_phone && i.parent_phone.includes(phone)));
     if (myInquiries.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-slate-500">No scholarship applications found for email ${email}. Submit one from the homepage form using this email.</p>`;
+        appContainer.innerHTML = `<p class="text-xs text-slate-500">No scholarship applications found for your mobile number. Submit one from the homepage form.</p>`;
     } else {
         appContainer.innerHTML = myInquiries.map(inq => `
             <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
@@ -332,9 +351,9 @@ function loadStudentDashboardData() {
         `).join('');
     }
 
-    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
+    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]').filter(v => phone && v.phone.includes(phone));
     if (vouchers.length === 0) {
-        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral vouchers generated yet.</p>`;
+        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral vouchers generated for this phone number.</p>`;
     } else {
         voucherContainer.innerHTML = vouchers.map(v => `
             <div class="p-3 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex justify-between items-center">
@@ -348,37 +367,25 @@ function loadStudentDashboardData() {
     }
 }
 
-// --- ADMIN LOGIN LOGIC ---
+// --- ADMIN LOGIN LOGIC (User ID: GTECH9347, Password: HARSHA@123) ---
 function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
     document.getElementById('admin-modal').classList.add('flex');
 }
 
-async function handleAdminLogin(e) {
+function handleAdminLogin(e) {
     e.preventDefault();
-    const emailInput = document.getElementById('admin-email-input').value.trim();
+    const userId = document.getElementById('admin-userid-input').value.trim();
     const password = document.getElementById('admin-pass-input').value;
 
-    if (emailInput.toLowerCase() !== 'greentecheducationservices@gmail.com') {
-        alert('Access Denied: Only greentecheducationservices@gmail.com is authorized as Admin.');
-        return;
+    if (userId === 'GTECH9347' && password === 'HARSHA@123') {
+        document.getElementById('admin-modal').classList.add('hidden');
+        document.getElementById('admin-dashboard-modal').classList.remove('hidden');
+        document.getElementById('admin-dashboard-modal').classList.add('flex');
+        fetchInquiriesFromSupabase().then(() => loadAdminDashboardData());
+    } else {
+        alert('Access Denied: Invalid User ID or Password.');
     }
-
-    const { data, error } = await _supabase.auth.signInWithPassword({
-        email: emailInput,
-        password: password
-    });
-
-    if (error) {
-        alert('Admin Authentication Failed: ' + error.message + '\n\n(Make sure this admin email is registered in Supabase Auth or your password is correct).');
-        return;
-    }
-
-    document.getElementById('admin-modal').classList.add('hidden');
-    document.getElementById('admin-dashboard-modal').classList.remove('hidden');
-    document.getElementById('admin-dashboard-modal').classList.add('flex');
-    await fetchInquiriesFromSupabase();
-    loadAdminDashboardData();
 }
 
 function switchAdminTab(tabName) {

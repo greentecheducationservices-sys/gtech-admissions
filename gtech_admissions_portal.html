@@ -910,7 +910,563 @@
                 state.universities.push(newUni);
             }
 
-            localStorage.setItem('gtech_universities', JSON.stringify(state.universities));
+            localStorage.setItem('gte<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTech Admissions Portal | Engineering Admissions Consultancy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white">
+
+    <!-- Top Notification Bar -->
+    <div class="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-indigo-200 text-xs py-2 px-4 text-center font-medium border-b border-indigo-800/50">
+        🎓 Admissions 2026-27 Open | Multi-Branch Fee Structure & Scholarship Assistance Active!
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/30">
+                    G
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base tracking-tight text-white">GTech Admissions</h1>
+                    <p class="text-[11px] text-indigo-400 font-medium">Admissions Consultancy & Services</p>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-300">
+                <a href="#about" class="hover:text-indigo-400 transition">About Us</a>
+                <a href="#universities" class="hover:text-indigo-400 transition">University Catalog</a>
+                <a href="#referral-section" class="hover:text-indigo-400 transition">Referral & Vouchers</a>
+                <a href="#apply" class="hover:text-indigo-400 transition">Scholarship Form</a>
+            </nav>
+
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button onclick="openStudentLoginModal()" class="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-user-lock text-[10px]"></i> <span>Student Login</span>
+                </button>
+                <button onclick="openAdminModal()" class="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500 text-indigo-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-lock text-[10px]"></i> <span>Admin</span>
+                </button>
+                <a href="#apply" class="hidden sm:inline-block px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25">
+                    Apply
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
+        <div class="max-w-4xl mx-auto text-center space-y-4">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certified Educational Admissions Consultancy
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                Secure Branch-Wise Fees & <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Scholarships</span> with GTech
+            </h2>
+            <p class="text-slate-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                Explore complete branch fee structures, hostel charges, entrance exam requirements, and scholarship assistance with our expert consultancy.
+            </p>
+        </div>
+    </section>
+
+    <!-- ABOUT GTECH TRUST BANNER WITH TRANSPARENT STUDENTS GROUP PHOTO -->
+    <section id="about" class="py-16 bg-slate-950 border-b border-slate-900 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-15 pointer-events-none bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop');"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-2xl mx-auto space-y-2 mb-12">
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Why Choose GTech</span>
+                <h3 class="text-2xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
+                <p class="text-xs text-slate-400">Empowering students across AP, Telangana, Chennai, Karnataka, UP, and Maharashtra with transparency and guidance.</p>
+            </div>
+
+            <!-- Transparent Group Photo Showcase Card -->
+            <div class="mb-12 relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900/60 backdrop-blur-md p-6 sm:p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl">
+                <div class="w-full md:w-1/2 h-64 rounded-2xl overflow-hidden relative border border-slate-700/50">
+                    <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop" alt="GTech Students Community" class="w-full h-full object-cover opacity-85 hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+                    <span class="absolute bottom-3 left-3 px-3 py-1 bg-slate-950/80 backdrop-blur-md rounded-xl text-[10px] font-bold text-emerald-400 border border-slate-800">📸 GTech Successful Students Community</span>
+                </div>
+                <div class="w-full md:w-1/2 space-y-4 text-left">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Our Core Promise</span>
+                    <h4 class="text-xl font-black text-white">Shaping Future Engineers Together</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Over the past 5 years, GTech Admissions Consultancy has successfully placed thousands of aspiring engineers into elite tier-1 institutions with top global placements scaling up to ₹1.05 Crores. We handle end-to-end educational loans, transparent university catalogs, and free campus visits.
+                    </p>
+                    <div class="flex gap-4 pt-2">
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex-1 text-center">
+                            <span class="block text-lg font-black text-indigo-400">5+</span>
+                            <span class="text-[10px] text-slate-400">Years Trust</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex-1 text-center">
+                            <span class="block text-lg font-black text-emerald-400">100%</span>
+                            <span class="text-[10px] text-slate-400">Loan Support</span>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex-1 text-center">
+                            <span class="block text-lg font-black text-amber-400">₹1.05 Cr</span>
+                            <span class="text-[10px] text-slate-400">Top Package</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-base">🛡️</div>
+                    <h4 class="font-extrabold text-white text-sm">5 Years of Proven Trust</h4>
+                    <p class="text-xs text-slate-400">Half a decade of consistent student guidance, transparent fee structures, and verified university partnerships.</p>
+                </div>
+                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-base">💳</div>
+                    <h4 class="font-extrabold text-white text-sm">Free Educational Loan Process</h4>
+                    <p class="text-xs text-slate-400">End-to-end documentation support and hassle-free bank loan tie-ups with zero consultancy processing fees.</p>
+                </div>
+                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-base">🚀</div>
+                    <h4 class="font-extrabold text-white text-sm">Top Placements up to ₹1.05 Cr</h4>
+                    <p class="text-xs text-slate-400">Secure admissions in premier institutions boasting elite global tech placements scaling up to ₹1.05 Crores per annum.</p>
+                </div>
+                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-base">⚡</div>
+                    <h4 class="font-extrabold text-white text-sm">Easy Admission Process</h4>
+                    <p class="text-xs text-slate-400">Streamlined counseling, direct application submission, and fast-track seat confirmation without bureaucratic delays.</p>
+                </div>
+                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
+                    <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold text-base">🚗</div>
+                    <h4 class="font-extrabold text-white text-sm">Free Visiting Provided</h4>
+                    <p class="text-xs text-slate-400">Complimentary campus visits and guided tours arranged for students and parents before locking admissions.</p>
+                </div>
+                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
+                    <div class="w-10 h-10 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold text-base">🎓</div>
+                    <h4 class="font-extrabold text-white text-sm">Scholarships from Top Universities</h4>
+                    <p class="text-xs text-slate-400">Unlock merit-based fee concessions and exclusive management scholarship vouchers directly through GTech.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Region Selector Filter -->
+    <section id="universities" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Institutional Database</span>
+                <h3 class="text-xl sm:text-2xl font-black text-white mt-1">University & Branch Fee Matrix</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Showing all branches, tuition fees, hostel fees, and official campus locations.</p>
+            </div>
+            <!-- Search bar -->
+            <div class="w-full md:w-72">
+                <input type="text" id="uni-search" oninput="renderUniversities()" placeholder="Search university, city, or branch..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            </div>
+        </div>
+
+        <!-- State Pills Tabs with Entrance Exams Added Between All Regions and Andhra Pradesh -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none">
+            <button onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition whitespace-nowrap shrink-0">All Regions</button>
+            <button onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-amber-500/40 text-amber-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-file-lines mr-1"></i> Entrance Exams</button>
+            <button onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
+            <button onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Telangana</button>
+            <button onclick="setStateFilter('Chennai')" data-state="Chennai" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Chennai</button>
+            <button onclick="setStateFilter('Karnataka')" data-state="Karnataka" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Karnataka</button>
+            <button onclick="setStateFilter('UP')" data-state="UP" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">UP</button>
+            <button onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Maharashtra</button>
+        </div>
+    </section>
+
+    <!-- Universities Grid Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Populated via Supabase JavaScript -->
+        </div>
+    </main>
+
+    <!-- Scholarship Inquiry / Application Form Section -->
+    <section id="apply" class="py-16 bg-slate-950 border-t border-slate-900">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
+                <div class="text-center space-y-1.5 mb-6">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Consultancy Assistance</span>
+                    <h3 class="text-xl font-black text-white">Get a Scholarship from Top Universities</h3>
+                    <p class="text-xs text-slate-400">Our senior educational consultant in Ongole will review your academic records to secure maximum fee concessions.</p>
+                </div>
+
+                <form onsubmit="handleScholarshipInquiry(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name *</label>
+                            <input type="text" id="app-name" required placeholder="Enter student legal name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Student WhatsApp Number *</label>
+                            <input type="tel" id="app-phone" required placeholder="+91 98765 43210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Parent / Guardian Phone Number *</label>
+                            <input type="tel" id="app-parent-phone" required placeholder="+91 98765 43210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Email Address</label>
+                            <input type="email" id="app-email" placeholder="student@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Residential Address *</label>
+                        <input type="text" id="app-address" required placeholder="Door No, Street, City, District, Pincode" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">10th Marks / CGPA *</label>
+                            <input type="text" id="app-10th" required placeholder="e.g. 95% or 9.8 CGPA" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Inter Marks (%) *</label>
+                            <input type="text" id="app-inter" required placeholder="e.g. 960 / 1000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Inter PCM Score (out of 600) *</label>
+                            <input type="number" id="app-pcm" required placeholder="e.g. 520" max="600" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred University *</label>
+                            <input type="text" id="app-uni" required placeholder="Select from catalog above" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred Engineering Branch *</label>
+                            <select id="app-branch" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                                <option value="ECE">ECE</option>
+                                <option value="CSE AI and ML">CSE AI and ML</option>
+                                <option value="AI and DS">AI and DS</option>
+                                <option value="DS">DS (Data Science)</option>
+                                <option value="CSE">CSE</option>
+                                <option value="CSE IT">CSE IT</option>
+                                <option value="EEE">EEE</option>
+                                <option value="MECHANICAL">MECHANICAL</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-xl shadow-indigo-600/30 transition">
+                        Submit Scholarship Application & Request Callback
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Referral & Concession Code Generator Section -->
+    <section id="referral-section" class="py-14 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+                <div class="text-center max-w-md mx-auto space-y-2 mb-6">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Visiting & Referral Benefits</span>
+                    <h3 class="text-xl font-black text-white">Generate Your Personal Fee Concession Voucher</h3>
+                    <p class="text-xs text-slate-400">Enter student details to generate a unique referral code. Unlock direct fee concessions and free campus visits.</p>
+                </div>
+
+                <form onsubmit="generateReferralCode(event)" class="space-y-3 max-w-sm mx-auto">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name</label>
+                        <input type="text" id="ref-name" required placeholder="e.g. Rahul Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">WhatsApp / Phone Number</label>
+                        <input type="tel" id="ref-phone" required placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20">
+                        Generate Concession Code
+                    </button>
+                </form>
+
+                <div id="generated-code-box" class="hidden mt-4 p-3.5 rounded-2xl bg-slate-950 border border-amber-500/40 text-center space-y-1.5">
+                    <p class="text-[10px] text-amber-400 font-bold uppercase">Your Exclusive Referral Concession Code:</p>
+                    <div id="generated-code-display" class="text-lg font-mono font-black text-white tracking-widest"></div>
+                    <div class="flex justify-center gap-2 pt-1">
+                        <button type="button" onclick="copyText(document.getElementById('generated-code-display').textContent)" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-200 rounded-lg border border-slate-800 font-bold">Copy Code</button>
+                        <button type="button" onclick="shareWhatsApp()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-[11px] text-white rounded-lg font-bold flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> Share</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer with Admin & Student Portal Links -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>© 2026 GTech Admissions Consultancy (Ongole / All India). All rights reserved.</p>
+        <div class="flex items-center gap-4">
+          <button onclick="openStudentLoginModal()" class="hover:text-emerald-400 transition font-bold text-emerald-400">Student Portal Login</button>
+          <button onclick="openAdminModal()" class="hover:text-indigo-400 transition font-bold text-indigo-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-lock text-[10px]"></i> Admin Portal (greentecheducationservices@gmail.com)
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- STUDENT AUTHENTICATION MODAL -->
+    <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
+            <button onclick="document.getElementById('student-login-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            
+            <div class="text-center space-y-1 mb-6">
+                <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🔐</div>
+                <h3 id="auth-modal-title" class="text-base font-extrabold text-white">Student Portal Login</h3>
+                <p id="auth-modal-subtitle" class="text-[11px] text-slate-400">Enter your email and password to access your dashboard.</p>
+            </div>
+
+            <!-- Mode Toggle Tabs -->
+            <div class="flex rounded-xl bg-slate-950 p-1 mb-5 border border-slate-800 text-xs font-bold">
+                <button type="button" onclick="switchAuthMode('login')" id="tab-login" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white transition">Login</button>
+                <button type="button" onclick="switchAuthMode('signup')" id="tab-signup" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Register Account</button>
+            </div>
+
+            <!-- AUTH FORM -->
+            <form id="student-auth-form" onsubmit="handleStudentAuth(event)" class="space-y-3">
+                <div id="name-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name *</label>
+                    <input type="text" id="auth-name" placeholder="Rahul Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div id="mobile-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Mobile Number *</label>
+                    <input type="tel" id="auth-mobile" placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Email ID *</label>
+                    <input type="email" id="auth-email" required placeholder="student@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Password *</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div id="confirm-pass-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Confirm Password *</label>
+                    <input type="password" id="auth-confirm-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-2">Login to Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- STUDENT DASHBOARD MODAL -->
+    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">🎓</div>
+                    <div>
+                        <h3 class="font-black text-white text-sm" id="student-dash-title">My Student Dashboard</h3>
+                        <p class="text-[10px] text-slate-400">Track your scholarship application status and generated referral vouchers.</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Sign Out</button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-400">My Scholarship Applications</h4>
+                    <div id="student-applications-list" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-amber-400">My Referral & Fee Concession Vouchers</h4>
+                    <div id="student-vouchers-list" class="space-y-2">
+                        <p class="text-xs text-slate-500">No vouchers generated yet. Use the voucher generator on the homepage.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl relative">
+            <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            <div class="text-center space-y-2 mb-5">
+                <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🔒</div>
+                <h3 class="text-base font-extrabold text-white">Admin Control Panel</h3>
+                <p class="text-[11px] text-slate-400">Authorized Access for GTech Management.</p>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Admin Email *</label>
+                    <input type="email" id="admin-email-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500" placeholder="greentecheducationservices@gmail.com">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Admin Password *</label>
+                    <input type="password" id="admin-pass-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500" placeholder="Enter admin password">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">Authenticate Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD MODAL -->
+    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">📊</div>
+                    <div>
+                        <h3 class="font-black text-white text-sm">GTech Admin & University Fee Control</h3>
+                        <p class="text-[10px] text-slate-400">Full control over branch fees, hostel fees, application fees, admission modes, and student inquiries.</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Close</button>
+            </div>
+
+            <!-- Dashboard Tabs -->
+            <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-5 text-xs font-bold">
+                <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400">Student Scholarship Leads</button>
+                <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200">Manage Universities & Branch Fees</button>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1 space-y-4">
+                <!-- Tab 1: Inquiries -->
+                <div id="admin-tab-inquiries" class="space-y-4">
+                    <div class="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">Student Name / Phone</th>
+                                    <th class="p-3">Parent Phone / Address</th>
+                                    <th class="p-3">Academics (10th / Inter / PCM)</th>
+                                    <th class="p-3">University & Branch</th>
+                                    <th class="p-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-inquiries-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Manage Universities -->
+                <div id="admin-tab-universities" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white text-xs">University Catalog & Fee Matrix Control</h4>
+                        <button onclick="openAddUniModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition">+ Add University</button>
+                    </div>
+                    <div class="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">University & Location</th>
+                                    <th class="p-3">Admission Mode</th>
+                                    <th class="p-3">Hostel Fee</th>
+                                    <th class="p-3">App Fee</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-unis-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD / EDIT UNIVERSITY MODAL -->
+    <div id="uni-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="document.getElementById('uni-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            <h3 id="uni-modal-title" class="text-base font-black text-white mb-3">Add University & Fees</h3>
+            
+            <form onsubmit="handleSaveUni(event)" class="space-y-3">
+                <input type="hidden" id="edit-uni-id">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">University Name *</label>
+                    <input type="text" id="modal-uni-name" required placeholder="e.g. VIT Vellore" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Region *</label>
+                        <select id="modal-uni-state" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="UP">UP</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">City / Location *</label>
+                        <input type="text" id="modal-uni-loc" required placeholder="Chennai, TN" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Full College Address *</label>
+                    <input type="text" id="modal-uni-address" required placeholder="Vandalur-Kelambakkam Road, Chennai" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Hostel Fee (₹/yr) *</label>
+                        <input type="number" id="modal-uni-hostelfee" required placeholder="95000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Application Fee (₹) *</label>
+                        <input type="number" id="modal-uni-appfee" required placeholder="1200" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Admission Mode *</label>
+                        <select id="modal-uni-admission" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                            <option value="Direct Admission Open">Direct Admission Open</option>
+                            <option value="Entrance Exam Required">Entrance Exam Required</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Campus Photo URL *</label>
+                        <input type="url" id="modal-uni-image" required placeholder="https://images.unsplash.com/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                    </div>
+                </div>
+                
+                <div class="border-t border-slate-800 pt-3">
+                    <label class="block text-[11px] font-bold text-indigo-400 mb-2">Branch Tuition Fees (₹ / Year)</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><span class="text-[10px] text-slate-400">ECE</span><input type="number" id="fee-ece" value="190000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">CSE AI and ML</span><input type="number" id="fee-cseaiml" value="230000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">AI and DS</span><input type="number" id="fee-aiandds" value="225000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">DS</span><input type="number" id="fee-ds" value="215000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">CSE</span><input type="number" id="fee-cse" value="210000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">CSE IT</span><input type="number" id="fee-cseit" value="200000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">EEE</span><input type="number" id="fee-eee" value="175000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">MECHANICAL</span><input type="number" id="fee-mech" value="160000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Save University</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- External JavaScript File Link -->
+    <script src="app.js"></script>
+</body>
+</html>ch_universities', JSON.stringify(state.universities));
             document.getElementById('uni-modal').classList.add('hidden');
             loadAdminUnisTable();
             renderUniversities();

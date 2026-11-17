@@ -11,7 +11,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white">
 
-    <!-- Navigation Header (Admin button removed) -->
+    <!-- Navigation Header -->
     <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -57,7 +57,7 @@
         </div>
     </section>
 
-    <!-- ABOUT GTECH WITH STUDENT GROUP PHOTO CAROUSEL -->
+    <!-- ABOUT GTECH WITH STUDENT & PARENT GRADUATION CAROUSEL -->
     <section id="about" class="py-14 bg-slate-950 border-b border-slate-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
@@ -66,11 +66,12 @@
                 <p class="text-xs text-slate-400">We simplify your higher education journey across AP, Telangana, Chennai, Karnataka, UP, and Maharashtra.</p>
             </div>
 
-            <!-- Student Group Photo Carousel -->
+            <!-- Carousel Container -->
             <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 shadow-2xl">
                 <div id="about-carousel" class="relative h-72 sm:h-96 w-full overflow-hidden flex transition-transform duration-700">
+                    <!-- Slide 1: Group of Students -->
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group 1">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group Success">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
                             <div>
                                 <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Campus Success 2026</span>
@@ -78,26 +79,28 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Slide 2: Parents with Happiness After Graduation -->
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group 2">
+                        <img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Parents with Happiness After Graduation">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
                             <div>
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Top University Placements</span>
-                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Connecting Aspirants to Premier Engineering Colleges</h4>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Proud Parents & Families</span>
+                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Celebrating Milestone Achievements and Successful Engineering Placements</h4>
                             </div>
                         </div>
                     </div>
+                    <!-- Slide 3: Student Achievement / Campus Tour -->
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group 3">
+                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Graduation Celebration">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
                             <div>
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">Free Campus Visits</span>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">Top University Admissions</span>
                                 <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Transparent Counseling & Educational Loan Support</h4>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Carousel Controls -->
+                <!-- Carousel Navigation Buttons -->
                 <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
                 <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
             </div>
@@ -363,7 +366,7 @@
         </div>
     </div>
 
-    <!-- ADMIN LOGIN MODAL (User ID: GTECH9347, Password: HARSHA@123) -->
+    <!-- ADMIN LOGIN MODAL (Blank fields as requested) -->
     <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl relative">
             <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
@@ -375,11 +378,11 @@
             <form onsubmit="handleAdminLogin(event)" class="space-y-3">
                 <div>
                     <label class="block text-[11px] font-bold text-slate-300 mb-1">User ID *</label>
-                    <input type="text" id="admin-userid-input" required placeholder="GTECH9347" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="admin-userid-input" required placeholder="Enter User ID" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-slate-300 mb-1">Password *</label>
-                    <input type="password" id="admin-pass-input" required placeholder="HARSHA@123" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                    <input type="password" id="admin-pass-input" required placeholder="Enter Password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">Authenticate Admin</button>
             </form>

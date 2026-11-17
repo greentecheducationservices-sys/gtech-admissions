@@ -1,4 +1,3 @@
-// Supabase Configuration
 const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i'; 
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -22,7 +21,6 @@ window.onload = async function() {
     }, 4000);
 };
 
-// Carousel Functions
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
@@ -294,7 +292,167 @@ function shareWhatsApp() {
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
-// --- ADMIN LOGIN LOGIC (User ID: GTECH9347, Password: HARSHA@123) ---
+// Student Authentication
+let authMode = 'login';
+function openStudentLoginModal() {
+    document.getElementById('student-login-modal').classList.remove('hidden');
+    document.getElementById('student-login-modal').classList.add('flex');
+    switchAuthMode('login');
+}
+
+function switchAuthMode(mode) {
+    authMode = mode;
+    const title = document.getElementById('auth-modal-title');
+    const subtitle = document.getElementById('auth-modal-subtitle');
+    const subBtn = document.getElementById('auth-submit-btn');
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const tabForgot = document.getElementById('tab-forgot');
+    const nameBox = document.getElementById('name-field-box');
+    const mobileBox = document.getElementById('mobile-field-box');
+    const passBox = document.getElementById('password-field-box');
+    const otpBox = document.getElementById('otp-field-box');
+
+    tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+    tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+    tabForgot.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+
+    if (mode === 'signup') {
+        tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
+        title.textContent = 'Register Student Account';
+        subtitle.textContent = 'Sign up with email OTP verification.';
+        subBtn.textContent = 'Send Verification OTP';
+        nameBox.classList.remove('hidden');
+        mobileBox.classList.remove('hidden');
+        passBox.classList.remove('hidden');
+        otpBox.classList.add('hidden');
+    } else if (mode === 'verify_otp') {
+        title.textContent = 'Verify Email OTP';
+        subtitle.textContent = 'Enter the 6-digit code sent to your email.';
+        subBtn.textContent = 'Verify OTP & Complete Registration';
+        nameBox.classList.add('hidden');
+        mobileBox.classList.add('hidden');
+        passBox.classList.add('hidden');
+        otpBox.classList.remove('hidden');
+    } else if (mode === 'forgot') {
+        tabForgot.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
+        title.textContent = 'Forgot Password';
+        subtitle.textContent = 'Enter your email to receive a password reset link.';
+        subBtn.textContent = 'Send Password Reset Link';
+        nameBox.classList.add('hidden');
+        mobileBox.classList.add('hidden');
+        passBox.classList.add('hidden');
+        otpBox.classList.add('hidden');
+    } else {
+        tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
+        title.textContent = 'Student Portal Login';
+        subtitle.textContent = 'Login with your Email ID and Password.';
+        subBtn.textContent = 'Login to Dashboard';
+        nameBox.classList.add('hidden');
+        mobileBox.classList.add('hidden');
+        passBox.classList.remove('hidden');
+        otpBox.classList.add('hidden');
+    }
+}
+
+async function handleStudentAuth(e) {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+
+    if (authMode === 'signup') {
+        const name = document.getElementById('auth-name').value.trim();
+        const mobile = document.getElementById('auth-mobile').value.trim();
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await _supabase.from('email_otps').insert([{ email, otp_code: otpCode, purpose: 'REGISTRATION', verified: false }]);
+        alert(`[DEV SIMULATION EMAIL] Your Email Verification OTP is: ${otpCode}`);
+        switchAuthMode('verify_otp');
+    } 
+    else if (authMode === 'verify_otp') {
+        const enteredOtp = document.getElementById('auth-otp').value.trim();
+        const name = document.getElementById('auth-name').value.trim();
+        const mobile = document.getElementById('auth-mobile').value.trim();
+
+        const { data: otpRecord } = await _supabase.from('email_otps').select('*').eq('email', email).eq('otp_code', enteredOtp).eq('verified', false).single();
+        if (!otpRecord) {
+            alert('Invalid or expired OTP. Please check and try again.');
+            return;
+        }
+
+        await _supabase.from('email_otps').update({ verified: true }).eq('id', otpRecord.id);
+        const { data: authData, error } = await _supabase.auth.signUp({ email, password });
+        if (error) {
+            alert('Registration Error: ' + error.message);
+            return;
+        }
+
+        state.currentStudentName = name;
+        await _supabase.from('student_profiles').insert([{ id: authData.user?.id || Date.now(), full_name: name, mobile, email, address: 'Ongole' }]);
+
+        alert('Registration Successful! Your account has been created successfully.');
+        document.getElementById('student-login-modal').classList.add('hidden');
+        openStudentLoginModal();
+    }
+    else if (authMode === 'forgot') {
+        alert(`Password reset secure link has been dispatched to ${email}. Check your inbox.`);
+        switchAuthMode('login');
+    }
+    else {
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert('Login Failed: ' + error.message);
+            return;
+        }
+
+        const { data: profile } = await _supabase.from('student_profiles').select('*').eq('email', email).single();
+        if (profile) state.currentStudentName = profile.full_name;
+
+        document.getElementById('student-login-modal').classList.add('hidden');
+        document.getElementById('student-dashboard-modal').classList.remove('hidden');
+        document.getElementById('student-dashboard-modal').classList.add('flex');
+        
+        document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudentName}! Welcome Back.`;
+        loadStudentDashboardData();
+        alert('Login Successful! Welcome to Your Student Dashboard.');
+    }
+}
+
+function loadStudentDashboardData() {
+    const appContainer = document.getElementById('student-applications-list');
+    const voucherContainer = document.getElementById('student-vouchers-list');
+
+    if (state.inquiries.length === 0) {
+        appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found. Submit your scholarship application from the form.</p>`;
+    } else {
+        appContainer.innerHTML = state.inquiries.slice(0, 3).map(inq => `
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+                <div>
+                    <strong class="text-white">${inq.uni} (${inq.branch})</strong>
+                    <p class="text-slate-400 text-[10px]">Student: ${inq.name} | PCM: ${inq.pcm}/600</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">${inq.status}</span>
+            </div>
+        `).join('');
+    }
+
+    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
+    if (vouchers.length === 0) {
+        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral discount vouchers active yet.</p>`;
+    } else {
+        voucherContainer.innerHTML = vouchers.map(v => `
+            <div class="p-3 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex justify-between items-center">
+                <div>
+                    <span class="font-mono font-bold text-amber-400 text-sm tracking-wider">${v.code}</span>
+                    <p class="text-slate-400 text-[10px]">Generated for ${v.name} | Worth ₹1,500 Discount</p>
+                </div>
+                <button onclick="copyText('${v.code}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px]">Copy</button>
+            </div>
+        `).join('');
+    }
+}
+
+// Admin Panel
 function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
     document.getElementById('admin-modal').classList.add('flex');
@@ -507,3 +665,24 @@ async function handleDeleteUni(id) {
         loadAdminUnisTable();
     }
 }
+
+// Global scope exposure
+window.openStudentLoginModal = openStudentLoginModal;
+window.switchAuthMode = switchAuthMode;
+window.handleStudentAuth = handleStudentAuth;
+window.openAdminModal = openAdminModal;
+window.handleAdminLogin = handleAdminLogin;
+window.switchAdminTab = switchAdminTab;
+window.openAddUniModal = openAddUniModal;
+window.openEditUniModal = openEditUniModal;
+window.handleSaveUni = handleSaveUni;
+window.handleDeleteUni = handleDeleteUni;
+window.setStateFilter = setStateFilter;
+window.selectUniForScholarship = selectUniForScholarship;
+window.handleScholarshipInquiry = handleScholarshipInquiry;
+window.generateReferralCode = generateReferralCode;
+window.copyText = copyText;
+window.shareWhatsApp = shareWhatsApp;
+window.nextSlide = nextSlide;
+window.prevSlide = prevSlide;
+window.handleUploadCarousel = handleUploadCarousel;

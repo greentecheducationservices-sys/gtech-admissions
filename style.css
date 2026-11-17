@@ -1,21 +1,46 @@
-/* GTech Admissions Custom Stylesheet */
-body {
-    background-color: #020617;
-    color: #f8fafc;
-}
-
-/* Custom Scrollbar */
+/* Custom Scrollbars for University Branch Lists & Tables */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-    background: #020617;
+    background: #020617; /* slate-950 */
+    border-radius: 8px;
 }
+
 ::-webkit-scrollbar-thumb {
-    background: #1e293b;
-    border-radius: 4px;
+    background: #1e293b; /* slate-800 */
+    border-radius: 8px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-    background: #334155;
+    background: #4f46e5; /* indigo-600 */
+}
+
+/* Hide scrollbar for horizontal filter pills */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Smooth Carousel Transitions */
+#about-carousel {
+    display: flex;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+/* Modal Blur & Backdrop Enhancements */
+.backdrop-blur-sm {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }

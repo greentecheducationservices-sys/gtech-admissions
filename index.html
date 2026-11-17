@@ -6,19 +6,12 @@
     <title>GTech Admissions Portal | Engineering Admissions Consultancy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS Stylesheet -->
     <link rel="stylesheet" href="./style.css">
-    <!-- Supabase JS Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white">
 
-    <!-- Top Notification Bar -->
-    <div class="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-indigo-200 text-xs py-2 px-4 text-center font-medium border-b border-indigo-800/50">
-        🎓 Admissions 2026-27 Open | Multi-Branch Fee Structure & Scholarship Assistance Active!
-    </div>
-
-    <!-- Navigation Header -->
+    <!-- Navigation Header (Admin button removed) -->
     <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -39,11 +32,8 @@
             </nav>
 
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <button onclick="openStudentLoginModal()" class="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <button onclick="openStudentLoginModal()" class="px-3.5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-user-lock text-[10px]"></i> <span>Student Login</span>
-                </button>
-                <button onclick="openAdminModal()" class="px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500 text-indigo-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-lock text-[10px]"></i> <span>Admin</span>
                 </button>
                 <a href="#apply" class="hidden sm:inline-block px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25">
                     Apply
@@ -67,7 +57,7 @@
         </div>
     </section>
 
-    <!-- ABOUT GTECH TRUST & STUDENT GROUP PHOTO BANNER -->
+    <!-- ABOUT GTECH WITH STUDENT GROUP PHOTO CAROUSEL -->
     <section id="about" class="py-14 bg-slate-950 border-b border-slate-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
@@ -76,15 +66,40 @@
                 <p class="text-xs text-slate-400">We simplify your higher education journey across AP, Telangana, Chennai, Karnataka, UP, and Maharashtra.</p>
             </div>
 
-            <!-- Transparent Student Group Photo Banner -->
-            <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 shadow-2xl group">
-                <div class="absolute inset-0 z-10 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"></div>
-                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" alt="GTech Student Community and Success Group" class="w-full h-72 sm:h-96 object-cover object-center opacity-40 group-hover:scale-105 transition duration-700">
-                <div class="absolute bottom-6 left-6 right-6 z-20 text-center space-y-2">
-                    <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">GTech Student Community</span>
-                    <h4 class="text-xl sm:text-2xl font-black text-white">Empowering Engineering Aspirants Across India</h4>
-                    <p class="text-xs text-slate-300 max-w-xl mx-auto">From campus counseling in Ongole to successful placements nationwide, our students form a thriving family of future innovators.</p>
+            <!-- Student Group Photo Carousel -->
+            <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 shadow-2xl">
+                <div id="about-carousel" class="relative h-72 sm:h-96 w-full overflow-hidden flex transition-transform duration-700">
+                    <div class="w-full h-full shrink-0 relative">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group 1">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Campus Success 2026</span>
+                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Thriving Student Community & Admissions Guidance</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full h-full shrink-0 relative">
+                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group 2">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Top University Placements</span>
+                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Connecting Aspirants to Premier Engineering Colleges</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full h-full shrink-0 relative">
+                        <img src="https://images.unsplash.com/photo-1519452635265-7b1fbfd1e4e0?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group 3">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">Free Campus Visits</span>
+                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Transparent Counseling & Educational Loan Support</h4>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <!-- Carousel Controls -->
+                <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
+                <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
             </div>
 
             <!-- Feature Cards Grid -->
@@ -234,14 +249,14 @@
         </div>
     </section>
 
-    <!-- Referral & Concession Code Generator Section -->
+    <!-- Referral & Concession Code Generator Section (Based on GTECH-5001) -->
     <section id="referral-section" class="py-14 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
                 <div class="text-center max-w-md mx-auto space-y-2 mb-6">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Visiting & Referral Benefits</span>
                     <h3 class="text-xl font-black text-white">Generate Your Personal Fee Concession Voucher</h3>
-                    <p class="text-xs text-slate-400">Enter student details to generate a unique referral code. Unlock direct fee concessions and free campus visits.</p>
+                    <p class="text-xs text-slate-400">Enter student details to generate a unique GTECH-5001 referral code. Unlock direct fee concessions and free campus visits.</p>
                 </div>
 
                 <form onsubmit="generateReferralCode(event)" class="space-y-3 max-w-sm mx-auto">
@@ -270,7 +285,7 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Footer with Admin Portal Link -->
     <footer class="bg-slate-950 border-t border-slate-900 py-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p>© 2026 GTech Admissions Consultancy (Ongole / All India). All rights reserved.</p>
@@ -348,23 +363,23 @@
         </div>
     </div>
 
-    <!-- ADMIN LOGIN MODAL -->
+    <!-- ADMIN LOGIN MODAL (User ID: GTECH9347, Password: HARSHA@123) -->
     <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl relative">
             <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
             <div class="text-center space-y-2 mb-5">
                 <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🔒</div>
                 <h3 class="text-base font-extrabold text-white">Admin Control Panel</h3>
-                <p class="text-[11px] text-slate-400">Authorized Access for GTech Management.</p>
+                <p class="text-[11px] text-slate-400">Enter User ID and Password.</p>
             </div>
             <form onsubmit="handleAdminLogin(event)" class="space-y-3">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Admin Email *</label>
-                    <input type="email" id="admin-email-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500" value="greentecheducationservices@gmail.com" readonly>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">User ID *</label>
+                    <input type="text" id="admin-userid-input" required placeholder="GTECH9347" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Admin Password *</label>
-                    <input type="password" id="admin-pass-input" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500" placeholder="Enter admin password">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Password *</label>
+                    <input type="password" id="admin-pass-input" required placeholder="HARSHA@123" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">Authenticate Admin</button>
             </form>

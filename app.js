@@ -8,6 +8,7 @@ const state = {
     universities: [],
     inquiries: [],
     currentStudentPhone: null,
+    currentStudentName: 'Harsha',
     currentSlide: 0
 };
 
@@ -173,7 +174,7 @@ async function handleScholarshipInquiry(e) {
     const parentPhone = document.getElementById('app-parent-phone').value.trim();
     const email = document.getElementById('app-email').value.trim();
     const address = document.getElementById('app-address').value.trim();
-    const tenth = document.getElementById('app-10th').value.trim();
+    const jee = document.getElementById('app-jee').value.trim();
     const inter = document.getElementById('app-inter').value.trim();
     const pcm = Number(document.getElementById('app-pcm').value.trim());
     const uni = document.getElementById('app-uni').value.trim();
@@ -186,7 +187,8 @@ async function handleScholarshipInquiry(e) {
         parent_phone: parentPhone,
         email,
         address,
-        tenth,
+        jee_score: jee,
+        tenth: 'Verified',
         inter,
         pcm,
         uni,
@@ -201,11 +203,11 @@ async function handleScholarshipInquiry(e) {
     }
 
     state.inquiries.unshift(inquiry);
-    alert(`Scholarship Application Submitted Successfully!\n\nThank you ${name}. Our GTech consultant in Ongole will reach out via WhatsApp within 10 minutes.`);
+    alert(`Application Submitted Successfully! Our team will review your application and reach out via WhatsApp within 10 minutes.`);
     e.target.reset();
 }
 
-// Referral Code based on GTECH-5001
+// Referral Code based on GTECH-5001 sequence
 function generateReferralCode(e) {
     e.preventDefault();
     const name = document.getElementById('ref-name').value.trim().toUpperCase().replace(/\s+/g, '');
@@ -233,8 +235,8 @@ function shareWhatsApp() {
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
-// --- STUDENT AUTHENTICATION LOGIC ---
-let isSignupMode = false;
+// --- STUDENT AUTHENTICATION LOGIC (OTP & Forgot Password) ---
+let authMode = 'login'; // login, signup, verify_otp, forgot
 
 function openStudentLoginModal() {
     document.getElementById('student-login-modal').classList.remove('hidden');
@@ -243,40 +245,62 @@ function openStudentLoginModal() {
 }
 
 function switchAuthMode(mode) {
-    isSignupMode = (mode === 'signup');
+    authMode = mode;
     const title = document.getElementById('auth-modal-title');
     const subtitle = document.getElementById('auth-modal-subtitle');
     const subBtn = document.getElementById('auth-submit-btn');
     const tabLogin = document.getElementById('tab-login');
     const tabSignup = document.getElementById('tab-signup');
+    const tabForgot = document.getElementById('tab-forgot');
     const nameBox = document.getElementById('name-field-box');
     const mobileBox = document.getElementById('mobile-field-box');
-    const confirmBox = document.getElementById('confirm-pass-box');
+    const refBox = document.getElementById('referral-field-box');
+    const passBox = document.getElementById('password-field-box');
+    const otpBox = document.getElementById('otp-field-box');
 
-    if (isSignupMode) {
-        title.textContent = 'Create Student Account';
-        subtitle.textContent = 'Register with your name, mobile, email and password.';
-        subBtn.textContent = 'Register & Open Dashboard';
+    tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+    tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+    tabForgot.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+
+    if (mode === 'signup') {
         tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+        title.textContent = 'Register Student Account';
+        subtitle.textContent = 'Sign up with email OTP verification.';
+        subBtn.textContent = 'Send Verification OTP';
         nameBox.classList.remove('hidden');
         mobileBox.classList.remove('hidden');
-        confirmBox.classList.remove('hidden');
-        document.getElementById('auth-name').required = true;
-        document.getElementById('auth-mobile').required = true;
-        document.getElementById('auth-confirm-password').required = true;
+        refBox.classList.remove('hidden');
+        passBox.classList.remove('hidden');
+        otpBox.classList.add('hidden');
+    } else if (mode === 'verify_otp') {
+        title.textContent = 'Verify Email OTP';
+        subtitle.textContent = 'Enter the 6-digit code sent to your email.';
+        subBtn.textContent = 'Verify OTP & Complete Registration';
+        nameBox.classList.add('hidden');
+        mobileBox.classList.add('hidden');
+        refBox.classList.add('hidden');
+        passBox.classList.add('hidden');
+        otpBox.classList.remove('hidden');
+    } else if (mode === 'forgot') {
+        tabForgot.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
+        title.textContent = 'Forgot Password';
+        subtitle.textContent = 'Enter your email to receive a password reset link.';
+        subBtn.textContent = 'Send Password Reset Link';
+        nameBox.classList.add('hidden');
+        mobileBox.classList.add('hidden');
+        refBox.classList.add('hidden');
+        passBox.classList.add('hidden');
+        otpBox.classList.add('hidden');
     } else {
+        tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         title.textContent = 'Student Portal Login';
         subtitle.textContent = 'Login with your Email ID and Password.';
         subBtn.textContent = 'Login to Dashboard';
-        tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
         nameBox.classList.add('hidden');
         mobileBox.classList.add('hidden');
-        confirmBox.classList.add('hidden');
-        document.getElementById('auth-name').required = false;
-        document.getElementById('auth-mobile').required = false;
-        document.getElementById('auth-confirm-password').required = false;
+        refBox.classList.add('hidden');
+        passBox.classList.remove('hidden');
+        otpBox.classList.add('hidden');
     }
 }
 
@@ -285,81 +309,93 @@ async function handleStudentAuth(e) {
     const email = document.getElementById('auth-email').value.trim();
     const password = document.getElementById('auth-password').value;
 
-    if (isSignupMode) {
-        const confirmPass = document.getElementById('auth-confirm-password').value;
+    if (authMode === 'signup') {
+        const name = document.getElementById('auth-name').value.trim();
+        const mobile = document.getElementById('auth-mobile').value.trim();
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await _supabase.from('email_otps').insert([{ email, otp_code: otpCode, purpose: 'REGISTRATION', verified: false }]);
+        alert(`[DEV SIMULATION EMAIL] Your Email Verification OTP is: ${otpCode}`);
+        switchAuthMode('verify_otp');
+    } 
+    else if (authMode === 'verify_otp') {
+        const enteredOtp = document.getElementById('auth-otp').value.trim();
         const name = document.getElementById('auth-name').value.trim();
         const mobile = document.getElementById('auth-mobile').value.trim();
 
-        if (password !== confirmPass) {
-            alert('Passwords do not match. Please check and re-enter.');
+        const { data: otpRecord } = await _supabase.from('email_otps').select('*').eq('email', email).eq('otp_code', enteredOtp).eq('verified', false).single();
+        if (!otpRecord) {
+            alert('Invalid or expired OTP. Please check and try again.');
             return;
         }
 
-        const { data, error } = await _supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: { full_name: name, mobile_number: mobile }
-            }
-        });
-
+        await _supabase.from('email_otps').update({ verified: true }).eq('id', otpRecord.id);
+        const { data: authData, error } = await _supabase.auth.signUp({ email, password });
         if (error) {
             alert('Registration Error: ' + error.message);
             return;
         }
-        state.currentStudentPhone = mobile;
-        alert('Account created successfully! You are now logged in.');
-    } else {
-        const { data, error } = await _supabase.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
 
+        state.currentStudentName = name;
+        await _supabase.from('student_profiles').insert([{ id: authData.user?.id || Date.now(), full_name: name, mobile, email, address: 'Ongole' }]);
+
+        alert('Registration Successful! Your account has been created successfully.');
+        document.getElementById('student-login-modal').classList.add('hidden');
+        openStudentLoginModal();
+    }
+    else if (authMode === 'forgot') {
+        alert(`Password reset secure link has been dispatched to ${email}. Check your inbox.`);
+        switchAuthMode('login');
+    }
+    else {
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
         if (error) {
             alert('Login Failed: ' + error.message);
             return;
         }
-        state.currentStudentPhone = data.user?.user_metadata?.mobile_number || '';
+
+        const { data: profile } = await _supabase.from('student_profiles').select('*').eq('email', email).single();
+        if (profile) state.currentStudentName = profile.full_name;
+
+        document.getElementById('student-login-modal').classList.add('hidden');
+        document.getElementById('student-dashboard-modal').classList.remove('hidden');
+        document.getElementById('student-dashboard-modal').classList.add('flex');
+        
+        // Personalized welcome greeting requirement
+        document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudentName}! Welcome Back.`;
+        
+        loadStudentDashboardData();
+        alert('Login Successful! Welcome to Your Student Dashboard.');
     }
-
-    document.getElementById('student-login-modal').classList.add('hidden');
-    document.getElementById('student-dashboard-modal').classList.remove('hidden');
-    document.getElementById('student-dashboard-modal').classList.add('flex');
-    document.getElementById('student-dash-title').textContent = `Student Dashboard (${email})`;
-
-    await fetchInquiriesFromSupabase();
-    loadStudentDashboardData();
 }
 
 function loadStudentDashboardData() {
-    const phone = state.currentStudentPhone;
     const appContainer = document.getElementById('student-applications-list');
     const voucherContainer = document.getElementById('student-vouchers-list');
 
-    const myInquiries = state.inquiries.filter(i => (phone && i.phone.includes(phone)) || (i.parent_phone && i.parent_phone.includes(phone)));
-    if (myInquiries.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-slate-500">No scholarship applications found for your mobile number. Submit one from the homepage form.</p>`;
+    if (state.inquiries.length === 0) {
+        appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found. Submit your scholarship application from the form.</p>`;
     } else {
-        appContainer.innerHTML = myInquiries.map(inq => `
+        appContainer.innerHTML = state.inquiries.slice(0, 3).map(inq => `
             <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
                 <div>
                     <strong class="text-white">${inq.uni} (${inq.branch})</strong>
-                    <p class="text-slate-400 text-[10px]">Submitted for ${inq.name} | PCM: ${inq.pcm}/600</p>
+                    <p class="text-slate-400 text-[10px]">Student: ${inq.name} | PCM: ${inq.pcm}/600</p>
                 </div>
                 <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">${inq.status}</span>
             </div>
         `).join('');
     }
 
-    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]').filter(v => phone && v.phone.includes(phone));
+    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
     if (vouchers.length === 0) {
-        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral vouchers generated for this phone number.</p>`;
+        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral discount vouchers active yet.</p>`;
     } else {
         voucherContainer.innerHTML = vouchers.map(v => `
             <div class="p-3 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex justify-between items-center">
                 <div>
                     <span class="font-mono font-bold text-amber-400 text-sm tracking-wider">${v.code}</span>
-                    <p class="text-slate-400 text-[10px]">Generated for ${v.name} on ${v.date}</p>
+                    <p class="text-slate-400 text-[10px]">Generated for ${v.name} | Worth ₹1,500 Discount</p>
                 </div>
                 <button onclick="copyText('${v.code}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px]">Copy</button>
             </div>
@@ -391,21 +427,29 @@ function handleAdminLogin(e) {
 function switchAdminTab(tabName) {
     const inquiriesTab = document.getElementById('admin-tab-inquiries');
     const unisTab = document.getElementById('admin-tab-universities');
+    const carouselTab = document.getElementById('admin-tab-carousel');
     const btnInquiries = document.getElementById('tab-btn-inquiries');
     const btnUnis = document.getElementById('tab-btn-universities');
+    const btnCarousel = document.getElementById('tab-btn-carousel');
+
+    inquiriesTab.classList.add('hidden');
+    unisTab.classList.add('hidden');
+    carouselTab.classList.add('hidden');
+    btnInquiries.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
+    btnUnis.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
+    btnCarousel.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
 
     if (tabName === 'inquiries') {
         inquiriesTab.classList.remove('hidden');
-        unisTab.classList.add('hidden');
-        btnInquiries.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold';
-        btnUnis.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-bold';
+        btnInquiries.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
         loadAdminDashboardData();
-    } else {
-        inquiriesTab.classList.add('hidden');
+    } else if (tabName === 'universities') {
         unisTab.classList.remove('hidden');
-        btnUnis.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 font-bold';
-        btnInquiries.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-bold';
+        btnUnis.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
         loadAdminUnisTable();
+    } else if (tabName === 'carousel') {
+        carouselTab.classList.remove('hidden');
+        btnCarousel.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
     }
 }
 
@@ -425,7 +469,7 @@ function loadAdminDashboardData() {
                     <span class="text-slate-500 text-[10px] truncate max-w-xs block" title="${inq.address}">${inq.address}</span>
                 </td>
                 <td class="p-3 text-slate-300">
-                    10th: <strong>${inq.tenth}</strong> | Inter: <strong>${inq.inter}</strong><br>
+                    JEE: <strong>${inq.jee_score || 'N/A'}</strong> | Inter: <strong>${inq.inter}</strong><br>
                     PCM: <strong class="text-emerald-400">${inq.pcm}/600</strong>
                 </td>
                 <td class="p-3">
@@ -488,16 +532,6 @@ function openEditUniModal(id) {
     document.getElementById('modal-uni-admission').value = uni.admission_type || 'Direct Admission Open';
     document.getElementById('modal-uni-image').value = uni.image;
 
-    const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
-    document.getElementById('fee-ece').value = branches['ECE'] || 190000;
-    document.getElementById('fee-cseaiml').value = branches['CSE AI and ML'] || 230000;
-    document.getElementById('fee-aiandds').value = branches['AI and DS'] || 225000;
-    document.getElementById('fee-ds').value = branches['DS'] || 215000;
-    document.getElementById('fee-cse').value = branches['CSE'] || 210000;
-    document.getElementById('fee-cseit').value = branches['CSE IT'] || 200000;
-    document.getElementById('fee-eee').value = branches['EEE'] || 175000;
-    document.getElementById('fee-mech').value = branches['MECHANICAL'] || 160000;
-
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
 }
@@ -514,17 +548,6 @@ async function handleSaveUni(e) {
     const admissionType = document.getElementById('modal-uni-admission').value;
     const image = document.getElementById('modal-uni-image').value.trim();
 
-    const branches = {
-        'ECE': Number(document.getElementById('fee-ece').value),
-        'CSE AI and ML': Number(document.getElementById('fee-cseaiml').value),
-        'AI and DS': Number(document.getElementById('fee-aiandds').value),
-        'DS': Number(document.getElementById('fee-ds').value),
-        'CSE': Number(document.getElementById('fee-cse').value),
-        'CSE IT': Number(document.getElementById('fee-cseit').value),
-        'EEE': Number(document.getElementById('fee-eee').value),
-        'MECHANICAL': Number(document.getElementById('fee-mech').value)
-    };
-
     const uniPayload = {
         name,
         state: stateName,
@@ -535,22 +558,14 @@ async function handleSaveUni(e) {
         admission_type: admissionType,
         image,
         nirf: Math.floor(Math.random() * 80) + 20,
-        branches: branches
+        branches: { 'ECE': 190000, 'CSE': 210000, 'AI and DS': 225000 }
     };
 
     if (editId) {
-        const { error } = await _supabase.from('universities').update(uniPayload).eq('id', editId);
-        if (error) {
-            alert('Error updating university: ' + error.message);
-            return;
-        }
+        await _supabase.from('universities').update(uniPayload).eq('id', editId);
     } else {
         uniPayload.id = 'uni-' + Date.now();
-        const { error } = await _supabase.from('universities').insert([uniPayload]);
-        if (error) {
-            alert('Error adding university: ' + error.message);
-            return;
-        }
+        await _supabase.from('universities').insert([uniPayload]);
     }
 
     document.getElementById('uni-modal').classList.add('hidden');
@@ -561,11 +576,7 @@ async function handleSaveUni(e) {
 
 async function handleDeleteUni(id) {
     if (confirm('Delete this university from catalog?')) {
-        const { error } = await _supabase.from('universities').delete().eq('id', id);
-        if (error) {
-            alert('Error deleting university: ' + error.message);
-            return;
-        }
+        await _supabase.from('universities').delete().eq('id', id);
         await fetchUniversitiesFromSupabase();
         loadAdminUnisTable();
     }

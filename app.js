@@ -7,12 +7,15 @@ const state = {
     universities: [],
     inquiries: [],
     students: [],
+    referrals: [],
     currentStudent: null,
     currentSlide: 0,
-    pendingAction: null // Stores action triggered before login (e.g., { type: 'apply', uniName: '...' })
+    pendingAction: null,
+    incomingReferralCode: ''
 };
 
 window.onload = async function() {
+    detectIncomingReferralLink();
     restoreStudentSession();
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
@@ -22,6 +25,33 @@ window.onload = async function() {
         nextSlide();
     }, 4500);
 };
+
+// --- DETECT INCOMING REFERRAL LINK (?ref=GTECH-REF-...) ---
+function detectIncomingReferralLink() {
+    const params = new URLSearchParams(window.location.search);
+    const refParam = params.get('ref');
+    if (refParam) {
+        const cleanCode = refParam.trim().toUpperCase();
+        state.incomingReferralCode = cleanCode;
+        localStorage.setItem('gtech_incoming_ref', cleanCode);
+    } else {
+        const savedRef = localStorage.getItem('gtech_incoming_ref');
+        if (savedRef) state.incomingReferralCode = savedRef;
+    }
+
+    if (state.incomingReferralCode) {
+        const banner = document.getElementById('referral-applied-banner');
+        const bannerCode = document.getElementById('banner-ref-code');
+        if (banner && bannerCode) {
+            bannerCode.textContent = state.incomingReferralCode;
+            banner.classList.remove('hidden');
+        }
+        const authRefInput = document.getElementById('auth-referral-code');
+        const appRefInput = document.getElementById('app-referral-code');
+        if (authRefInput) authRefInput.value = state.incomingReferralCode;
+        if (appRefInput) appRefInput.value = state.incomingReferralCode;
+    }
+}
 
 // --- MODERN UI TOAST NOTIFICATION ---
 let toastTimeout;
@@ -57,7 +87,7 @@ function hideToast() {
     if (toast) toast.classList.add('hidden');
 }
 
-// --- AUTOMATIC PHOTO CROPPER & PREVIEW (CARDS & CAROUSEL) ---
+// --- AUTOMATIC PHOTO CROPPER & PREVIEW ---
 function cropImageFileToBlob(file, targetWidth, targetHeight) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -78,22 +108,17 @@ function cropImageFileToBlob(file, targetWidth, targetHeight) {
                 let offsetY = 0;
 
                 if (imgRatio > targetRatio) {
-                    // Image is wider than target -> crop sides
                     drawWidth = img.height * targetRatio;
                     offsetX = (img.width - drawWidth) / 2;
                 } else {
-                    // Image is taller than target -> crop top & bottom
                     drawHeight = img.width / targetRatio;
                     offsetY = (img.height - drawHeight) / 2;
                 }
 
                 ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, targetWidth, targetHeight);
                 canvas.toBlob((blob) => {
-                    if (blob) {
-                        resolve(blob);
-                    } else {
-                        reject(new Error('Failed to crop image.'));
-                    }
+                    if (blob) resolve(blob);
+                    else reject(new Error('Failed to crop image.'));
                 }, 'image/jpeg', 0.9);
             };
             img.onerror = () => reject(new Error('Invalid image file selected.'));
@@ -109,9 +134,7 @@ async function previewCroppedImage(inputEl, previewImgId, targetWidth, targetHei
     try {
         const blob = await cropImageFileToBlob(inputEl.files[0], targetWidth, targetHeight);
         const previewEl = document.getElementById(previewImgId);
-        if (previewEl) {
-            previewEl.src = URL.createObjectURL(blob);
-        }
+        if (previewEl) previewEl.src = URL.createObjectURL(blob);
         showToast('Photo Cropped', `Image automatically cropped to ${targetWidth}×${targetHeight} fit.`, 'success');
     } catch (err) {
         showToast('Crop Error', err.message, 'error');
@@ -132,7 +155,7 @@ async function uploadCroppedImageToBucket(file, prefix, targetWidth, targetHeigh
         });
 
     if (uploadError) {
-        throw new Error(`Storage upload failed: ${uploadError.message}. Ensure the 'universities' bucket exists and has public policies.`);
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
     }
 
     const { data: publicURLData } = _supabase.storage
@@ -142,7 +165,7 @@ async function uploadCroppedImageToBucket(file, prefix, targetWidth, targetHeigh
     return publicURLData.publicUrl;
 }
 
-// --- CAROUSEL LOGIC (FIXED FOR SLIDE 1 & SLIDE 2) ---
+// --- CAROUSEL LOGIC ---
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
@@ -172,7 +195,6 @@ async function loadActiveCarousel() {
         const carousel = document.getElementById('about-carousel');
         if (!carousel) return;
 
-        // Ensure at least 2 slides exist if only 1 was uploaded in DB
         const slides = [...data];
         if (slides.length === 1) {
             slides.push({
@@ -186,17 +208,16 @@ async function loadActiveCarousel() {
         carousel.style.transform = 'translateX(0%)';
         carousel.innerHTML = slides.map(slide => `
             <div class="w-full h-full shrink-0 relative">
-                <img src="${slide.image_url}" class="w-full h-full object-cover opacity-55" alt="${slide.title}">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title}">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent flex items-end p-3 sm:p-8">
                     <div>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">GTech Admissions</span>
-                        <h4 class="text-xl sm:text-2xl font-black text-white mt-1">${slide.title}</h4>
+                        <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">GTech Admissions</span>
+                        <h4 class="text-xs sm:text-2xl font-black text-white mt-0.5 sm:mt-1 line-clamp-1">${slide.title}</h4>
                     </div>
                 </div>
             </div>
         `).join('');
 
-        // Update admin previews if present
         data.forEach(slide => {
             const prevImg = document.getElementById(`carousel-preview-${slide.id}`);
             const titleInput = document.getElementById(`carousel-title-${slide.id}`);
@@ -239,7 +260,7 @@ async function handleUploadCarousel(slideNum) {
     }
 }
 
-// --- UNIVERSITIES & CATALOG ---
+// --- UNIVERSITIES & CATALOG (MOBILE + DESKTOP RESPONSIVE 16:9 CARDS) ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -252,16 +273,17 @@ async function fetchUniversitiesFromSupabase() {
 
 async function fetchInquiriesFromSupabase() {
     const { data, error } = await _supabase.from('inquiries').select('*').order('created_at', { ascending: false });
-    if (!error) {
-        state.inquiries = data || [];
-    }
+    if (!error) state.inquiries = data || [];
 }
 
 async function fetchRegisteredStudentsFromSupabase() {
     const { data, error } = await _supabase.from('student_profiles').select('*').order('created_at', { ascending: false });
-    if (!error) {
-        state.students = data || [];
-    }
+    if (!error) state.students = data || [];
+}
+
+async function fetchReferralsFromSupabase() {
+    const { data, error } = await _supabase.from('referral_vouchers').select('*').order('created_at', { ascending: false });
+    if (!error) state.referrals = data || [];
 }
 
 function setStateFilter(stateName) {
@@ -332,13 +354,14 @@ function renderUniversities() {
         return `
             <div class="bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-indigo-500/40 transition duration-300 flex flex-col justify-between">
                 <div>
-                    <div class="relative h-44 w-full overflow-hidden bg-slate-950">
-                        <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                        <span class="absolute top-3 left-3 px-3 py-1 rounded-xl text-[10px] font-bold bg-slate-950/80 backdrop-blur-md text-indigo-300 border border-slate-800">${uni.state}</span>
-                        <div class="absolute top-3 right-3 flex gap-1.5">
-                            <span class="text-[10px] font-mono font-bold text-white bg-slate-950/80 backdrop-blur-md px-2 py-1 rounded-lg border border-slate-800">NIRF #${uni.nirf || 50}</span>
-                            <span class="text-[10px] font-bold px-2 py-1 rounded-lg border ${badgeClass}">${badgeType}</span>
+                    <!-- Responsive 16:9 Card Photo Container (No Cropping on Mobile or Laptop) -->
+                    <div class="relative aspect-[16/9] w-full overflow-hidden bg-slate-950">
+                        <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                        <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-slate-950/85 backdrop-blur-md text-indigo-300 border border-slate-800">${uni.state}</span>
+                        <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
+                            <span class="text-[10px] font-mono font-bold text-white bg-slate-950/85 backdrop-blur-md px-2 py-0.5 rounded-lg border border-slate-800">NIRF #${uni.nirf || 50}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border backdrop-blur-md ${badgeClass}">${badgeType}</span>
                         </div>
                     </div>
 
@@ -379,12 +402,12 @@ function renderUniversities() {
     }).join('');
 }
 
-// --- AUTH GATE FOR APPLY & SCHOLARSHIP ---
+// --- AUTH GATE FOR APPLY, SCHOLARSHIP & REFERRAL ---
 function requireAuthForApply(e) {
     if (e) e.preventDefault();
     if (!state.currentStudent) {
         state.pendingAction = { type: 'apply', uniName: '' };
-        showToast('Login Required', 'Please login or register to apply for scholarships.', 'error');
+        showToast('Login Required', 'Please login or register first to apply.', 'error');
         openStudentLoginModal();
         return;
     }
@@ -395,7 +418,7 @@ function requireAuthForApply(e) {
 function selectUniForScholarship(uniName) {
     if (!state.currentStudent) {
         state.pendingAction = { type: 'apply', uniName: uniName };
-        showToast('Login Required', 'Please login or register to request a scholarship or expert call.', 'error');
+        showToast('Login Required', 'Please login or register first to request a scholarship or expert call.', 'error');
         openStudentLoginModal();
         return;
     }
@@ -409,9 +432,13 @@ function prefillScholarshipFormWithStudent() {
     const nameEl = document.getElementById('app-name');
     const phoneEl = document.getElementById('app-phone');
     const emailEl = document.getElementById('app-email');
+    const refEl = document.getElementById('app-referral-code');
     if (nameEl && !nameEl.value) nameEl.value = state.currentStudent.full_name || '';
     if (phoneEl && !phoneEl.value) phoneEl.value = state.currentStudent.mobile || '';
     if (emailEl && !emailEl.value) emailEl.value = state.currentStudent.email || '';
+    if (refEl && !refEl.value) {
+        refEl.value = state.currentStudent.referred_by_code || state.incomingReferralCode || '';
+    }
 }
 
 async function handleScholarshipInquiry(e) {
@@ -434,6 +461,7 @@ async function handleScholarshipInquiry(e) {
     const pcm = Number(document.getElementById('app-pcm').value.trim());
     const uni = document.getElementById('app-uni').value.trim();
     const branch = document.getElementById('app-branch').value;
+    const referralCode = document.getElementById('app-referral-code').value.trim().toUpperCase();
 
     const inquiry = {
         id: Date.now(),
@@ -447,6 +475,7 @@ async function handleScholarshipInquiry(e) {
         pcm,
         uni,
         branch,
+        referral_code: referralCode || null,
         status: 'Pending Callback'
     };
 
@@ -462,31 +491,67 @@ async function handleScholarshipInquiry(e) {
     prefillScholarshipFormWithStudent();
 }
 
-function generateReferralCode(e) {
-    e.preventDefault();
-    const name = document.getElementById('ref-name').value.trim().toUpperCase().replace(/\s+/g, '');
-    const phone = document.getElementById('ref-phone').value.trim();
-    const code = `GTECH-5001-${name}-${phone.slice(-4)}`;
+// --- 5-STEP REFERRAL SYSTEM (LOGIN REQUIRED FIRST) ---
+async function handleGenerateReferralClick() {
+    if (!state.currentStudent) {
+        state.pendingAction = { type: 'referral' };
+        showToast('Login Required', 'Please login or register first to generate your GTech referral link.', 'error');
+        openStudentLoginModal();
+        return;
+    }
+
+    const stu = state.currentStudent;
+    const cleanName = stu.full_name.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'STUDENT';
+    const last4 = (stu.mobile || '5001').slice(-4);
+    const code = `GTECH-REF-${cleanName}-${last4}`;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const shareUrl = `${baseUrl}?ref=${encodeURIComponent(code)}`;
+
+    // Save or fetch from Supabase referral_vouchers table
+    const { error } = await _supabase.from('referral_vouchers').upsert([
+        {
+            student_phone: stu.mobile,
+            student_name: stu.full_name,
+            referrer_email: stu.email,
+            code: code,
+            status: 'ACTIVE',
+            reward_status: 'Pending Friend Admission'
+        }
+    ], { onConflict: 'code' });
+
+    if (error) {
+        console.warn('Referral DB sync note:', error.message);
+    }
 
     document.getElementById('generated-code-display').textContent = code;
+    document.getElementById('generated-link-display').textContent = shareUrl;
     document.getElementById('generated-code-box').classList.remove('hidden');
+    document.getElementById('referral-section').scrollIntoView({ behavior: 'smooth' });
 
-    let vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
-    vouchers.unshift({ phone, code, name, date: new Date().toLocaleDateString() });
-    localStorage.setItem('gtech_vouchers', JSON.stringify(vouchers));
-
-    showToast('Voucher Generated', 'Your referral concession code is ready below.', 'success');
+    showToast('Referral Link Ready', 'Share your unique referral link via WhatsApp or Instagram!', 'success');
 }
 
-function copyText(txt) {
-    navigator.clipboard.writeText(txt);
-    showToast('Copied', `Copied to clipboard: ${txt}`, 'success');
+function copyReferralLink() {
+    const link = document.getElementById('generated-link-display').textContent;
+    if (!link) return;
+    navigator.clipboard.writeText(link);
+    showToast('Link Copied', 'Referral link copied! Paste it in WhatsApp, Instagram bio/DM, or SMS.', 'success');
 }
 
 function shareWhatsApp() {
     const code = document.getElementById('generated-code-display').textContent;
-    const text = encodeURIComponent(`Hey! Use my referral code *${code}* on GTech Admissions to get instant fee concessions and free campus visits!`);
+    const link = document.getElementById('generated-link-display').textContent;
+    const text = encodeURIComponent(`Hey! Apply for B.Tech / Engineering admissions through GTech Admissions using my referral link:\n${link}\n\nReferral Coupon Code: *${code}*\nUnlock merit scholarships & fee concessions!`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+}
+
+function shareInstagram() {
+    const link = document.getElementById('generated-link-display').textContent;
+    navigator.clipboard.writeText(link);
+    showToast('Link Copied for Instagram', 'Your referral link is copied! Opening Instagram so you can paste & share it in DM or Story.', 'success');
+    setTimeout(() => {
+        window.open('https://www.instagram.com/', '_blank');
+    }, 800);
 }
 
 // --- PASSWORDLESS & OTP-FREE STUDENT AUTHENTICATION ---
@@ -507,6 +572,7 @@ function switchAuthMode(mode) {
     const tabSignup = document.getElementById('tab-signup');
     const nameBox = document.getElementById('name-field-box');
     const mobileBox = document.getElementById('mobile-field-box');
+    const refBox = document.getElementById('referral-field-box');
     const nameInput = document.getElementById('auth-name');
     const mobileInput = document.getElementById('auth-mobile');
 
@@ -514,12 +580,16 @@ function switchAuthMode(mode) {
         tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
         title.textContent = 'Register with GTech';
-        subtitle.textContent = 'Enter your Name, Email, and Phone Number.';
+        subtitle.textContent = 'Enter your Name, Email, Phone Number & optional Referral Coupon.';
         subBtn.textContent = 'Register Now';
         nameBox.classList.remove('hidden');
         mobileBox.classList.remove('hidden');
+        refBox.classList.remove('hidden');
         nameInput.required = true;
         mobileInput.required = true;
+        if (state.incomingReferralCode) {
+            document.getElementById('auth-referral-code').value = state.incomingReferralCode;
+        }
     } else {
         tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
@@ -528,6 +598,7 @@ function switchAuthMode(mode) {
         subBtn.textContent = 'Login with Email';
         nameBox.classList.add('hidden');
         mobileBox.classList.add('hidden');
+        refBox.classList.add('hidden');
         nameInput.required = false;
         mobileInput.required = false;
     }
@@ -540,13 +611,15 @@ async function handleStudentAuth(e) {
     if (authMode === 'signup') {
         const name = document.getElementById('auth-name').value.trim();
         const mobile = document.getElementById('auth-mobile').value.trim();
+        const refCoupon = document.getElementById('auth-referral-code').value.trim().toUpperCase();
 
         const studentRecord = {
             id: 'stu_' + Date.now(),
             full_name: name,
             mobile: mobile,
             email: email,
-            address: 'Ongole'
+            address: 'Ongole',
+            referred_by_code: refCoupon || state.incomingReferralCode || null
         };
 
         const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
@@ -583,10 +656,14 @@ async function handleStudentAuth(e) {
         if (state.pendingAction) {
             const action = state.pendingAction;
             state.pendingAction = null;
-            if (action.uniName) {
-                document.getElementById('app-uni').value = action.uniName;
+            if (action.type === 'referral') {
+                handleGenerateReferralClick();
+            } else {
+                if (action.uniName) {
+                    document.getElementById('app-uni').value = action.uniName;
+                }
+                document.getElementById('apply').scrollIntoView({ behavior: 'smooth' });
             }
-            document.getElementById('apply').scrollIntoView({ behavior: 'smooth' });
         } else {
             openStudentDashboardModal();
         }
@@ -625,6 +702,8 @@ async function openStudentDashboardModal() {
         return;
     }
     await fetchInquiriesFromSupabase();
+    await fetchReferralsFromSupabase();
+
     document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudent.full_name}! Welcome Back.`;
     document.getElementById('student-dash-email').textContent = `Email: ${state.currentStudent.email} | Phone: ${state.currentStudent.mobile}`;
 
@@ -657,17 +736,21 @@ function loadStudentDashboardData() {
         `).join('');
     }
 
-    const vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
-    if (vouchers.length === 0) {
-        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">No referral discount vouchers active yet.</p>`;
+    const myReferrals = state.referrals.filter(r =>
+        (r.referrer_email && stu.email && r.referrer_email.toLowerCase() === stu.email.toLowerCase()) ||
+        (r.student_phone && stu.mobile && r.student_phone === stu.mobile)
+    );
+
+    if (myReferrals.length === 0) {
+        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">Click "+ Get / View My Referral Link" above to generate your unique GTech referral ID & share link.</p>`;
     } else {
-        voucherContainer.innerHTML = vouchers.map(v => `
-            <div class="p-3 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex justify-between items-center">
+        voucherContainer.innerHTML = myReferrals.map(v => `
+            <div class="p-3.5 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                     <span class="font-mono font-bold text-amber-400 text-sm tracking-wider">${v.code}</span>
-                    <p class="text-slate-400 text-[10px]">Generated for ${v.name} | Worth ₹1,500 Discount</p>
+                    <p class="text-slate-400 text-[10px] mt-0.5">Status: <strong class="text-emerald-300">${v.reward_status || 'Pending Friend Admission'}</strong></p>
                 </div>
-                <button onclick="copyText('${v.code}')" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px]">Copy</button>
+                <button onclick="navigator.clipboard.writeText('${window.location.origin + window.location.pathname}?ref=${v.code}'); showToast('Copied', 'Referral link copied!', 'success');" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px] shrink-0">Copy Referral Link</button>
             </div>
         `).join('');
     }
@@ -690,6 +773,7 @@ async function handleAdminLogin(e) {
         document.getElementById('admin-dashboard-modal').classList.add('flex');
         await fetchInquiriesFromSupabase();
         await fetchRegisteredStudentsFromSupabase();
+        await fetchReferralsFromSupabase();
         loadAdminDashboardData();
         showToast('Admin Authenticated', 'Welcome to the GTech Admin Control Panel.', 'success');
     } else {
@@ -698,7 +782,7 @@ async function handleAdminLogin(e) {
 }
 
 async function switchAdminTab(tabName) {
-    const tabs = ['inquiries', 'students', 'universities', 'carousel'];
+    const tabs = ['inquiries', 'students', 'referrals', 'universities', 'carousel'];
     tabs.forEach(t => {
         const panel = document.getElementById(`admin-tab-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
@@ -717,6 +801,9 @@ async function switchAdminTab(tabName) {
     } else if (tabName === 'students') {
         await fetchRegisteredStudentsFromSupabase();
         loadAdminStudentsTable();
+    } else if (tabName === 'referrals') {
+        await fetchReferralsFromSupabase();
+        loadAdminReferralsTable();
     } else if (tabName === 'universities') {
         loadAdminUnisTable();
     }
@@ -725,7 +812,7 @@ async function switchAdminTab(tabName) {
 function loadAdminDashboardData() {
     const tbody = document.getElementById('admin-inquiries-tbody');
     if (state.inquiries.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No student scholarship inquiries yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No student scholarship inquiries yet.</td></tr>`;
         return;
     }
 
@@ -761,6 +848,9 @@ function loadAdminDashboardData() {
                 <td class="p-3">
                     <strong class="text-white">${inq.uni}</strong>
                     <span class="text-indigo-400 font-bold block">${inq.branch}</span>
+                </td>
+                <td class="p-3">
+                    ${inq.referral_code ? `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px] border border-amber-500/30">${inq.referral_code}</span>` : '<span class="text-slate-600">—</span>'}
                 </td>
                 <td class="p-3">
                     <select onchange="updateInquiryStatus(${inq.id}, this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 focus:outline-none focus:border-indigo-500">
@@ -806,11 +896,60 @@ function loadAdminStudentsTable() {
                 <td class="p-3 font-bold text-white">${stu.full_name}</td>
                 <td class="p-3 text-indigo-300 font-mono">${stu.email}</td>
                 <td class="p-3 text-emerald-300 font-mono"><a href="tel:${stu.mobile}" class="hover:underline">${stu.mobile}</a></td>
-                <td class="p-3 text-slate-400">${stu.address || 'Ongole'}</td>
+                <td class="p-3">${stu.referred_by_code ? `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px]">${stu.referred_by_code}</span>` : '<span class="text-slate-600">Direct</span>'}</td>
                 <td class="p-3 text-slate-400">${regDate}</td>
             </tr>
         `;
     }).join('');
+}
+
+function loadAdminReferralsTable() {
+    const tbody = document.getElementById('admin-referrals-tbody');
+    if (state.referrals.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No student referral IDs generated yet.</td></tr>`;
+        return;
+    }
+
+    const rewardStatuses = [
+        'Pending Friend Admission',
+        'Friend Applied - Under Verification',
+        'Admission Confirmed - Reward Approved',
+        'Reward Paid / Credited'
+    ];
+
+    tbody.innerHTML = state.referrals.map(ref => {
+        const currentReward = ref.reward_status || 'Pending Friend Admission';
+        const optionsHtml = rewardStatuses.map(opt =>
+            `<option value="${opt}" ${currentReward === opt ? 'selected' : ''}>${opt}</option>`
+        ).join('');
+
+        return `
+            <tr class="hover:bg-slate-900/60">
+                <td class="p-3 font-bold text-white">${ref.student_name}</td>
+                <td class="p-3 text-slate-300 font-mono">${ref.student_phone}<br><span class="text-[10px] text-slate-500">${ref.referrer_email || ''}</span></td>
+                <td class="p-3 font-mono font-bold text-amber-400">${ref.code}</td>
+                <td class="p-3">
+                    <select onchange="updateReferralRewardStatus('${ref.code}', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-amber-300 focus:outline-none focus:border-amber-400">
+                        ${optionsHtml}
+                    </select>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function updateReferralRewardStatus(code, newRewardStatus) {
+    const { error } = await _supabase
+        .from('referral_vouchers')
+        .update({ reward_status: newRewardStatus })
+        .eq('code', code);
+
+    if (error) {
+        showToast('Update Failed', error.message, 'error');
+        return;
+    }
+
+    showToast('Referral Updated', `Referral ${code} updated to "${newRewardStatus}".`, 'success');
 }
 
 function loadAdminUnisTable() {
@@ -971,6 +1110,7 @@ window.openAdminModal = openAdminModal;
 window.handleAdminLogin = handleAdminLogin;
 window.switchAdminTab = switchAdminTab;
 window.updateInquiryStatus = updateInquiryStatus;
+window.updateReferralRewardStatus = updateReferralRewardStatus;
 window.openAddUniModal = openAddUniModal;
 window.openEditUniModal = openEditUniModal;
 window.handleSaveUni = handleSaveUni;
@@ -978,9 +1118,10 @@ window.handleDeleteUni = handleDeleteUni;
 window.setStateFilter = setStateFilter;
 window.selectUniForScholarship = selectUniForScholarship;
 window.handleScholarshipInquiry = handleScholarshipInquiry;
-window.generateReferralCode = generateReferralCode;
-window.copyText = copyText;
+window.handleGenerateReferralClick = handleGenerateReferralClick;
+window.copyReferralLink = copyReferralLink;
 window.shareWhatsApp = shareWhatsApp;
+window.shareInstagram = shareInstagram;
 window.nextSlide = nextSlide;
 window.prevSlide = prevSlide;
 window.handleUploadCarousel = handleUploadCarousel;

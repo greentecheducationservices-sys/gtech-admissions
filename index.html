@@ -16,20 +16,20 @@
         <i class="fa-solid fa-gift mr-1"></i> Referral Coupon <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Register & submit your admission enquiry.
     </div>
 
-    <!-- Responsive Student Navigation Header (Clean Mobile & Desktop Fit) -->
+    <!-- Responsive Student Navigation Header -->
     <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/90 shadow-lg shadow-slate-950/60">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:h-20 flex flex-wrap items-center justify-between gap-2">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
             <!-- Brand Identity -->
-            <a href="#" class="flex items-center space-x-2.5 shrink-0 group">
-                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-base sm:text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition">
+            <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-base sm:text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition shrink-0">
                     G
                 </div>
-                <div>
+                <div class="min-w-0">
                     <div class="flex items-center gap-1.5">
-                        <span class="font-black text-sm sm:text-lg tracking-tight text-white">GTech Admissions</span>
+                        <span class="font-black text-sm sm:text-lg tracking-tight text-white truncate">GTech Admissions</span>
                         <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">2026–27</span>
                     </div>
-                    <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-tight">Student Admissions & Scholarship Hub</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-tight truncate">Student Admissions & Scholarship Hub</p>
                 </div>
             </a>
 
@@ -43,7 +43,7 @@
 
             <!-- Student Actions -->
             <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 max-w-[140px] sm:max-w-none">
+                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 max-w-[148px] sm:max-w-none">
                     <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
                     <span id="header-student-name" class="truncate">Dashboard</span>
                 </button>
@@ -59,18 +59,18 @@
             </div>
         </div>
 
-        <!-- Mobile Quick Sub-Navigation Strip -->
-        <div class="flex md:hidden items-center justify-around border-t border-slate-900 bg-slate-950/95 px-2 py-1.5 text-[11px] font-bold text-slate-400">
-            <a href="#about" class="px-2 py-1 hover:text-white transition">About</a>
-            <a href="#universities" class="px-2 py-1 hover:text-white transition">Universities</a>
-            <a href="#referral-section" class="px-2 py-1 text-amber-400 hover:text-amber-300 transition">Refer & Earn</a>
-            <a href="#apply" onclick="requireAuthForApply(event)" class="px-2 py-1 text-indigo-400 hover:text-indigo-300 transition">Scholarship</a>
+        <!-- Clean Pill Sub-Navigation Strip for Mobile -->
+        <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-slate-900 bg-slate-950/95 px-3 py-2 text-[11px] font-bold scrollbar-none">
+            <a href="#about" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white whitespace-nowrap shrink-0 transition">About</a>
+            <a href="#universities" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 hover:border-indigo-500/50 whitespace-nowrap shrink-0 transition">Universities</a>
+            <a href="#referral-section" class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 whitespace-nowrap shrink-0 transition">Refer & Earn</a>
+            <a href="#apply" onclick="requireAuthForApply(event)" class="px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/25 whitespace-nowrap shrink-0 transition">Scholarship</a>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
-        <div class="max-w-4xl mx-auto text-center space-y-4">
+    <section class="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
+        <div class="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
             <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certified Educational Admissions Consultancy
             </span>
@@ -83,16 +83,16 @@
         </div>
     </section>
 
-    <!-- ABOUT GTECH WITH CLEAN CAROUSEL ONLY (NO TEXT FLASH ON LOAD) -->
-    <section id="about" class="py-12 sm:py-14 bg-slate-950 border-b border-slate-900">
+    <!-- ABOUT GTECH WITH CLEAN CAROUSEL ONLY -->
+    <section id="about" class="py-10 sm:py-14 bg-slate-950 border-b border-slate-900">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto space-y-2 mb-8">
+            <div class="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Why Choose GTech</span>
                 <h3 class="text-xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
             </div>
 
-            <!-- Carousel Container Only (Populated Directly from Supabase Without Old Text Flash) -->
-            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 sm:mb-12 shadow-2xl">
+            <!-- Carousel Container Only -->
+            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-8 sm:mb-12 shadow-2xl">
                 <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700 bg-slate-900">
                     <div class="w-full h-full shrink-0 bg-slate-900 animate-pulse"></div>
                 </div>
@@ -174,8 +174,8 @@
     </section>
 
     <!-- Region Selector Filter -->
-    <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-12 pb-6">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6">
+    <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Institutional Database</span>
                 <h3 class="text-xl sm:text-2xl font-black text-white mt-1">University & Branch Fee Matrix</h3>
@@ -186,26 +186,26 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none">
-            <button onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition whitespace-nowrap shrink-0">All Regions</button>
-            <button onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-amber-500/40 text-amber-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-file-lines mr-1"></i> Entrance Exams</button>
-            <button onclick="setStateFilter('Application Only')" data-state="Application Only" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-blue-500/40 text-blue-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-pen-to-square mr-1"></i> Application Only</button>
-            <button onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
-            <button onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Telangana</button>
-            <button onclick="setStateFilter('Chennai')" data-state="Chennai" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Chennai</button>
-            <button onclick="setStateFilter('Karnataka')" data-state="Karnataka" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Karnataka</button>
-            <button onclick="setStateFilter('UP')" data-state="UP" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">UP</button>
-            <button onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Maharashtra</button>
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
+            <button onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition whitespace-nowrap shrink-0">All Regions</button>
+            <button onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-amber-500/40 text-amber-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-file-lines mr-1"></i> Entrance Exams</button>
+            <button onclick="setStateFilter('Application Only')" data-state="Application Only" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-blue-500/40 text-blue-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-pen-to-square mr-1"></i> Application Only</button>
+            <button onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
+            <button onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Telangana</button>
+            <button onclick="setStateFilter('Chennai')" data-state="Chennai" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Chennai</button>
+            <button onclick="setStateFilter('Karnataka')" data-state="Karnataka" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Karnataka</button>
+            <button onclick="setStateFilter('UP')" data-state="UP" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">UP</button>
+            <button onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Maharashtra</button>
         </div>
     </section>
 
     <!-- Universities Grid Container -->
-    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
         <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
 
     <!-- Scholarship Inquiry / Application Form Section -->
-    <section id="apply" class="py-16 bg-slate-950 border-t border-slate-900">
+    <section id="apply" class="py-14 sm:py-16 bg-slate-950 border-t border-slate-900">
         <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-10 shadow-2xl">
                 <div class="text-center space-y-1.5 mb-6">
@@ -290,8 +290,8 @@
     </section>
 
     <!-- 5-STEP STUDENT REFERRAL PROGRAM SECTION -->
-    <section id="referral-section" class="py-16 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
-        <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-10">
+    <section id="referral-section" class="py-14 sm:py-16 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
             <div class="text-center max-w-2xl mx-auto space-y-2">
                 <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">GTech Student Referral Program</span>
                 <h3 class="text-2xl sm:text-3xl font-black text-white">Refer Friends & Earn Admission Rewards</h3>
@@ -410,10 +410,9 @@
         </div>
     </div>
 
-    <!-- RESPONSIVE MOBILE-FRIENDLY STUDENT DASHBOARD MODAL (NO SIDE SCROLL / NO ZOOM NEEDED) -->
+    <!-- RESPONSIVE MOBILE-FRIENDLY STUDENT DASHBOARD MODAL -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
         <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Dashboard Top Bar -->
             <div class="p-3.5 sm:p-5 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 shrink-0">
@@ -429,9 +428,7 @@
                 </button>
             </div>
 
-            <!-- Scrollable Dashboard Body (Strictly Fitted to Screen Width) -->
             <div class="p-3.5 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-4 sm:space-y-6">
-                <!-- Admission Process Flow Tracker -->
                 <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
@@ -442,7 +439,6 @@
                     <div id="admission-process-flow" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
                 </div>
 
-                <!-- My Scholarship Applications & Status -->
                 <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
                     <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-file-circle-check"></i> My Scholarship Applications & Status
@@ -450,7 +446,6 @@
                     <div id="student-applications-list" class="space-y-2"></div>
                 </div>
 
-                <!-- My Referral ID, Link & Reward Note -->
                 <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
@@ -461,7 +456,6 @@
                         </button>
                     </div>
 
-                    <!-- Referral Usage Note -->
                     <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 flex items-start gap-2">
                         <i class="fa-solid fa-circle-info text-amber-400 mt-0.5 shrink-0"></i>
                         <div class="leading-relaxed">
@@ -476,8 +470,8 @@
     </div>
 
     <!-- ADMIN LOGIN MODAL -->
-    <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl relative">
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl max-w-sm w-full shadow-2xl relative">
             <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
             <div class="text-center space-y-2 mb-5">
                 <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🔒</div>
@@ -498,29 +492,34 @@
         </div>
     </div>
 
-    <!-- ADMIN DASHBOARD MODAL -->
-    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">📊</div>
-                    <div>
-                        <h3 class="font-black text-white text-sm">GTech Admin & University Fee Control</h3>
-                        <p class="text-[10px] text-slate-400">Manage student signups, call statuses, referral verifications, branch fees, universities, and carousel banners.</p>
+    <!-- RESPONSIVE MOBILE + DESKTOP ADMIN DASHBOARD MODAL -->
+    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-x-hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-3.5 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">📊</div>
+                    <div class="min-w-0">
+                        <h3 class="font-black text-white text-xs sm:text-sm truncate">GTech Admin & Fee Control</h3>
+                        <p class="text-[10px] text-slate-400 truncate hidden sm:block">Manage student signups, call statuses, referral verifications, branch fees, universities, and carousel banners.</p>
                     </div>
                 </div>
-                <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Close</button>
+                <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-[11px] text-rose-300 font-bold shrink-0">Close</button>
             </div>
-            <div class="flex border-b border-slate-800 bg-slate-950 px-4 sm:px-5 gap-4 sm:gap-5 text-xs font-bold overflow-x-auto">
-                <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap">Student Scholarship Leads</button>
-                <button onclick="switchAdminTab('students')" id="tab-btn-students" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Registered Students</button>
-                <button onclick="switchAdminTab('referrals')" id="tab-btn-referrals" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Referral Rewards</button>
-                <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Universities</button>
-                <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Carousel</button>
+
+            <!-- Scrollable Admin Tabs -->
+            <div class="flex border-b border-slate-800 bg-slate-950 px-3 sm:px-5 gap-2 sm:gap-5 text-[11px] sm:text-xs font-bold overflow-x-auto scrollbar-none">
+                <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap shrink-0">Leads</button>
+                <button onclick="switchAdminTab('students')" id="tab-btn-students" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Students</button>
+                <button onclick="switchAdminTab('referrals')" id="tab-btn-referrals" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Referrals</button>
+                <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Universities</button>
+                <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Carousel</button>
             </div>
-            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
-                <div id="admin-tab-inquiries" class="space-y-4">
-                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+
+            <div class="p-3 sm:p-5 overflow-y-auto overflow-x-hidden flex-1 space-y-4">
+                <!-- Leads Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-inquiries" class="space-y-3">
+                    <div id="admin-inquiries-mobile" class="md:hidden space-y-3"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
@@ -537,12 +536,14 @@
                     </div>
                 </div>
 
-                <div id="admin-tab-students" class="space-y-4 hidden">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-white text-xs">Registered Student Signup Accounts</h4>
+                <!-- Registered Students Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-students" class="space-y-3 hidden">
+                    <div class="flex justify-between items-center gap-2">
+                        <h4 class="font-bold text-white text-xs">Registered Students</h4>
                         <span id="total-students-count" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">0 Students</span>
                     </div>
-                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                    <div id="admin-students-mobile" class="md:hidden space-y-2.5"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
@@ -558,11 +559,11 @@
                     </div>
                 </div>
 
-                <div id="admin-tab-referrals" class="space-y-4 hidden">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-white text-xs">Student Referral IDs & Reward Verification</h4>
-                    </div>
-                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                <!-- Referrals Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-referrals" class="space-y-3 hidden">
+                    <h4 class="font-bold text-white text-xs">Student Referral IDs & Reward Verification</h4>
+                    <div id="admin-referrals-mobile" class="md:hidden space-y-2.5"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
@@ -577,12 +578,14 @@
                     </div>
                 </div>
 
-                <div id="admin-tab-universities" class="space-y-4 hidden">
-                    <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-white text-xs">University Catalog & Fee Matrix Control</h4>
+                <!-- Universities Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-universities" class="space-y-3 hidden">
+                    <div class="flex justify-between items-center gap-2">
+                        <h4 class="font-bold text-white text-xs">University Catalog & Fees</h4>
                         <button onclick="openAddUniModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition">+ Add University</button>
                     </div>
-                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                    <div id="admin-unis-mobile" class="md:hidden space-y-2.5"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
@@ -598,12 +601,11 @@
                     </div>
                 </div>
 
+                <!-- Carousel Tab -->
                 <div id="admin-tab-carousel" class="space-y-4 hidden">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h4 class="font-bold text-white text-xs">Manage Carousel Slides (Auto-Cropped to 1600×640 Banner Size)</h4>
-                            <p class="text-[10px] text-slate-400">Any uploaded photo is automatically center-cropped to fit the exact carousel banner aspect ratio.</p>
-                        </div>
+                    <div>
+                        <h4 class="font-bold text-white text-xs">Manage Carousel Slides (Auto-Cropped to 1600×640 Banner Size)</h4>
+                        <p class="text-[10px] text-slate-400">Any uploaded photo is automatically center-cropped to fit the exact carousel banner aspect ratio.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
@@ -631,8 +633,8 @@
     </div>
 
     <!-- ADD / EDIT UNIVERSITY MODAL -->
-    <div id="uni-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <div id="uni-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button onclick="document.getElementById('uni-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
             <h3 id="uni-modal-title" class="text-base font-black text-white mb-3">Add University & Fees</h3>
             <form onsubmit="handleSaveUni(event)" class="space-y-3">
@@ -672,7 +674,7 @@
                         <input type="number" id="modal-uni-appfee" required placeholder="1200" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-300 mb-1">Service Mode *</label>
                         <select id="modal-uni-admission" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">

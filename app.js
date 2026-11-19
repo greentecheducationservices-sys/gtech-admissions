@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const state = {
@@ -15,11 +15,45 @@ window.onload = async function() {
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
     await loadActiveCarousel();
-    
+
     setInterval(() => {
         nextSlide();
     }, 4000);
 };
+
+// --- MODERN UI TOAST NOTIFICATION ---
+let toastTimeout;
+function showToast(title, message, type = 'success') {
+    const toast = document.getElementById('gtech-toast');
+    const icon = document.getElementById('gtech-toast-icon');
+    const titleEl = document.getElementById('gtech-toast-title');
+    const msgEl = document.getElementById('gtech-toast-msg');
+
+    if (!toast) return;
+
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    if (type === 'error') {
+        toast.className = 'fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl bg-slate-900 border border-rose-500/60 text-white shadow-2xl shadow-rose-500/10 max-w-sm transition-all duration-300';
+        icon.className = 'w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 font-bold text-sm';
+        icon.textContent = '!';
+    } else {
+        toast.className = 'fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl bg-slate-900 border border-emerald-500/60 text-white shadow-2xl shadow-emerald-500/10 max-w-sm transition-all duration-300';
+        icon.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm';
+        icon.textContent = '✓';
+    }
+
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        hideToast();
+    }, 4500);
+}
+
+function hideToast() {
+    const toast = document.getElementById('gtech-toast');
+    if (toast) toast.classList.add('hidden');
+}
 
 // --- CAROUSEL LOGIC ---
 function nextSlide() {
@@ -57,7 +91,6 @@ async function loadActiveCarousel() {
     }
 }
 
-// Helper for Storage Image Uploads (with clear diagnostics)
 async function uploadImageToBucket(file, prefix) {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const filePath = `${prefix}_${Date.now()}_${safeName}`;
@@ -85,9 +118,9 @@ async function handleUploadCarousel(slideNum) {
     const fileInput = document.getElementById(`carousel-file-${slideNum}`);
     const titleInput = document.getElementById(`carousel-title-${slideNum}`);
     const btn = document.getElementById(`btn-upload-carousel-${slideNum}`);
-    
+
     if (!fileInput.files || !fileInput.files[0]) {
-        alert(`Please select an image file for Photo ${slideNum}.`);
+        showToast('Missing File', `Please select an image file for Photo ${slideNum}.`, 'error');
         return;
     }
 
@@ -103,11 +136,11 @@ async function handleUploadCarousel(slideNum) {
 
         if (dbError) throw new Error(dbError.message);
 
-        alert(`Carousel Photo ${slideNum} uploaded and updated successfully!`);
+        showToast('Carousel Updated', `Carousel Photo ${slideNum} uploaded and updated successfully!`, 'success');
         fileInput.value = '';
         await loadActiveCarousel();
     } catch (err) {
-        alert(err.message);
+        showToast('Upload Failed', err.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = `Upload Photo ${slideNum}`;
@@ -159,7 +192,7 @@ function renderUniversities() {
             matchesState = uni.state === state.stateFilter;
         }
 
-        let matchesQuery = 
+        let matchesQuery =
             uni.name.toLowerCase().includes(query) ||
             (uni.location && uni.location.toLowerCase().includes(query)) ||
             (uni.address && uni.address.toLowerCase().includes(query)) ||
@@ -211,7 +244,7 @@ function renderUniversities() {
                     <div class="p-5">
                         <h3 class="font-black text-base text-white leading-snug">${uni.name}</h3>
                         <p class="text-xs text-slate-400 mt-1 flex items-start gap-1.5">
-                            <i class="fa-solid fa-location-dot text-indigo-400 mt-0.5 shrink-0"></i> 
+                            <i class="fa-solid fa-location-dot text-indigo-400 mt-0.5 shrink-0"></i>
                             <span>${uni.address}</span>
                         </p>
 
@@ -280,12 +313,12 @@ async function handleScholarshipInquiry(e) {
 
     const { error } = await _supabase.from('inquiries').insert([inquiry]);
     if (error) {
-        alert('Error submitting application: ' + error.message);
+        showToast('Submission Error', error.message, 'error');
         return;
     }
 
     state.inquiries.unshift(inquiry);
-    alert('Application Submitted Successfully! Our team will review your application and reach out via WhatsApp within 10 minutes.');
+    showToast('Application Submitted', 'Our team will review your application and reach out via WhatsApp within 10 minutes.', 'success');
     e.target.reset();
 }
 
@@ -297,17 +330,17 @@ function generateReferralCode(e) {
 
     document.getElementById('generated-code-display').textContent = code;
     document.getElementById('generated-code-box').classList.remove('hidden');
-    
+
     let vouchers = JSON.parse(localStorage.getItem('gtech_vouchers') || '[]');
     vouchers.unshift({ phone, code, name, date: new Date().toLocaleDateString() });
     localStorage.setItem('gtech_vouchers', JSON.stringify(vouchers));
 
-    alert('Referral Code Generated Successfully!');
+    showToast('Voucher Generated', 'Your referral concession code is ready below.', 'success');
 }
 
 function copyText(txt) {
     navigator.clipboard.writeText(txt);
-    alert('Copied to clipboard: ' + txt);
+    showToast('Copied', `Copied to clipboard: ${txt}`, 'success');
 }
 
 function shareWhatsApp() {
@@ -378,11 +411,11 @@ async function handleStudentAuth(e) {
 
         const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
         if (error) {
-            alert('Registration Error: ' + error.message);
+            showToast('Registration Failed', error.message, 'error');
             return;
         }
 
-        alert('You are successfully registered with GTech! Please login with your email.');
+        showToast('Registration Complete', 'You are successfully registered with GTech! Please login with your email.', 'success');
         switchAuthMode('login');
         document.getElementById('auth-email').value = email;
     } else {
@@ -393,7 +426,7 @@ async function handleStudentAuth(e) {
             .maybeSingle();
 
         if (error || !profile) {
-            alert('Email not registered yet. Please switch to the Register tab first.');
+            showToast('Account Not Found', 'Email not registered yet. Please switch to the Register tab first.', 'error');
             switchAuthMode('signup');
             document.getElementById('auth-email').value = email;
             return;
@@ -404,7 +437,7 @@ async function handleStudentAuth(e) {
         updateHeaderForLoggedInStudent(profile);
 
         document.getElementById('student-login-modal').classList.add('hidden');
-        alert('You are successfully logged in with GTech!');
+        showToast('Welcome Back!', 'You are successfully logged in with GTech!', 'success');
         openStudentDashboardModal();
     }
 }
@@ -445,7 +478,7 @@ function logoutStudent() {
         dashBtn.classList.add('hidden');
         loginBtn.classList.remove('hidden');
     }
-    alert('Signed out from Student Dashboard.');
+    showToast('Signed Out', 'You have signed out from the Student Dashboard.', 'success');
 }
 
 async function openStudentDashboardModal() {
@@ -456,7 +489,7 @@ async function openStudentDashboardModal() {
     await fetchInquiriesFromSupabase();
     document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudent.full_name}! Welcome Back.`;
     document.getElementById('student-dash-email').textContent = `Email: ${state.currentStudent.email} | Phone: ${state.currentStudent.mobile}`;
-    
+
     document.getElementById('student-dashboard-modal').classList.remove('hidden');
     document.getElementById('student-dashboard-modal').classList.add('flex');
     loadStudentDashboardData();
@@ -467,8 +500,7 @@ function loadStudentDashboardData() {
     const voucherContainer = document.getElementById('student-vouchers-list');
     const stu = state.currentStudent;
 
-    // Filter applications matching student email or phone
-    const myApps = state.inquiries.filter(inq => 
+    const myApps = state.inquiries.filter(inq =>
         (inq.email && stu.email && inq.email.toLowerCase() === stu.email.toLowerCase()) ||
         (inq.phone && stu.mobile && inq.phone.includes(stu.mobile))
     );
@@ -519,8 +551,9 @@ function handleAdminLogin(e) {
         document.getElementById('admin-dashboard-modal').classList.remove('hidden');
         document.getElementById('admin-dashboard-modal').classList.add('flex');
         fetchInquiriesFromSupabase().then(() => loadAdminDashboardData());
+        showToast('Admin Authenticated', 'Welcome to the GTech Admin Control Panel.', 'success');
     } else {
-        alert('Access Denied: Invalid User ID or Password.');
+        showToast('Access Denied', 'Invalid User ID or Password.', 'error');
     }
 }
 
@@ -659,7 +692,7 @@ async function handleSaveUni(e) {
     const hostelFee = Number(document.getElementById('modal-uni-hostelfee').value);
     const applicationFee = Number(document.getElementById('modal-uni-appfee').value);
     const admissionType = document.getElementById('modal-uni-admission').value;
-    
+
     const fileInput = document.getElementById('modal-uni-file');
     let imageUrl = document.getElementById('modal-uni-image-url').value;
 
@@ -707,9 +740,9 @@ async function handleSaveUni(e) {
         document.getElementById('uni-modal').classList.add('hidden');
         await fetchUniversitiesFromSupabase();
         loadAdminUnisTable();
-        alert('University saved successfully to Supabase database!');
+        showToast('University Saved', 'University saved successfully to Supabase database!', 'success');
     } catch (err) {
-        alert(err.message);
+        showToast('Save Failed', err.message, 'error');
     } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = 'Save University';
@@ -721,10 +754,13 @@ async function handleDeleteUni(id) {
         await _supabase.from('universities').delete().eq('id', id);
         await fetchUniversitiesFromSupabase();
         loadAdminUnisTable();
+        showToast('University Deleted', 'University removed from catalog.', 'success');
     }
 }
 
 // Global scope exposure
+window.showToast = showToast;
+window.hideToast = hideToast;
 window.openStudentLoginModal = openStudentLoginModal;
 window.openStudentDashboardModal = openStudentDashboardModal;
 window.logoutStudent = logoutStudent;

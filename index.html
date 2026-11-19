@@ -16,37 +16,45 @@
         <i class="fa-solid fa-gift mr-1.5"></i> Referral Coupon <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Register & submit your admission enquiry to unlock fee concessions.
     </div>
 
-    <!-- Navigation Header -->
-    <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/30">
+    <!-- Professional & Attractive Student Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/90 shadow-lg shadow-slate-950/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
+            <!-- Brand Identity -->
+            <a href="#" class="flex items-center space-x-3 shrink-0 group">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition">
                     G
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-base tracking-tight text-white">GTech Admissions</h1>
-                    <p class="text-[11px] text-indigo-400 font-medium">Admissions Consultancy & Services</p>
+                    <div class="flex items-center gap-2">
+                        <span class="font-black text-base sm:text-lg tracking-tight text-white">GTech Admissions</span>
+                        <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">2026–27</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-medium">Student Admissions & Scholarship Hub</p>
                 </div>
-            </div>
+            </a>
 
-            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-300">
-                <a href="#about" class="hover:text-indigo-400 transition">About Us</a>
-                <a href="#universities" class="hover:text-indigo-400 transition">University Catalog</a>
-                <a href="#referral-section" class="hover:text-indigo-400 transition">Refer & Earn</a>
-                <a href="#apply" onclick="requireAuthForApply(event)" class="hover:text-indigo-400 transition">Scholarship Form</a>
+            <!-- Student Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 text-xs font-bold text-slate-300">
+                <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition">About</a>
+                <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition">Universities</a>
+                <a href="#referral-section" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-amber-300 transition">Refer & Earn</a>
+                <a href="#apply" onclick="requireAuthForApply(event)" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-indigo-300 transition">Scholarship</a>
             </nav>
 
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-3.5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25">
-                    <i class="fa-solid fa-gauge-high text-[10px]"></i> <span id="header-student-name">Dashboard</span>
+            <!-- Student Actions -->
+            <div class="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
+                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold transition flex items-center gap-2 shadow-lg shadow-emerald-600/25">
+                    <i class="fa-solid fa-user-graduate text-xs"></i>
+                    <span id="header-student-name">Student Hub</span>
                 </button>
 
-                <button id="header-login-btn" onclick="openStudentLoginModal()" class="px-3.5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-user-lock text-[10px]"></i> <span>Student Login</span>
+                <button id="header-login-btn" onclick="openStudentLoginModal()" class="px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-700/80 hover:border-emerald-400 text-emerald-300 text-xs font-extrabold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                    <span>Student Login</span>
                 </button>
 
-                <button type="button" onclick="requireAuthForApply(event)" class="hidden sm:inline-block px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25">
-                    Apply
+                <button type="button" onclick="requireAuthForApply(event)" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-extrabold transition shadow-lg shadow-indigo-600/30">
+                    Apply Now
                 </button>
             </div>
         </div>
@@ -67,35 +75,22 @@
         </div>
     </section>
 
-    <!-- ABOUT GTECH WITH RESPONSIVE CAROUSEL & SOFTWARE-STYLE FEATURE CARDS -->
+    <!-- ABOUT GTECH WITH CLEAN CAROUSEL ONLY & SOFTWARE-STYLE FEATURE CARDS -->
     <section id="about" class="py-14 bg-slate-950 border-b border-slate-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
+            <div class="text-center max-w-2xl mx-auto space-y-2 mb-8">
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Why Choose GTech</span>
                 <h3 class="text-2xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
-                <p class="text-xs text-slate-400">End-to-end digital admissions guidance across AP, Telangana, Chennai, Karnataka, UP, and Maharashtra.</p>
             </div>
 
-            <!-- Responsive Carousel Container (5:2 Aspect Ratio on Mobile, Fixed Banner on Desktop) -->
+            <!-- Carousel Container Only (No Extra Title/Badge Overlays) -->
             <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-12 shadow-2xl">
                 <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700">
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="Student Group Success">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3 sm:p-8">
-                            <div>
-                                <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Campus Success 2026</span>
-                                <h4 class="text-xs sm:text-2xl font-black text-white mt-0.5 sm:mt-1 line-clamp-1">Thriving Student Community & Admissions Guidance</h4>
-                            </div>
-                        </div>
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="GTech Carousel Slide 1">
                     </div>
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="Top Engineering Campuses">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3 sm:p-8">
-                            <div>
-                                <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Direct & Merit Seats</span>
-                                <h4 class="text-xs sm:text-2xl font-black text-white mt-0.5 sm:mt-1 line-clamp-1">Top NIRF Ranked Universities Across India</h4>
-                            </div>
-                        </div>
+                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="GTech Carousel Slide 2">
                     </div>
                 </div>
                 <button type="button" onclick="prevSlide()" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
@@ -104,7 +99,6 @@
 
             <!-- Professional Software-Grade 4-Card Service Suite -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <!-- Card 1: Scholarship -->
                 <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-indigo-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -122,7 +116,6 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Expert Callback -->
                 <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -140,7 +133,6 @@
                     </div>
                 </div>
 
-                <!-- Card 3: Top Placements -->
                 <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -158,7 +150,6 @@
                     </div>
                 </div>
 
-                <!-- Card 4: Easy Education Loan Process -->
                 <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
@@ -301,10 +292,9 @@
             <div class="text-center max-w-2xl mx-auto space-y-2">
                 <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">GTech Student Referral Program</span>
                 <h3 class="text-2xl sm:text-3xl font-black text-white">Refer Friends & Earn Admission Rewards</h3>
-                <p class="text-xs text-slate-400">Login to get your unique GTech referral ID & link, share it with friends, and earn rewards once their admission is confirmed.</p>
+                <p class="text-xs text-slate-400">Login to get your unique GTech referral ID & link, share it with friends, and earn rewards used toward admission or tuition fees once their admission is confirmed.</p>
             </div>
 
-            <!-- 5-Step Visual Process Flow -->
             <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
                 <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
                     <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">1</span>
@@ -329,11 +319,10 @@
                 <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-1.5">
                     <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-slate-950 font-black text-[11px]">5</span>
                     <h4 class="text-xs font-extrabold text-amber-300">Referral Reward</h4>
-                    <p class="text-[11px] text-slate-300 leading-snug">Referring student receives the reward after successful admission.</p>
+                    <p class="text-[11px] text-slate-300 leading-snug">Reward applied toward admission or tuition fee after admission.</p>
                 </div>
             </div>
 
-            <!-- Generate Referral ID & Share Box (Requires Student Login First) -->
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl max-w-2xl mx-auto text-center space-y-4">
                 <div class="space-y-1">
                     <h4 class="text-base font-black text-white">Your Personal GTech Referral ID & Share Link</h4>
@@ -381,7 +370,7 @@
       </div>
     </footer>
 
-    <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL (WITH OPTIONAL REFERRAL COUPON) -->
+    <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL -->
     <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
             <button onclick="document.getElementById('student-login-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
@@ -418,31 +407,64 @@
         </div>
     </div>
 
-    <!-- STUDENT DASHBOARD MODAL -->
+    <!-- ATTRACTIVE STUDENT DASHBOARD MODAL -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">🎓</div>
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Dashboard Top Bar with Cancel Option -->
+            <div class="p-5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-emerald-600/20">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
                     <div>
-                        <h3 class="font-black text-white text-sm" id="student-dash-title">Welcome Back!</h3>
-                        <p class="text-[10px] text-slate-400" id="student-dash-email">Track your scholarship applications and referral rewards.</p>
+                        <h3 class="font-black text-white text-sm sm:text-base" id="student-dash-title">Welcome Back!</h3>
+                        <p class="text-[11px] text-slate-400" id="student-dash-email">Track your admission flow, scholarship status, and referral rewards.</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-200 font-bold">Close / Minimize</button>
-                </div>
+                <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
             </div>
-            <div class="p-6 overflow-y-auto flex-1 space-y-6">
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
-                    <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-400">My Scholarship Applications & Status</h4>
+
+            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6">
+                <!-- Admission Process Flow Tracker -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-extrabold text-xs uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+                            <i class="fa-solid fa-route"></i> Admission Process Flow
+                        </h4>
+                        <span id="dash-current-stage-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">Active</span>
+                    </div>
+                    <div id="admission-process-flow" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5"></div>
+                </div>
+
+                <!-- My Scholarship Applications & Status -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <h4 class="font-extrabold text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-file-circle-check"></i> My Scholarship Applications & Status
+                    </h4>
                     <div id="student-applications-list" class="space-y-2"></div>
                 </div>
-                <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h4 class="font-bold text-xs uppercase tracking-wider text-amber-400">My Referral ID, Link & Reward Status</h4>
-                        <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden'); handleGenerateReferralClick();" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-[10px]">+ Get / View My Referral Link</button>
+
+                <!-- My Referral ID, Link & Reward Note -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-gift"></i> My Referral ID, Link & Reward Status
+                        </h4>
+                        <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden'); handleGenerateReferralClick();" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] transition">
+                            + Get / View My Referral Link
+                        </button>
                     </div>
+
+                    <!-- Referral Usage Note -->
+                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 flex items-start gap-2.5">
+                        <i class="fa-solid fa-circle-info text-amber-400 mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong class="text-amber-300">Note:</strong> Referral reward amount is used toward <strong>admission processing or tuition fee</strong> adjustments after your referred friend's admission is verified and confirmed by GTech.
+                        </div>
+                    </div>
+
                     <div id="student-vouchers-list" class="space-y-2"></div>
                 </div>
             </div>
@@ -493,7 +515,6 @@
                 <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Carousel</button>
             </div>
             <div class="p-5 overflow-y-auto flex-1 space-y-4">
-                <!-- Tab 1: Student Scholarship Leads -->
                 <div id="admin-tab-inquiries" class="space-y-4">
                     <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
@@ -512,7 +533,6 @@
                     </div>
                 </div>
 
-                <!-- Tab 2: Registered Student Signup Accounts -->
                 <div id="admin-tab-students" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white text-xs">Registered Student Signup Accounts</h4>
@@ -534,7 +554,6 @@
                     </div>
                 </div>
 
-                <!-- Tab 3: Referral Verification & Rewards -->
                 <div id="admin-tab-referrals" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white text-xs">Student Referral IDs & Reward Verification</h4>
@@ -554,7 +573,6 @@
                     </div>
                 </div>
 
-                <!-- Tab 4: Manage Universities -->
                 <div id="admin-tab-universities" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white text-xs">University Catalog & Fee Matrix Control</h4>
@@ -576,7 +594,6 @@
                     </div>
                 </div>
 
-                <!-- Tab 5: Manage Carousel -->
                 <div id="admin-tab-carousel" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <div>
@@ -667,7 +684,6 @@
                     </div>
                 </div>
 
-                <!-- Live Cropped Card Preview -->
                 <div class="w-full aspect-[16/9] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
                     <img id="uni-card-preview" src="https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover" alt="University Card Preview">
                 </div>

@@ -32,9 +32,15 @@
             </nav>
 
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <button onclick="openStudentLoginModal()" class="px-3.5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <!-- Visible Student Dashboard Button when logged in -->
+                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-3.5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25">
+                    <i class="fa-solid fa-gauge-high text-[10px]"></i> <span id="header-student-name">Dashboard</span>
+                </button>
+
+                <button id="header-login-btn" onclick="openStudentLoginModal()" class="px-3.5 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500 text-emerald-400 text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-user-lock text-[10px]"></i> <span>Student Login</span>
                 </button>
+
                 <a href="#apply" class="hidden sm:inline-block px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25">
                     Apply
                 </a>
@@ -83,7 +89,7 @@
                 <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
             </div>
 
-            <!-- Feature Cards Grid (Updated Titles) -->
+            <!-- Feature Cards Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div onclick="document.getElementById('apply').scrollIntoView({behavior:'smooth'})" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer space-y-3 shadow-lg transition">
                     <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-base">🎓</div>
@@ -265,44 +271,35 @@
       </div>
     </footer>
 
-    <!-- STUDENT AUTHENTICATION MODAL -->
+    <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL -->
     <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
             <button onclick="document.getElementById('student-login-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
             <div class="text-center space-y-1 mb-6">
-                <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🔐</div>
+                <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🎓</div>
                 <h3 id="auth-modal-title" class="text-base font-extrabold text-white">Student Portal Login</h3>
-                <p id="auth-modal-subtitle" class="text-[11px] text-slate-400">Access your student dashboard and scholarship status.</p>
+                <p id="auth-modal-subtitle" class="text-[11px] text-slate-400">Sign in instantly with your registered email.</p>
             </div>
             
             <div class="flex rounded-xl bg-slate-950 p-1 mb-5 border border-slate-800 text-xs font-bold">
                 <button type="button" onclick="switchAuthMode('login')" id="tab-login" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white transition">Login</button>
                 <button type="button" onclick="switchAuthMode('signup')" id="tab-signup" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Register</button>
-                <button type="button" onclick="switchAuthMode('forgot')" id="tab-forgot" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Reset</button>
             </div>
 
             <form id="student-auth-form" onsubmit="handleStudentAuth(event)" class="space-y-3">
                 <div id="name-field-box" class="hidden">
                     <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name *</label>
-                    <input type="text" id="auth-name" placeholder="Rahul Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
-                </div>
-                <div id="mobile-field-box" class="hidden">
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Mobile Number *</label>
-                    <input type="tel" id="auth-mobile" placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="auth-name" placeholder="Enter your full name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold text-slate-300 mb-1">Email ID *</label>
                     <input type="email" id="auth-email" required placeholder="student@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
-                <div id="password-field-box">
-                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Password *</label>
-                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                <div id="mobile-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Phone Number *</label>
+                    <input type="tel" id="auth-mobile" placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
-                <div id="otp-field-box" class="hidden">
-                    <label class="block text-[11px] font-bold text-amber-400 mb-1">Enter Email Verification OTP *</label>
-                    <input type="text" id="auth-otp" placeholder="6-digit OTP" class="w-full bg-slate-950 border border-amber-500 rounded-xl px-3.5 py-2.5 text-white text-xs tracking-widest text-center font-mono">
-                </div>
-                <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-2">Login to Dashboard</button>
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-2">Login with Email</button>
             </form>
         </div>
     </div>
@@ -314,11 +311,14 @@
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">🎓</div>
                     <div>
-                        <h3 class="font-black text-white text-sm" id="student-dash-title">Hello, Harsha! Welcome Back.</h3>
-                        <p class="text-[10px] text-slate-400">Track your scholarship application status and generated referral vouchers.</p>
+                        <h3 class="font-black text-white text-sm" id="student-dash-title">Welcome Back!</h3>
+                        <p class="text-[10px] text-slate-400" id="student-dash-email">Track your scholarship applications and referral vouchers.</p>
                     </div>
                 </div>
-                <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Sign Out</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Minimize</button>
+                    <button onclick="logoutStudent()" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-[11px] text-rose-300 font-bold">Sign Out</button>
+                </div>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-6">
                 <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
@@ -420,13 +420,13 @@
                             <h5 class="text-xs font-bold text-indigo-400">Carousel Photo 1</h5>
                             <input type="file" id="carousel-file-1" accept="image/*" class="w-full text-xs text-slate-300">
                             <input type="text" id="carousel-title-1" placeholder="Slide Title 1" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                            <button onclick="handleUploadCarousel(1)" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">Upload Photo 1</button>
+                            <button type="button" id="btn-upload-carousel-1" onclick="handleUploadCarousel(1)" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">Upload Photo 1</button>
                         </div>
                         <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
                             <h5 class="text-xs font-bold text-emerald-400">Carousel Photo 2</h5>
                             <input type="file" id="carousel-file-2" accept="image/*" class="w-full text-xs text-slate-300">
                             <input type="text" id="carousel-title-2" placeholder="Slide Title 2" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                            <button onclick="handleUploadCarousel(2)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Upload Photo 2</button>
+                            <button type="button" id="btn-upload-carousel-2" onclick="handleUploadCarousel(2)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Upload Photo 2</button>
                         </div>
                     </div>
                 </div>
@@ -506,7 +506,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Save University</button>
+                <button type="submit" id="btn-save-uni" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Save University</button>
             </form>
         </div>
     </div>

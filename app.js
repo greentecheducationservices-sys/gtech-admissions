@@ -293,9 +293,9 @@ function setStateFilter(stateName) {
     state.stateFilter = stateName;
     document.querySelectorAll('.state-btn').forEach(btn => {
         if (btn.getAttribute('data-state') === stateName) {
-            btn.className = 'state-btn px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition whitespace-nowrap shrink-0';
+            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition whitespace-nowrap shrink-0';
         } else {
-            btn.className = 'state-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0';
+            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0';
         }
     });
     renderUniversities();
@@ -805,7 +805,7 @@ function loadStudentDashboardData() {
     }
 }
 
-// --- ADMIN PANEL ---
+// --- ADMIN PANEL (MOBILE + DESKTOP RESPONSIVE) ---
 function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
     document.getElementById('admin-modal').classList.add('flex');
@@ -836,13 +836,13 @@ async function switchAdminTab(tabName) {
         const panel = document.getElementById(`admin-tab-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
         if (panel) panel.classList.add('hidden');
-        if (btn) btn.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
+        if (btn) btn.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0 font-bold';
     });
 
     const activePanel = document.getElementById(`admin-tab-${tabName}`);
     const activeBtn = document.getElementById(`tab-btn-${tabName}`);
     if (activePanel) activePanel.classList.remove('hidden');
-    if (activeBtn) activeBtn.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
+    if (activeBtn) activeBtn.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap shrink-0 font-bold';
 
     if (tabName === 'inquiries') {
         await fetchInquiriesFromSupabase();
@@ -860,8 +860,11 @@ async function switchAdminTab(tabName) {
 
 function loadAdminDashboardData() {
     const tbody = document.getElementById('admin-inquiries-tbody');
+    const mobileList = document.getElementById('admin-inquiries-mobile');
+
     if (state.inquiries.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No student scholarship inquiries yet.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">No student scholarship inquiries yet.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center text-xs text-slate-500">No student scholarship inquiries yet.</div>`;
         return;
     }
 
@@ -873,42 +876,78 @@ function loadAdminDashboardData() {
         'Admission Completed'
     ];
 
-    tbody.innerHTML = state.inquiries.map(inq => {
-        const currentStatus = inq.status || 'Pending Callback';
-        const optionsHtml = statusOptions.map(opt =>
-            `<option value="${opt}" ${currentStatus === opt ? 'selected' : ''}>${opt}</option>`
-        ).join('');
+    if (tbody) {
+        tbody.innerHTML = state.inquiries.map(inq => {
+            const currentStatus = inq.status || 'Pending Callback';
+            const optionsHtml = statusOptions.map(opt =>
+                `<option value="${opt}" ${currentStatus === opt ? 'selected' : ''}>${opt}</option>`
+            ).join('');
 
-        return `
-            <tr class="hover:bg-slate-900/60">
-                <td class="p-3">
-                    <strong class="text-white block">${inq.name}</strong>
-                    <a href="tel:${inq.phone}" class="text-indigo-300 font-mono text-[10px] hover:underline">${inq.phone}</a>
-                    ${inq.email ? `<span class="text-slate-500 text-[10px] block">${inq.email}</span>` : ''}
-                </td>
-                <td class="p-3">
-                    <span class="text-slate-300 block">Parent: ${inq.parent_phone || 'N/A'}</span>
-                    <span class="text-slate-500 text-[10px] truncate max-w-xs block" title="${inq.address}">${inq.address}</span>
-                </td>
-                <td class="p-3 text-slate-300">
-                    JEE: <strong>${inq.jee_score || 'N/A'}</strong> | Inter: <strong>${inq.inter}</strong><br>
-                    PCM: <strong class="text-emerald-400">${inq.pcm}/600</strong>
-                </td>
-                <td class="p-3">
-                    <strong class="text-white">${inq.uni}</strong>
-                    <span class="text-indigo-400 font-bold block">${inq.branch}</span>
-                </td>
-                <td class="p-3">
-                    ${inq.referral_code ? `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px] border border-amber-500/30">${inq.referral_code}</span>` : '<span class="text-slate-600">—</span>'}
-                </td>
-                <td class="p-3">
-                    <select onchange="updateInquiryStatus(${inq.id}, this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 focus:outline-none focus:border-indigo-500">
-                        ${optionsHtml}
-                    </select>
-                </td>
-            </tr>
-        `;
-    }).join('');
+            return `
+                <tr class="hover:bg-slate-900/60">
+                    <td class="p-3">
+                        <strong class="text-white block">${inq.name}</strong>
+                        <a href="tel:${inq.phone}" class="text-indigo-300 font-mono text-[10px] hover:underline">${inq.phone}</a>
+                        ${inq.email ? `<span class="text-slate-500 text-[10px] block">${inq.email}</span>` : ''}
+                    </td>
+                    <td class="p-3">
+                        <span class="text-slate-300 block">Parent: ${inq.parent_phone || 'N/A'}</span>
+                        <span class="text-slate-500 text-[10px] truncate max-w-xs block" title="${inq.address}">${inq.address}</span>
+                    </td>
+                    <td class="p-3 text-slate-300">
+                        JEE: <strong>${inq.jee_score || 'N/A'}</strong> | Inter: <strong>${inq.inter}</strong><br>
+                        PCM: <strong class="text-emerald-400">${inq.pcm}/600</strong>
+                    </td>
+                    <td class="p-3">
+                        <strong class="text-white">${inq.uni}</strong>
+                        <span class="text-indigo-400 font-bold block">${inq.branch}</span>
+                    </td>
+                    <td class="p-3">
+                        ${inq.referral_code ? `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px] border border-amber-500/30">${inq.referral_code}</span>` : '<span class="text-slate-600">—</span>'}
+                    </td>
+                    <td class="p-3">
+                        <select onchange="updateInquiryStatus(${inq.id}, this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 focus:outline-none focus:border-indigo-500">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = state.inquiries.map(inq => {
+            const currentStatus = inq.status || 'Pending Callback';
+            const optionsHtml = statusOptions.map(opt =>
+                `<option value="${opt}" ${currentStatus === opt ? 'selected' : ''}>${opt}</option>`
+            ).join('');
+
+            return `
+                <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5 text-xs">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <strong class="text-white text-sm block">${inq.name}</strong>
+                            <a href="tel:${inq.phone}" class="text-indigo-300 font-mono text-[11px]">${inq.phone}</a>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-lg bg-indigo-500/15 text-indigo-300 font-bold text-[10px] border border-indigo-500/30">${inq.branch}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-300">
+                        <strong>${inq.uni}</strong> • PCM: <span class="text-emerald-400 font-bold">${inq.pcm}/600</span> • Inter: ${inq.inter}
+                    </div>
+                    <div class="text-[10px] text-slate-400 break-words">
+                        Parent: ${inq.parent_phone || 'N/A'} • ${inq.address}
+                    </div>
+                    ${inq.referral_code ? `<div class="text-[10px] text-amber-300 font-mono">Coupon: ${inq.referral_code}</div>` : ''}
+                    <div class="pt-1">
+                        <label class="block text-[10px] text-slate-400 mb-1">Update Status</label>
+                        <select onchange="updateInquiryStatus(${inq.id}, this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-emerald-300 focus:outline-none focus:border-indigo-500">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 async function updateInquiryStatus(inquiryId, newStatus) {
@@ -930,32 +969,56 @@ async function updateInquiryStatus(inquiryId, newStatus) {
 
 function loadAdminStudentsTable() {
     const tbody = document.getElementById('admin-students-tbody');
+    const mobileList = document.getElementById('admin-students-mobile');
     const countBadge = document.getElementById('total-students-count');
     if (countBadge) countBadge.textContent = `${state.students.length} Registered Students`;
 
     if (state.students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No students have registered yet.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No students have registered yet.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center text-xs text-slate-500">No students have registered yet.</div>`;
         return;
     }
 
-    tbody.innerHTML = state.students.map(stu => {
-        const regDate = stu.created_at ? new Date(stu.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent';
-        return `
-            <tr class="hover:bg-slate-900/60">
-                <td class="p-3 font-bold text-white">${stu.full_name}</td>
-                <td class="p-3 text-indigo-300 font-mono">${stu.email}</td>
-                <td class="p-3 text-emerald-300 font-mono"><a href="tel:${stu.mobile}" class="hover:underline">${stu.mobile}</a></td>
-                <td class="p-3">${stu.referred_by_code ? `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px]">${stu.referred_by_code}</span>` : '<span class="text-slate-600">Direct</span>'}</td>
-                <td class="p-3 text-slate-400">${regDate}</td>
-            </tr>
-        `;
-    }).join('');
+    if (tbody) {
+        tbody.innerHTML = state.students.map(stu => {
+            const regDate = stu.created_at ? new Date(stu.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent';
+            return `
+                <tr class="hover:bg-slate-900/60">
+                    <td class="p-3 font-bold text-white">${stu.full_name}</td>
+                    <td class="p-3 text-indigo-300 font-mono">${stu.email}</td>
+                    <td class="p-3 text-emerald-300 font-mono"><a href="tel:${stu.mobile}" class="hover:underline">${stu.mobile}</a></td>
+                    <td class="p-3">${stu.referred_by_code ? `<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px]">${stu.referred_by_code}</span>` : '<span class="text-slate-600">Direct</span>'}</td>
+                    <td class="p-3 text-slate-400">${regDate}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = state.students.map(stu => {
+            const regDate = stu.created_at ? new Date(stu.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent';
+            return `
+                <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
+                    <div class="flex items-center justify-between gap-2">
+                        <strong class="text-white">${stu.full_name}</strong>
+                        <span class="text-[10px] text-slate-500">${regDate}</span>
+                    </div>
+                    <p class="text-indigo-300 font-mono text-[11px] break-all">${stu.email}</p>
+                    <p class="text-emerald-300 font-mono text-[11px]">${stu.mobile}</p>
+                    ${stu.referred_by_code ? `<span class="inline-block px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono text-[10px]">Ref: ${stu.referred_by_code}</span>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 function loadAdminReferralsTable() {
     const tbody = document.getElementById('admin-referrals-tbody');
+    const mobileList = document.getElementById('admin-referrals-mobile');
+
     if (state.referrals.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No student referral IDs generated yet.</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No student referral IDs generated yet.</td></tr>`;
+        if (mobileList) mobileList.innerHTML = `<div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center text-xs text-slate-500">No student referral IDs generated yet.</div>`;
         return;
     }
 
@@ -966,25 +1029,47 @@ function loadAdminReferralsTable() {
         'Reward Paid / Credited'
     ];
 
-    tbody.innerHTML = state.referrals.map(ref => {
-        const currentReward = ref.reward_status || 'Pending Friend Admission';
-        const optionsHtml = rewardStatuses.map(opt =>
-            `<option value="${opt}" ${currentReward === opt ? 'selected' : ''}>${opt}</option>`
-        ).join('');
+    if (tbody) {
+        tbody.innerHTML = state.referrals.map(ref => {
+            const currentReward = ref.reward_status || 'Pending Friend Admission';
+            const optionsHtml = rewardStatuses.map(opt =>
+                `<option value="${opt}" ${currentReward === opt ? 'selected' : ''}>${opt}</option>`
+            ).join('');
 
-        return `
-            <tr class="hover:bg-slate-900/60">
-                <td class="p-3 font-bold text-white">${ref.student_name}</td>
-                <td class="p-3 text-slate-300 font-mono">${ref.student_phone}<br><span class="text-[10px] text-slate-500">${ref.referrer_email || ''}</span></td>
-                <td class="p-3 font-mono font-bold text-amber-400">${ref.code}</td>
-                <td class="p-3">
-                    <select onchange="updateReferralRewardStatus('${ref.code}', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-amber-300 focus:outline-none focus:border-amber-400">
+            return `
+                <tr class="hover:bg-slate-900/60">
+                    <td class="p-3 font-bold text-white">${ref.student_name}</td>
+                    <td class="p-3 text-slate-300 font-mono">${ref.student_phone}<br><span class="text-[10px] text-slate-500">${ref.referrer_email || ''}</span></td>
+                    <td class="p-3 font-mono font-bold text-amber-400">${ref.code}</td>
+                    <td class="p-3">
+                        <select onchange="updateReferralRewardStatus('${ref.code}', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-amber-300 focus:outline-none focus:border-amber-400">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = state.referrals.map(ref => {
+            const currentReward = ref.reward_status || 'Pending Friend Admission';
+            const optionsHtml = rewardStatuses.map(opt =>
+                `<option value="${opt}" ${currentReward === opt ? 'selected' : ''}>${opt}</option>`
+            ).join('');
+
+            return `
+                <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                    <div class="font-bold text-white">${ref.student_name}</div>
+                    <div class="font-mono text-amber-400 text-xs break-all">${ref.code}</div>
+                    <div class="text-[10px] text-slate-400">${ref.student_phone} • ${ref.referrer_email || ''}</div>
+                    <select onchange="updateReferralRewardStatus('${ref.code}', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-400">
                         ${optionsHtml}
                     </select>
-                </td>
-            </tr>
-        `;
-    }).join('');
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 async function updateReferralRewardStatus(code, newRewardStatus) {
@@ -1003,24 +1088,53 @@ async function updateReferralRewardStatus(code, newRewardStatus) {
 
 function loadAdminUnisTable() {
     const tbody = document.getElementById('admin-unis-tbody');
-    tbody.innerHTML = state.universities.map(uni => `
-        <tr class="hover:bg-slate-900/60">
-            <td class="p-3 flex items-center gap-2.5">
-                <img src="${uni.image}" class="w-8 h-8 rounded-lg object-cover shrink-0">
-                <div>
-                    <strong class="text-white block text-[11px]">${uni.name}</strong>
-                    <span class="text-[9px] text-slate-400">${uni.location}</span>
+    const mobileList = document.getElementById('admin-unis-mobile');
+
+    if (tbody) {
+        tbody.innerHTML = state.universities.map(uni => `
+            <tr class="hover:bg-slate-900/60">
+                <td class="p-3 flex items-center gap-2.5">
+                    <img src="${uni.image}" class="w-8 h-8 rounded-lg object-cover shrink-0">
+                    <div>
+                        <strong class="text-white block text-[11px]">${uni.name}</strong>
+                        <span class="text-[9px] text-slate-400">${uni.location}</span>
+                    </div>
+                </td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">${uni.admission_type || 'Direct Admission Open'}</span></td>
+                <td class="p-3 text-amber-400 font-bold">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</td>
+                <td class="p-3 text-indigo-300 font-bold">₹${Number(uni.application_fee).toLocaleString('en-IN')}</td>
+                <td class="p-3 text-right space-x-1.5">
+                    <button onclick="openEditUniModal('${uni.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-[10px]">Edit</button>
+                    <button onclick="handleDeleteUni('${uni.id}')" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-md text-[10px]">Del</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    if (mobileList) {
+        mobileList.innerHTML = state.universities.map(uni => `
+            <div class="p-3 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+                <div class="flex items-center gap-2.5">
+                    <img src="${uni.image}" class="w-10 h-10 rounded-lg object-cover shrink-0">
+                    <div class="min-w-0">
+                        <strong class="text-white block text-xs truncate">${uni.name}</strong>
+                        <span class="text-[10px] text-slate-400">${uni.location}</span>
+                    </div>
                 </div>
-            </td>
-            <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">${uni.admission_type || 'Direct Admission Open'}</span></td>
-            <td class="p-3 text-amber-400 font-bold">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</td>
-            <td class="p-3 text-indigo-300 font-bold">₹${Number(uni.application_fee).toLocaleString('en-IN')}</td>
-            <td class="p-3 text-right space-x-1.5">
-                <button onclick="openEditUniModal('${uni.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-[10px]">Edit</button>
-                <button onclick="handleDeleteUni('${uni.id}')" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-md text-[10px]">Del</button>
-            </td>
-        </tr>
-    `).join('');
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <span class="text-amber-400 font-bold">Hostel: ₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</span>
+                    <span class="text-indigo-300 font-bold">App: ₹${Number(uni.application_fee).toLocaleString('en-IN')}</span>
+                </div>
+                <div class="flex items-center justify-between gap-2 pt-1">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">${uni.admission_type || 'Direct Admission Open'}</span>
+                    <div class="space-x-1.5 shrink-0">
+                        <button onclick="openEditUniModal('${uni.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] font-bold">Edit</button>
+                        <button onclick="handleDeleteUni('${uni.id}')" class="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg text-[10px] font-bold">Del</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
 }
 
 function openAddUniModal() {

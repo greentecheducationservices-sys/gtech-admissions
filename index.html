@@ -11,6 +11,11 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white">
 
+    <!-- Referral Link Auto-Detection Top Banner -->
+    <div id="referral-applied-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold py-2 px-4 text-center">
+        <i class="fa-solid fa-gift mr-1.5"></i> Referral Coupon <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Register & submit your admission enquiry to unlock fee concessions.
+    </div>
+
     <!-- Navigation Header -->
     <header class="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -27,7 +32,7 @@
             <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold text-slate-300">
                 <a href="#about" class="hover:text-indigo-400 transition">About Us</a>
                 <a href="#universities" class="hover:text-indigo-400 transition">University Catalog</a>
-                <a href="#referral-section" class="hover:text-indigo-400 transition">Referral & Vouchers</a>
+                <a href="#referral-section" class="hover:text-indigo-400 transition">Refer & Earn</a>
                 <a href="#apply" onclick="requireAuthForApply(event)" class="hover:text-indigo-400 transition">Scholarship Form</a>
             </nav>
 
@@ -48,7 +53,7 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
+    <section class="relative overflow-hidden py-14 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
         <div class="max-w-4xl mx-auto text-center space-y-4">
             <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certified Educational Admissions Consultancy
@@ -57,62 +62,118 @@
                 Secure Branch-Wise Fees & <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Scholarships</span> with GTech
             </h2>
             <p class="text-slate-400 text-xs sm:text-sm max-w-2xl mx-auto">
-                Explore complete branch fee structures, hostel charges, application-only universities, and scholarship assistance with our expert consultancy.
+                Explore transparent branch fee structures, hostel charges, application-only universities, education loan guidance, and merit scholarship assistance.
             </p>
         </div>
     </section>
 
-    <!-- ABOUT GTECH WITH DYNAMIC CAROUSEL -->
+    <!-- ABOUT GTECH WITH RESPONSIVE CAROUSEL & SOFTWARE-STYLE FEATURE CARDS -->
     <section id="about" class="py-14 bg-slate-950 border-b border-slate-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Why Choose GTech</span>
                 <h3 class="text-2xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
-                <p class="text-xs text-slate-400">We simplify your higher education journey across AP, Telangana, Chennai, Karnataka, UP, and Maharashtra.</p>
+                <p class="text-xs text-slate-400">End-to-end digital admissions guidance across AP, Telangana, Chennai, Karnataka, UP, and Maharashtra.</p>
             </div>
 
-            <!-- Carousel Container -->
-            <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 shadow-2xl">
-                <div id="about-carousel" class="relative h-72 sm:h-96 w-full flex transition-transform duration-700">
+            <!-- Responsive Carousel Container (5:2 Aspect Ratio on Mobile, Fixed Banner on Desktop) -->
+            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-12 shadow-2xl">
+                <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700">
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-55" alt="Student Group Success">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="Student Group Success">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3 sm:p-8">
                             <div>
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Campus Success 2026</span>
-                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Thriving Student Community & Admissions Guidance</h4>
+                                <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Campus Success 2026</span>
+                                <h4 class="text-xs sm:text-2xl font-black text-white mt-0.5 sm:mt-1 line-clamp-1">Thriving Student Community & Admissions Guidance</h4>
                             </div>
                         </div>
                     </div>
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-55" alt="Top Engineering Campuses">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="Top Engineering Campuses">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3 sm:p-8">
                             <div>
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Direct & Merit Seats</span>
-                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Top NIRF Ranked Universities Across India</h4>
+                                <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Direct & Merit Seats</span>
+                                <h4 class="text-xs sm:text-2xl font-black text-white mt-0.5 sm:mt-1 line-clamp-1">Top NIRF Ranked Universities Across India</h4>
                             </div>
                         </div>
                     </div>
                 </div>
-                <button type="button" onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
-                <button type="button" onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
+                <button type="button" onclick="prevSlide()" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
+                <button type="button" onclick="nextSlide()" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
             </div>
 
-            <!-- Feature Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div onclick="requireAuthForApply(event)" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer space-y-3 shadow-lg transition">
-                    <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-base">🎓</div>
-                    <h4 class="font-extrabold text-white text-sm">GET THE SCHOLARSHIP FROM COLLEGE CONSULTANT</h4>
-                    <p class="text-xs text-slate-400">Submit your academic details and JEE/Inter scores to unlock suitable university scholarship opportunities through our expert consultant.</p>
+            <!-- Professional Software-Grade 4-Card Service Suite -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Card 1: Scholarship -->
+                <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-indigo-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Merit & Fee Waiver</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">Consultant-Backed College Scholarships</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Evaluate your JEE percentile and Inter PCM marks with our senior consultants to unlock maximum tuition fee concessions.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-indigo-400 group-hover:text-indigo-300">
+                        <span>Check Eligibility</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
                 </div>
-                <div onclick="requireAuthForApply(event)" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 cursor-pointer space-y-3 shadow-lg transition">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-base">📞</div>
-                    <h4 class="font-extrabold text-white text-sm">GET A CALL FROM AN EXPERT</h4>
-                    <p class="text-xs text-slate-400">Connect instantly with our senior admissions consultant in Ongole for guidance on direct admissions or application-only universities.</p>
+
+                <!-- Card 2: Expert Callback -->
+                <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">10-Min Response</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">1-on-1 Expert Admissions Callback</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Speak directly with our senior counselors for branch selection, direct seat availability, and application-only university filings.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-emerald-400 group-hover:text-emerald-300">
+                        <span>Request Callback</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
                 </div>
-                <div class="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg">
-                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-base">🚀</div>
-                    <h4 class="font-extrabold text-white text-sm">Top Placements up to ₹1.05 Cr</h4>
-                    <p class="text-xs text-slate-400">Secure admissions in premier institutions boasting elite global tech placements scaling up to ₹1.05 Crores per annum.</p>
+
+                <!-- Card 3: Top Placements -->
+                <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">Up to ₹1.05 Cr</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">Top Placement Universities</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Gain admission into premier NIRF-ranked engineering institutions boasting global tech placement packages up to ₹1.05 Cr/annum.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-amber-400 group-hover:text-amber-300">
+                        <span>Explore Campuses</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
+                </div>
+
+                <!-- Card 4: Easy Education Loan Process -->
+                <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-building-columns"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20">Zero-Hassle Support</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">Streamlined Education Loan Process</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Complete documentation assistance for nationalized & private bank education loans covering tuition and hostel fees.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-sky-400 group-hover:text-sky-300">
+                        <span>Get Loan Guidance</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,7 +216,7 @@
             <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
                 <div class="text-center space-y-1.5 mb-6">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Consultancy Assistance</span>
-                    <h3 class="text-xl font-black text-white">Get Scholarship & Expert Callback</h3>
+                    <h3 class="text-xl font-black text-white">Get Scholarship, Loan Guidance & Expert Callback</h3>
                     <p class="text-xs text-slate-400">Login or register first, then submit your academic records and JEE scores to secure maximum fee concessions.</p>
                 </div>
 
@@ -202,13 +263,13 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred University *</label>
-                            <input type="text" id="app-uni" required placeholder="Select from catalog above" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                            <input type="text" id="app-uni" required placeholder="Select from catalog" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred Engineering Branch *</label>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred Branch *</label>
                             <select id="app-branch" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
                                 <option value="ECE">ECE</option>
                                 <option value="CSE AI and ML">CSE AI and ML</option>
@@ -220,6 +281,10 @@
                                 <option value="MECHANICAL">MECHANICAL</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-amber-400 mb-1">Referral Coupon (Optional)</label>
+                            <input type="text" id="app-referral-code" placeholder="GTECH-REF-..." class="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3.5 py-2.5 text-xs font-mono text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400">
+                        </div>
                     </div>
 
                     <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-xl shadow-indigo-600/30 transition">
@@ -230,36 +295,73 @@
         </div>
     </section>
 
-    <!-- Referral & Concession Code Generator Section -->
-    <section id="referral-section" class="py-14 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-                <div class="text-center max-w-md mx-auto space-y-2 mb-6">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Visiting & Referral Benefits</span>
-                    <h3 class="text-xl font-black text-white">Generate Your Personal Fee Concession Voucher</h3>
-                    <p class="text-xs text-slate-400">Enter student details to generate a unique GTECH-5001 referral code. Unlock direct fee concessions and free campus visits.</p>
+    <!-- 5-STEP STUDENT REFERRAL PROGRAM SECTION -->
+    <section id="referral-section" class="py-16 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">GTech Student Referral Program</span>
+                <h3 class="text-2xl sm:text-3xl font-black text-white">Refer Friends & Earn Admission Rewards</h3>
+                <p class="text-xs text-slate-400">Login to get your unique GTech referral ID & link, share it with friends, and earn rewards once their admission is confirmed.</p>
+            </div>
+
+            <!-- 5-Step Visual Process Flow -->
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">1</span>
+                    <h4 class="text-xs font-extrabold text-white">Student Registers</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">Existing GTech student logs in and gets a unique referral ID & link.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">2</span>
+                    <h4 class="text-xs font-extrabold text-white">Share Referral Link</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">Share easily via WhatsApp, Instagram, or direct link with friends.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">3</span>
+                    <h4 class="text-xs font-extrabold text-white">Friend Applies</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">New student opens the link & submits an admission enquiry.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">4</span>
+                    <h4 class="text-xs font-extrabold text-white">Admission Confirmed</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">GTech verifies the referral coupon and confirms university admission.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-slate-950 font-black text-[11px]">5</span>
+                    <h4 class="text-xs font-extrabold text-amber-300">Referral Reward</h4>
+                    <p class="text-[11px] text-slate-300 leading-snug">Referring student receives the reward after successful admission.</p>
+                </div>
+            </div>
+
+            <!-- Generate Referral ID & Share Box (Requires Student Login First) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl max-w-2xl mx-auto text-center space-y-4">
+                <div class="space-y-1">
+                    <h4 class="text-base font-black text-white">Your Personal GTech Referral ID & Share Link</h4>
+                    <p class="text-xs text-slate-400">Must be logged in as a registered GTech student to generate your referral link.</p>
                 </div>
 
-                <form onsubmit="generateReferralCode(event)" class="space-y-3 max-w-sm mx-auto">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name</label>
-                        <input type="text" id="ref-name" required placeholder="e.g. Rahul Sharma" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">WhatsApp / Phone Number</label>
-                        <input type="tel" id="ref-phone" required placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
-                    </div>
-                    <button type="submit" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20">
-                        Generate Concession Code
-                    </button>
-                </form>
+                <button type="button" onclick="handleGenerateReferralClick()" class="px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-ticket"></i> Generate My Referral ID & Share Link
+                </button>
 
-                <div id="generated-code-box" class="hidden mt-4 p-3.5 rounded-2xl bg-slate-950 border border-amber-500/40 text-center space-y-1.5">
-                    <p class="text-[10px] text-amber-400 font-bold uppercase">Your Exclusive Referral Concession Code:</p>
-                    <div id="generated-code-display" class="text-lg font-mono font-black text-white tracking-widest"></div>
-                    <div class="flex justify-center gap-2 pt-1">
-                        <button type="button" onclick="copyText(document.getElementById('generated-code-display').textContent)" class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-200 rounded-lg border border-slate-800 font-bold">Copy Code</button>
-                        <button type="button" onclick="shareWhatsApp()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-[11px] text-white rounded-lg font-bold flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> Share</button>
+                <div id="generated-code-box" class="hidden mt-4 p-4 rounded-2xl bg-slate-950 border border-amber-500/40 text-center space-y-3">
+                    <div>
+                        <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Your Unique GTech Referral ID:</p>
+                        <div id="generated-code-display" class="text-lg sm:text-xl font-mono font-black text-white tracking-widest mt-0.5"></div>
+                    </div>
+
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-indigo-300 break-all" id="generated-link-display"></div>
+
+                    <div class="flex flex-wrap justify-center gap-2 pt-1">
+                        <button type="button" onclick="copyReferralLink()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-[11px] text-white rounded-xl border border-slate-700 font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-link"></i> Copy Referral Link
+                        </button>
+                        <button type="button" onclick="shareWhatsApp()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-[11px] text-white rounded-xl font-bold flex items-center gap-1.5">
+                            <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+                        </button>
+                        <button type="button" onclick="shareInstagram()" class="px-3.5 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-[11px] text-white rounded-xl font-bold flex items-center gap-1.5">
+                            <i class="fa-brands fa-instagram"></i> Share on Instagram
+                        </button>
                     </div>
                 </div>
             </div>
@@ -279,7 +381,7 @@
       </div>
     </footer>
 
-    <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL -->
+    <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL (WITH OPTIONAL REFERRAL COUPON) -->
     <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
             <button onclick="document.getElementById('student-login-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
@@ -307,12 +409,16 @@
                     <label class="block text-[11px] font-bold text-slate-300 mb-1">Phone Number *</label>
                     <input type="tel" id="auth-mobile" placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
                 </div>
+                <div id="referral-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-amber-400 mb-1">Referral Coupon Code (Optional)</label>
+                    <input type="text" id="auth-referral-code" placeholder="Enter friend's GTECH-REF code if any" class="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3.5 py-2.5 text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400">
+                </div>
                 <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-2">Login with Email</button>
             </form>
         </div>
     </div>
 
-    <!-- STUDENT DASHBOARD MODAL (Sign Out Removed) -->
+    <!-- STUDENT DASHBOARD MODAL -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
@@ -320,7 +426,7 @@
                     <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">🎓</div>
                     <div>
                         <h3 class="font-black text-white text-sm" id="student-dash-title">Welcome Back!</h3>
-                        <p class="text-[10px] text-slate-400" id="student-dash-email">Track your scholarship applications and referral vouchers.</p>
+                        <p class="text-[10px] text-slate-400" id="student-dash-email">Track your scholarship applications and referral rewards.</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -333,7 +439,10 @@
                     <div id="student-applications-list" class="space-y-2"></div>
                 </div>
                 <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
-                    <h4 class="font-bold text-xs uppercase tracking-wider text-amber-400">My Referral & Fee Concession Vouchers</h4>
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-amber-400">My Referral ID, Link & Reward Status</h4>
+                        <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden'); handleGenerateReferralClick();" class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-[10px]">+ Get / View My Referral Link</button>
+                    </div>
                     <div id="student-vouchers-list" class="space-y-2"></div>
                 </div>
             </div>
@@ -371,7 +480,7 @@
                     <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">📊</div>
                     <div>
                         <h3 class="font-black text-white text-sm">GTech Admin & University Fee Control</h3>
-                        <p class="text-[10px] text-slate-400">Manage student signups, call statuses, branch fees, universities, and auto-cropped carousel banners.</p>
+                        <p class="text-[10px] text-slate-400">Manage student signups, call statuses, referral verifications, branch fees, universities, and carousel banners.</p>
                     </div>
                 </div>
                 <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Close</button>
@@ -379,6 +488,7 @@
             <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-5 text-xs font-bold overflow-x-auto">
                 <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap">Student Scholarship Leads</button>
                 <button onclick="switchAdminTab('students')" id="tab-btn-students" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Registered Students</button>
+                <button onclick="switchAdminTab('referrals')" id="tab-btn-referrals" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Referral Rewards</button>
                 <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Universities</button>
                 <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Carousel</button>
             </div>
@@ -393,6 +503,7 @@
                                     <th class="p-3">Parent Phone / Address</th>
                                     <th class="p-3">Academics (JEE / Inter / PCM)</th>
                                     <th class="p-3">University & Branch</th>
+                                    <th class="p-3">Referral Code</th>
                                     <th class="p-3">Call / Application Status</th>
                                 </tr>
                             </thead>
@@ -414,7 +525,7 @@
                                     <th class="p-3">Student Name</th>
                                     <th class="p-3">Email ID</th>
                                     <th class="p-3">Phone Number</th>
-                                    <th class="p-3">City / Address</th>
+                                    <th class="p-3">Referred By Coupon</th>
                                     <th class="p-3">Registered On</th>
                                 </tr>
                             </thead>
@@ -423,7 +534,27 @@
                     </div>
                 </div>
 
-                <!-- Tab 3: Manage Universities -->
+                <!-- Tab 3: Referral Verification & Rewards -->
+                <div id="admin-tab-referrals" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white text-xs">Student Referral IDs & Reward Verification</h4>
+                    </div>
+                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">Referring Student</th>
+                                    <th class="p-3">Phone / Email</th>
+                                    <th class="p-3">Unique Referral ID</th>
+                                    <th class="p-3">Reward Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-referrals-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Manage Universities -->
                 <div id="admin-tab-universities" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white text-xs">University Catalog & Fee Matrix Control</h4>
@@ -445,7 +576,7 @@
                     </div>
                 </div>
 
-                <!-- Tab 4: Manage Carousel (Auto-Cropped 1600x640 Banner Ratio) -->
+                <!-- Tab 5: Manage Carousel -->
                 <div id="admin-tab-carousel" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <div>
@@ -456,7 +587,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
                             <h5 class="text-xs font-bold text-indigo-400">Carousel Photo 1</h5>
-                            <div class="w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                            <div class="w-full aspect-[5/2] rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
                                 <img id="carousel-preview-1" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover" alt="Slide 1 Preview">
                             </div>
                             <input type="file" id="carousel-file-1" accept="image/*" onchange="previewCroppedImage(this, 'carousel-preview-1', 1600, 640)" class="w-full text-xs text-slate-300">
@@ -465,7 +596,7 @@
                         </div>
                         <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
                             <h5 class="text-xs font-bold text-emerald-400">Carousel Photo 2</h5>
-                            <div class="w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                            <div class="w-full aspect-[5/2] rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
                                 <img id="carousel-preview-2" src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover" alt="Slide 2 Preview">
                             </div>
                             <input type="file" id="carousel-file-2" accept="image/*" onchange="previewCroppedImage(this, 'carousel-preview-2', 1600, 640)" class="w-full text-xs text-slate-300">
@@ -478,7 +609,7 @@
         </div>
     </div>
 
-    <!-- ADD / EDIT UNIVERSITY MODAL (Auto-Cropped 800x450 Card Ratio) -->
+    <!-- ADD / EDIT UNIVERSITY MODAL -->
     <div id="uni-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button onclick="document.getElementById('uni-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
@@ -537,7 +668,7 @@
                 </div>
 
                 <!-- Live Cropped Card Preview -->
-                <div class="w-full h-28 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+                <div class="w-full aspect-[16/9] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
                     <img id="uni-card-preview" src="https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover" alt="University Card Preview">
                 </div>
 

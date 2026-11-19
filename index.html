@@ -28,7 +28,7 @@
                 <a href="#about" class="hover:text-indigo-400 transition">About Us</a>
                 <a href="#universities" class="hover:text-indigo-400 transition">University Catalog</a>
                 <a href="#referral-section" class="hover:text-indigo-400 transition">Referral & Vouchers</a>
-                <a href="#apply" class="hover:text-indigo-400 transition">Scholarship Form</a>
+                <a href="#apply" onclick="requireAuthForApply(event)" class="hover:text-indigo-400 transition">Scholarship Form</a>
             </nav>
 
             <div class="flex items-center space-x-2 sm:space-x-3">
@@ -40,9 +40,9 @@
                     <i class="fa-solid fa-user-lock text-[10px]"></i> <span>Student Login</span>
                 </button>
 
-                <a href="#apply" class="hidden sm:inline-block px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25">
+                <button type="button" onclick="requireAuthForApply(event)" class="hidden sm:inline-block px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/25">
                     Apply
-                </a>
+                </button>
             </div>
         </div>
     </header>
@@ -73,9 +73,9 @@
 
             <!-- Carousel Container -->
             <div class="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 shadow-2xl">
-                <div id="about-carousel" class="relative h-72 sm:h-96 w-full overflow-hidden flex transition-transform duration-700">
+                <div id="about-carousel" class="relative h-72 sm:h-96 w-full flex transition-transform duration-700">
                     <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-50" alt="Student Group Success">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-55" alt="Student Group Success">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
                             <div>
                                 <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Campus Success 2026</span>
@@ -83,19 +83,28 @@
                             </div>
                         </div>
                     </div>
+                    <div class="w-full h-full shrink-0 relative">
+                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover opacity-55" alt="Top Engineering Campuses">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Direct & Merit Seats</span>
+                                <h4 class="text-xl sm:text-2xl font-black text-white mt-1">Top NIRF Ranked Universities Across India</h4>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
-                <button onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
+                <button type="button" onclick="prevSlide()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
+                <button type="button" onclick="nextSlide()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/70 border border-slate-800 text-white flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
             </div>
 
             <!-- Feature Cards Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div onclick="document.getElementById('apply').scrollIntoView({behavior:'smooth'})" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer space-y-3 shadow-lg transition">
+                <div onclick="requireAuthForApply(event)" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 cursor-pointer space-y-3 shadow-lg transition">
                     <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-base">🎓</div>
                     <h4 class="font-extrabold text-white text-sm">GET THE SCHOLARSHIP FROM COLLEGE CONSULTANT</h4>
                     <p class="text-xs text-slate-400">Submit your academic details and JEE/Inter scores to unlock suitable university scholarship opportunities through our expert consultant.</p>
                 </div>
-                <div onclick="document.getElementById('apply').scrollIntoView({behavior:'smooth'})" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 cursor-pointer space-y-3 shadow-lg transition">
+                <div onclick="requireAuthForApply(event)" class="p-6 rounded-3xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 cursor-pointer space-y-3 shadow-lg transition">
                     <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-base">📞</div>
                     <h4 class="font-extrabold text-white text-sm">GET A CALL FROM AN EXPERT</h4>
                     <p class="text-xs text-slate-400">Connect instantly with our senior admissions consultant in Ongole for guidance on direct admissions or application-only universities.</p>
@@ -147,7 +156,7 @@
                 <div class="text-center space-y-1.5 mb-6">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Consultancy Assistance</span>
                     <h3 class="text-xl font-black text-white">Get Scholarship & Expert Callback</h3>
-                    <p class="text-xs text-slate-400">Our senior educational consultant in Ongole will review your academic records and JEE scores to secure maximum fee concessions.</p>
+                    <p class="text-xs text-slate-400">Login or register first, then submit your academic records and JEE scores to secure maximum fee concessions.</p>
                 </div>
 
                 <form onsubmit="handleScholarshipInquiry(event)" class="space-y-4">
@@ -303,7 +312,7 @@
         </div>
     </div>
 
-    <!-- STUDENT DASHBOARD MODAL -->
+    <!-- STUDENT DASHBOARD MODAL (Sign Out Removed) -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
@@ -315,8 +324,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Minimize</button>
-                    <button onclick="logoutStudent()" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-[11px] text-rose-300 font-bold">Sign Out</button>
+                    <button onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-200 font-bold">Close / Minimize</button>
                 </div>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-6">
@@ -363,19 +371,21 @@
                     <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">📊</div>
                     <div>
                         <h3 class="font-black text-white text-sm">GTech Admin & University Fee Control</h3>
-                        <p class="text-[10px] text-slate-400">Full control over branch fees, hostel fees, application fees, admission modes, and student inquiries.</p>
+                        <p class="text-[10px] text-slate-400">Manage student signups, call statuses, branch fees, universities, and auto-cropped carousel banners.</p>
                     </div>
                 </div>
                 <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Close</button>
             </div>
             <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-5 text-xs font-bold overflow-x-auto">
                 <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap">Student Scholarship Leads</button>
+                <button onclick="switchAdminTab('students')" id="tab-btn-students" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Registered Students</button>
                 <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Universities</button>
                 <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Carousel</button>
             </div>
             <div class="p-5 overflow-y-auto flex-1 space-y-4">
+                <!-- Tab 1: Student Scholarship Leads -->
                 <div id="admin-tab-inquiries" class="space-y-4">
-                    <div class="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
@@ -383,19 +393,43 @@
                                     <th class="p-3">Parent Phone / Address</th>
                                     <th class="p-3">Academics (JEE / Inter / PCM)</th>
                                     <th class="p-3">University & Branch</th>
-                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Call / Application Status</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-inquiries-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
                         </table>
                     </div>
                 </div>
+
+                <!-- Tab 2: Registered Student Signup Accounts -->
+                <div id="admin-tab-students" class="space-y-4 hidden">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white text-xs">Registered Student Signup Accounts</h4>
+                        <span id="total-students-count" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">0 Students</span>
+                    </div>
+                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">Student Name</th>
+                                    <th class="p-3">Email ID</th>
+                                    <th class="p-3">Phone Number</th>
+                                    <th class="p-3">City / Address</th>
+                                    <th class="p-3">Registered On</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-students-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Manage Universities -->
                 <div id="admin-tab-universities" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white text-xs">University Catalog & Fee Matrix Control</h4>
                         <button onclick="openAddUniModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition">+ Add University</button>
                     </div>
-                    <div class="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+                    <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
@@ -410,22 +444,33 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Tab 4: Manage Carousel (Auto-Cropped 1600x640 Banner Ratio) -->
                 <div id="admin-tab-carousel" class="space-y-4 hidden">
                     <div class="flex justify-between items-center">
-                        <h4 class="font-bold text-white text-xs">Manage Carousel Slides (Photo 1 & Photo 2)</h4>
+                        <div>
+                            <h4 class="font-bold text-white text-xs">Manage Carousel Slides (Auto-Cropped to 1600×640 Banner Size)</h4>
+                            <p class="text-[10px] text-slate-400">Any uploaded photo is automatically center-cropped to fit the exact carousel banner aspect ratio.</p>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
                             <h5 class="text-xs font-bold text-indigo-400">Carousel Photo 1</h5>
-                            <input type="file" id="carousel-file-1" accept="image/*" class="w-full text-xs text-slate-300">
+                            <div class="w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                                <img id="carousel-preview-1" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover" alt="Slide 1 Preview">
+                            </div>
+                            <input type="file" id="carousel-file-1" accept="image/*" onchange="previewCroppedImage(this, 'carousel-preview-1', 1600, 640)" class="w-full text-xs text-slate-300">
                             <input type="text" id="carousel-title-1" placeholder="Slide Title 1" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="button" id="btn-upload-carousel-1" onclick="handleUploadCarousel(1)" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">Upload Photo 1</button>
+                            <button type="button" id="btn-upload-carousel-1" onclick="handleUploadCarousel(1)" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">Crop & Upload Photo 1</button>
                         </div>
                         <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
                             <h5 class="text-xs font-bold text-emerald-400">Carousel Photo 2</h5>
-                            <input type="file" id="carousel-file-2" accept="image/*" class="w-full text-xs text-slate-300">
+                            <div class="w-full h-32 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                                <img id="carousel-preview-2" src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover" alt="Slide 2 Preview">
+                            </div>
+                            <input type="file" id="carousel-file-2" accept="image/*" onchange="previewCroppedImage(this, 'carousel-preview-2', 1600, 640)" class="w-full text-xs text-slate-300">
                             <input type="text" id="carousel-title-2" placeholder="Slide Title 2" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                            <button type="button" id="btn-upload-carousel-2" onclick="handleUploadCarousel(2)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Upload Photo 2</button>
+                            <button type="button" id="btn-upload-carousel-2" onclick="handleUploadCarousel(2)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Crop & Upload Photo 2</button>
                         </div>
                     </div>
                 </div>
@@ -433,7 +478,7 @@
         </div>
     </div>
 
-    <!-- ADD / EDIT UNIVERSITY MODAL -->
+    <!-- ADD / EDIT UNIVERSITY MODAL (Auto-Cropped 800x450 Card Ratio) -->
     <div id="uni-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button onclick="document.getElementById('uni-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
@@ -485,10 +530,15 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Upload University Photo *</label>
-                        <input type="file" id="modal-uni-file" accept="image/*" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white file:bg-indigo-600 file:border-0 file:rounded-lg file:text-white file:text-[10px]">
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Card Photo (Auto-Cropped 16:9)</label>
+                        <input type="file" id="modal-uni-file" accept="image/*" onchange="previewCroppedImage(this, 'uni-card-preview', 800, 450)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white file:bg-indigo-600 file:border-0 file:rounded-lg file:text-white file:text-[10px]">
                         <input type="hidden" id="modal-uni-image-url">
                     </div>
+                </div>
+
+                <!-- Live Cropped Card Preview -->
+                <div class="w-full h-28 rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+                    <img id="uni-card-preview" src="https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover" alt="University Card Preview">
                 </div>
 
                 <div class="border-t border-slate-800 pt-3">
@@ -505,7 +555,7 @@
                     </div>
                 </div>
 
-                <button type="submit" id="btn-save-uni" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Save University</button>
+                <button type="submit" id="btn-save-uni" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Crop & Save University</button>
             </form>
         </div>
     </div>

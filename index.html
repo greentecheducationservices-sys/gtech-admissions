@@ -2,38 +2,38 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>GTech Admissions Portal | Engineering Admissions Consultancy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white">
+<body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white overflow-x-hidden">
 
     <!-- Referral Link Auto-Detection Top Banner -->
-    <div id="referral-applied-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold py-2 px-4 text-center">
-        <i class="fa-solid fa-gift mr-1.5"></i> Referral Coupon <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Register & submit your admission enquiry to unlock fee concessions.
+    <div id="referral-applied-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold py-2 px-3 text-center">
+        <i class="fa-solid fa-gift mr-1"></i> Referral Coupon <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Register & submit your admission enquiry.
     </div>
 
-    <!-- Professional & Attractive Student Navigation Header -->
-    <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/90 shadow-lg shadow-slate-950/60">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
+    <!-- Responsive Student Navigation Header (Clean Mobile & Desktop Fit) -->
+    <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/90 shadow-lg shadow-slate-950/60">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:h-20 flex flex-wrap items-center justify-between gap-2">
             <!-- Brand Identity -->
-            <a href="#" class="flex items-center space-x-3 shrink-0 group">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition">
+            <a href="#" class="flex items-center space-x-2.5 shrink-0 group">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-base sm:text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition">
                     G
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-black text-base sm:text-lg tracking-tight text-white">GTech Admissions</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-black text-sm sm:text-lg tracking-tight text-white">GTech Admissions</span>
                         <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">2026–27</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 font-medium">Student Admissions & Scholarship Hub</p>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-tight">Student Admissions & Scholarship Hub</p>
                 </div>
             </a>
 
-            <!-- Student Navigation Links -->
+            <!-- Desktop Navigation Links -->
             <nav class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 text-xs font-bold text-slate-300">
                 <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition">About</a>
                 <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition">Universities</a>
@@ -42,31 +42,39 @@
             </nav>
 
             <!-- Student Actions -->
-            <div class="flex items-center space-x-2 sm:space-x-2.5 shrink-0">
-                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold transition flex items-center gap-2 shadow-lg shadow-emerald-600/25">
-                    <i class="fa-solid fa-user-graduate text-xs"></i>
-                    <span id="header-student-name">Student Hub</span>
+            <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 max-w-[140px] sm:max-w-none">
+                    <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
+                    <span id="header-student-name" class="truncate">Dashboard</span>
                 </button>
 
-                <button id="header-login-btn" onclick="openStudentLoginModal()" class="px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-700/80 hover:border-emerald-400 text-emerald-300 text-xs font-extrabold transition flex items-center gap-2 shadow-sm">
-                    <i class="fa-solid fa-right-to-bracket text-xs"></i>
-                    <span>Student Login</span>
+                <button id="header-login-btn" onclick="openStudentLoginModal()" class="px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700/80 hover:border-emerald-400 text-emerald-300 text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
+                    <span>Login</span>
                 </button>
 
-                <button type="button" onclick="requireAuthForApply(event)" class="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-extrabold transition shadow-lg shadow-indigo-600/30">
-                    Apply Now
+                <button type="button" onclick="requireAuthForApply(event)" class="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-[11px] sm:text-xs font-extrabold transition shadow-lg shadow-indigo-600/30">
+                    Apply
                 </button>
             </div>
+        </div>
+
+        <!-- Mobile Quick Sub-Navigation Strip -->
+        <div class="flex md:hidden items-center justify-around border-t border-slate-900 bg-slate-950/95 px-2 py-1.5 text-[11px] font-bold text-slate-400">
+            <a href="#about" class="px-2 py-1 hover:text-white transition">About</a>
+            <a href="#universities" class="px-2 py-1 hover:text-white transition">Universities</a>
+            <a href="#referral-section" class="px-2 py-1 text-amber-400 hover:text-amber-300 transition">Refer & Earn</a>
+            <a href="#apply" onclick="requireAuthForApply(event)" class="px-2 py-1 text-indigo-400 hover:text-indigo-300 transition">Scholarship</a>
         </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden py-14 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
+    <section class="relative overflow-hidden py-12 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
         <div class="max-w-4xl mx-auto text-center space-y-4">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certified Educational Admissions Consultancy
             </span>
-            <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+            <h2 class="text-2xl sm:text-5xl font-black text-white tracking-tight leading-tight">
                 Secure Branch-Wise Fees & <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Scholarships</span> with GTech
             </h2>
             <p class="text-slate-400 text-xs sm:text-sm max-w-2xl mx-auto">
@@ -75,31 +83,26 @@
         </div>
     </section>
 
-    <!-- ABOUT GTECH WITH CLEAN CAROUSEL ONLY & SOFTWARE-STYLE FEATURE CARDS -->
-    <section id="about" class="py-14 bg-slate-950 border-b border-slate-900">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- ABOUT GTECH WITH CLEAN CAROUSEL ONLY (NO TEXT FLASH ON LOAD) -->
+    <section id="about" class="py-12 sm:py-14 bg-slate-950 border-b border-slate-900">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="text-center max-w-2xl mx-auto space-y-2 mb-8">
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Why Choose GTech</span>
-                <h3 class="text-2xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
+                <h3 class="text-xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
             </div>
 
-            <!-- Carousel Container Only (No Extra Title/Badge Overlays) -->
-            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-12 shadow-2xl">
-                <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700">
-                    <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="GTech Carousel Slide 1">
-                    </div>
-                    <div class="w-full h-full shrink-0 relative">
-                        <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover object-center" alt="GTech Carousel Slide 2">
-                    </div>
+            <!-- Carousel Container Only (Populated Directly from Supabase Without Old Text Flash) -->
+            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-10 sm:mb-12 shadow-2xl">
+                <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700 bg-slate-900">
+                    <div class="w-full h-full shrink-0 bg-slate-900 animate-pulse"></div>
                 </div>
                 <button type="button" onclick="prevSlide()" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
                 <button type="button" onclick="nextSlide()" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
             </div>
 
             <!-- Professional Software-Grade 4-Card Service Suite -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-indigo-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                <div onclick="requireAuthForApply(event)" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-indigo-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
@@ -116,7 +119,7 @@
                     </div>
                 </div>
 
-                <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                <div onclick="requireAuthForApply(event)" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
@@ -133,7 +136,7 @@
                     </div>
                 </div>
 
-                <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
@@ -150,7 +153,7 @@
                     </div>
                 </div>
 
-                <div onclick="requireAuthForApply(event)" class="group relative p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                <div onclick="requireAuthForApply(event)" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <div class="w-11 h-11 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
@@ -171,8 +174,8 @@
     </section>
 
     <!-- Region Selector Filter -->
-    <section id="universities" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+    <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-12 pb-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6">
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Institutional Database</span>
                 <h3 class="text-xl sm:text-2xl font-black text-white mt-1">University & Branch Fee Matrix</h3>
@@ -197,14 +200,14 @@
     </section>
 
     <!-- Universities Grid Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-16">
         <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
 
     <!-- Scholarship Inquiry / Application Form Section -->
     <section id="apply" class="py-16 bg-slate-950 border-t border-slate-900">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
+        <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-10 shadow-2xl">
                 <div class="text-center space-y-1.5 mb-6">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Consultancy Assistance</span>
                     <h3 class="text-xl font-black text-white">Get Scholarship, Loan Guidance & Expert Callback</h3>
@@ -288,7 +291,7 @@
 
     <!-- 5-STEP STUDENT REFERRAL PROGRAM SECTION -->
     <section id="referral-section" class="py-16 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-10">
             <div class="text-center max-w-2xl mx-auto space-y-2">
                 <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">GTech Student Referral Program</span>
                 <h3 class="text-2xl sm:text-3xl font-black text-white">Refer Friends & Earn Admission Rewards</h3>
@@ -323,33 +326,33 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl max-w-2xl mx-auto text-center space-y-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl max-w-2xl mx-auto text-center space-y-4">
                 <div class="space-y-1">
                     <h4 class="text-base font-black text-white">Your Personal GTech Referral ID & Share Link</h4>
                     <p class="text-xs text-slate-400">Must be logged in as a registered GTech student to generate your referral link.</p>
                 </div>
 
-                <button type="button" onclick="handleGenerateReferralClick()" class="px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
+                <button type="button" onclick="handleGenerateReferralClick()" class="px-5 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
                     <i class="fa-solid fa-ticket"></i> Generate My Referral ID & Share Link
                 </button>
 
                 <div id="generated-code-box" class="hidden mt-4 p-4 rounded-2xl bg-slate-950 border border-amber-500/40 text-center space-y-3">
                     <div>
                         <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Your Unique GTech Referral ID:</p>
-                        <div id="generated-code-display" class="text-lg sm:text-xl font-mono font-black text-white tracking-widest mt-0.5"></div>
+                        <div id="generated-code-display" class="text-base sm:text-xl font-mono font-black text-white tracking-widest mt-0.5 break-all"></div>
                     </div>
 
                     <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-indigo-300 break-all" id="generated-link-display"></div>
 
                     <div class="flex flex-wrap justify-center gap-2 pt-1">
                         <button type="button" onclick="copyReferralLink()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-[11px] text-white rounded-xl border border-slate-700 font-bold flex items-center gap-1.5">
-                            <i class="fa-solid fa-link"></i> Copy Referral Link
+                            <i class="fa-solid fa-link"></i> Copy Link
                         </button>
                         <button type="button" onclick="shareWhatsApp()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-[11px] text-white rounded-xl font-bold flex items-center gap-1.5">
-                            <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+                            <i class="fa-brands fa-whatsapp"></i> WhatsApp
                         </button>
                         <button type="button" onclick="shareInstagram()" class="px-3.5 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-[11px] text-white rounded-xl font-bold flex items-center gap-1.5">
-                            <i class="fa-brands fa-instagram"></i> Share on Instagram
+                            <i class="fa-brands fa-instagram"></i> Instagram
                         </button>
                     </div>
                 </div>
@@ -371,10 +374,10 @@
     </footer>
 
     <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL -->
-    <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 p-6 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative">
+    <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative max-h-[92vh] overflow-y-auto">
             <button onclick="document.getElementById('student-login-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
-            <div class="text-center space-y-1 mb-6">
+            <div class="text-center space-y-1 mb-5">
                 <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🎓</div>
                 <h3 id="auth-modal-title" class="text-base font-extrabold text-white">Student Portal Login</h3>
                 <p id="auth-modal-subtitle" class="text-[11px] text-slate-400">Sign in instantly with your registered email.</p>
@@ -407,60 +410,61 @@
         </div>
     </div>
 
-    <!-- ATTRACTIVE STUDENT DASHBOARD MODAL -->
-    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
-        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Dashboard Top Bar with Cancel Option -->
-            <div class="p-5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-emerald-600/20">
+    <!-- RESPONSIVE MOBILE-FRIENDLY STUDENT DASHBOARD MODAL (NO SIDE SCROLL / NO ZOOM NEEDED) -->
+    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Dashboard Top Bar -->
+            <div class="p-3.5 sm:p-5 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 shrink-0">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
-                    <div>
-                        <h3 class="font-black text-white text-sm sm:text-base" id="student-dash-title">Welcome Back!</h3>
-                        <p class="text-[11px] text-slate-400" id="student-dash-email">Track your admission flow, scholarship status, and referral rewards.</p>
+                    <div class="min-w-0">
+                        <h3 class="font-black text-white text-xs sm:text-base truncate" id="student-dash-title">Welcome Back!</h3>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400 truncate" id="student-dash-email">Track your admission flow & referral rewards.</p>
                     </div>
                 </div>
-                <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition flex items-center gap-1.5">
+                <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 shrink-0">
                     <i class="fa-solid fa-xmark"></i> Cancel
                 </button>
             </div>
 
-            <div class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-6">
+            <!-- Scrollable Dashboard Body (Strictly Fitted to Screen Width) -->
+            <div class="p-3.5 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-4 sm:space-y-6">
                 <!-- Admission Process Flow Tracker -->
-                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h4 class="font-extrabold text-xs uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
                             <i class="fa-solid fa-route"></i> Admission Process Flow
                         </h4>
                         <span id="dash-current-stage-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">Active</span>
                     </div>
-                    <div id="admission-process-flow" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5"></div>
+                    <div id="admission-process-flow" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
                 </div>
 
                 <!-- My Scholarship Applications & Status -->
-                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
-                    <h4 class="font-extrabold text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
+                    <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-file-circle-check"></i> My Scholarship Applications & Status
                     </h4>
                     <div id="student-applications-list" class="space-y-2"></div>
                 </div>
 
                 <!-- My Referral ID, Link & Reward Note -->
-                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <h4 class="font-extrabold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-2">
-                            <i class="fa-solid fa-gift"></i> My Referral ID, Link & Reward Status
+                        <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-gift"></i> My Referral ID & Reward Status
                         </h4>
-                        <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden'); handleGenerateReferralClick();" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[11px] transition">
-                            + Get / View My Referral Link
+                        <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden'); handleGenerateReferralClick();" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[10px] sm:text-[11px] transition">
+                            + Get / View Referral Link
                         </button>
                     </div>
 
                     <!-- Referral Usage Note -->
-                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 flex items-start gap-2.5">
+                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 flex items-start gap-2">
                         <i class="fa-solid fa-circle-info text-amber-400 mt-0.5 shrink-0"></i>
-                        <div>
+                        <div class="leading-relaxed">
                             <strong class="text-amber-300">Note:</strong> Referral reward amount is used toward <strong>admission processing or tuition fee</strong> adjustments after your referred friend's admission is verified and confirmed by GTech.
                         </div>
                     </div>
@@ -495,9 +499,9 @@
     </div>
 
     <!-- ADMIN DASHBOARD MODAL -->
-    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">📊</div>
                     <div>
@@ -507,14 +511,14 @@
                 </div>
                 <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 font-bold">Close</button>
             </div>
-            <div class="flex border-b border-slate-800 bg-slate-950 px-5 gap-5 text-xs font-bold overflow-x-auto">
+            <div class="flex border-b border-slate-800 bg-slate-950 px-4 sm:px-5 gap-4 sm:gap-5 text-xs font-bold overflow-x-auto">
                 <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap">Student Scholarship Leads</button>
                 <button onclick="switchAdminTab('students')" id="tab-btn-students" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Registered Students</button>
                 <button onclick="switchAdminTab('referrals')" id="tab-btn-referrals" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Referral Rewards</button>
                 <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Universities</button>
                 <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">Manage Carousel</button>
             </div>
-            <div class="p-5 overflow-y-auto flex-1 space-y-4">
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
                 <div id="admin-tab-inquiries" class="space-y-4">
                     <div class="border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
                         <table class="w-full text-left border-collapse">
@@ -708,11 +712,11 @@
     </div>
 
     <!-- Modern UI Toast Notification Container -->
-    <div id="gtech-toast" class="fixed bottom-6 right-6 z-[100] hidden items-center gap-3 px-5 py-4 rounded-2xl bg-slate-900 border border-emerald-500/50 text-white shadow-2xl shadow-emerald-500/10 max-w-sm transition-all duration-300">
+    <div id="gtech-toast" class="fixed bottom-4 right-4 left-4 sm:left-auto z-[100] hidden items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-900 border border-emerald-500/50 text-white shadow-2xl shadow-emerald-500/10 sm:max-w-sm transition-all duration-300">
         <div id="gtech-toast-icon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm">
             ✓
         </div>
-        <div class="flex-1">
+        <div class="flex-1 min-w-0">
             <p id="gtech-toast-title" class="text-xs font-black text-white">Success</p>
             <p id="gtech-toast-msg" class="text-[11px] text-slate-300 mt-0.5 leading-snug"></p>
         </div>

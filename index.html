@@ -32,7 +32,6 @@
             </nav>
 
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <!-- Visible Student Dashboard Button when logged in -->
                 <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-3.5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25">
                     <i class="fa-solid fa-gauge-high text-[10px]"></i> <span id="header-student-name">Dashboard</span>
                 </button>
@@ -509,6 +508,18 @@
                 <button type="submit" id="btn-save-uni" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Save University</button>
             </form>
         </div>
+    </div>
+
+    <!-- Modern UI Toast Notification Container -->
+    <div id="gtech-toast" class="fixed bottom-6 right-6 z-[100] hidden items-center gap-3 px-5 py-4 rounded-2xl bg-slate-900 border border-emerald-500/50 text-white shadow-2xl shadow-emerald-500/10 max-w-sm transition-all duration-300">
+        <div id="gtech-toast-icon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm">
+            ✓
+        </div>
+        <div class="flex-1">
+            <p id="gtech-toast-title" class="text-xs font-black text-white">Success</p>
+            <p id="gtech-toast-msg" class="text-[11px] text-slate-300 mt-0.5 leading-snug"></p>
+        </div>
+        <button onclick="hideToast()" class="text-slate-500 hover:text-white text-xs ml-2">✕</button>
     </div>
 
     <script src="./app.js"></script>

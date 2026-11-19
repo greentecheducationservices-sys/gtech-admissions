@@ -465,14 +465,13 @@ async function handleScholarshipInquiry(e) {
     const branch = document.getElementById('app-branch').value;
     const referralCode = document.getElementById('app-referral-code').value.trim().toUpperCase();
 
-    const inquiry = {
+    const basePayload = {
         id: Date.now(),
         name,
         phone,
         parent_phone: parentPhone,
         email,
         address,
-        jee_score: jee,
         inter,
         pcm,
         uni,
@@ -481,13 +480,19 @@ async function handleScholarshipInquiry(e) {
         status: 'Pending Callback'
     };
 
-    const { error } = await _supabase.from('inquiries').insert([inquiry]);
+    let { error } = await _supabase.from('inquiries').insert([{ ...basePayload, jee_score: jee }]);
+
+    if (error && error.message && error.message.includes('jee_score')) {
+        const fallbackRes = await _supabase.from('inquiries').insert([{ ...basePayload, jee: jee }]);
+        error = fallbackRes.error;
+    }
+
     if (error) {
         showToast('Submission Error', error.message, 'error');
         return;
     }
 
-    state.inquiries.unshift(inquiry);
+    state.inquiries.unshift({ ...basePayload, jee_score: jee });
     showToast('Application Submitted', 'Our team will review your application and reach out via WhatsApp within 10 minutes.', 'success');
     e.target.reset();
     prefillScholarshipFormWithStudent();
@@ -882,6 +887,7 @@ function loadAdminDashboardData() {
             const optionsHtml = statusOptions.map(opt =>
                 `<option value="${opt}" ${currentStatus === opt ? 'selected' : ''}>${opt}</option>`
             ).join('');
+            const jeeVal = inq.jee_score || inq.jee || 'N/A';
 
             return `
                 <tr class="hover:bg-slate-900/60">
@@ -895,7 +901,7 @@ function loadAdminDashboardData() {
                         <span class="text-slate-500 text-[10px] truncate max-w-xs block" title="${inq.address}">${inq.address}</span>
                     </td>
                     <td class="p-3 text-slate-300">
-                        JEE: <strong>${inq.jee_score || 'N/A'}</strong> | Inter: <strong>${inq.inter}</strong><br>
+                        JEE: <strong>${jeeVal}</strong> | Inter: <strong>${inq.inter}</strong><br>
                         PCM: <strong class="text-emerald-400">${inq.pcm}/600</strong>
                     </td>
                     <td class="p-3">

@@ -200,7 +200,7 @@ async function loadActiveCarousel() {
             slides.push({
                 id: 2,
                 image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
-                title: 'Top NIRF Ranked Universities Across India'
+                title: 'GTech Carousel Slide 2'
             });
         }
 
@@ -208,13 +208,7 @@ async function loadActiveCarousel() {
         carousel.style.transform = 'translateX(0%)';
         carousel.innerHTML = slides.map(slide => `
             <div class="w-full h-full shrink-0 relative">
-                <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title}">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent flex items-end p-3 sm:p-8">
-                    <div>
-                        <span class="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">GTech Admissions</span>
-                        <h4 class="text-xs sm:text-2xl font-black text-white mt-0.5 sm:mt-1 line-clamp-1">${slide.title}</h4>
-                    </div>
-                </div>
+                <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
             </div>
         `).join('');
 
@@ -260,7 +254,7 @@ async function handleUploadCarousel(slideNum) {
     }
 }
 
-// --- UNIVERSITIES & CATALOG (MOBILE + DESKTOP RESPONSIVE 16:9 CARDS) ---
+// --- UNIVERSITIES & CATALOG ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -354,7 +348,6 @@ function renderUniversities() {
         return `
             <div class="bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-indigo-500/40 transition duration-300 flex flex-col justify-between">
                 <div>
-                    <!-- Responsive 16:9 Card Photo Container (No Cropping on Mobile or Laptop) -->
                     <div class="relative aspect-[16/9] w-full overflow-hidden bg-slate-950">
                         <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
@@ -507,7 +500,6 @@ async function handleGenerateReferralClick() {
     const baseUrl = window.location.origin + window.location.pathname;
     const shareUrl = `${baseUrl}?ref=${encodeURIComponent(code)}`;
 
-    // Save or fetch from Supabase referral_vouchers table
     const { error } = await _supabase.from('referral_vouchers').upsert([
         {
             student_phone: stu.mobile,
@@ -715,6 +707,8 @@ async function openStudentDashboardModal() {
 function loadStudentDashboardData() {
     const appContainer = document.getElementById('student-applications-list');
     const voucherContainer = document.getElementById('student-vouchers-list');
+    const flowContainer = document.getElementById('admission-process-flow');
+    const stageBadge = document.getElementById('dash-current-stage-badge');
     const stu = state.currentStudent;
 
     const myApps = state.inquiries.filter(inq =>
@@ -722,16 +716,62 @@ function loadStudentDashboardData() {
         (inq.phone && stu.mobile && inq.phone.includes(stu.mobile))
     );
 
+    let activeStepIndex = 0;
+    let latestStatusLabel = 'Registered';
+
+    if (myApps.length > 0) {
+        activeStepIndex = 1;
+        latestStatusLabel = myApps[0].status || 'Pending Callback';
+        const statusLower = latestStatusLabel.toLowerCase();
+        if (statusLower.includes('completed') && !statusLower.includes('application') && !statusLower.includes('admission')) {
+            activeStepIndex = 2;
+        } else if (statusLower.includes('visiting')) {
+            activeStepIndex = 2;
+        } else if (statusLower.includes('application')) {
+            activeStepIndex = 3;
+        } else if (statusLower.includes('admission')) {
+            activeStepIndex = 4;
+        }
+    }
+
+    if (stageBadge) stageBadge.textContent = latestStatusLabel;
+
+    const steps = [
+        { title: '1. Registered', desc: 'Account active' },
+        { title: '2. Enquiry Sent', desc: 'Details submitted' },
+        { title: '3. Call / Visit', desc: 'Counselor & visit' },
+        { title: '4. Application', desc: 'Form completed' },
+        { title: '5. Admission Done', desc: 'Seat confirmed' }
+    ];
+
+    if (flowContainer) {
+        flowContainer.innerHTML = steps.map((step, idx) => {
+            const done = idx <= activeStepIndex;
+            const current = idx === activeStepIndex;
+            const cardStyle = current
+                ? 'bg-indigo-600/20 border-indigo-400 text-white shadow-md shadow-indigo-600/20'
+                : done
+                    ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-200'
+                    : 'bg-slate-900/70 border-slate-800 text-slate-500';
+            return `
+                <div class="p-3 rounded-xl border ${cardStyle} transition">
+                    <div class="text-[11px] font-extrabold">${step.title}</div>
+                    <div class="text-[10px] opacity-80 mt-0.5">${step.desc}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
     if (myApps.length === 0) {
         appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found for ${stu.email}. Submit your scholarship application from the form below.</p>`;
     } else {
         appContainer.innerHTML = myApps.map(inq => `
-            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+            <div class="p-3.5 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center gap-2">
                 <div>
                     <strong class="text-white">${inq.uni} (${inq.branch})</strong>
-                    <p class="text-slate-400 text-[10px]">Student: ${inq.name} | PCM: ${inq.pcm}/600</p>
+                    <p class="text-slate-400 text-[10px] mt-0.5">Student: ${inq.name} | PCM: ${inq.pcm}/600</p>
                 </div>
-                <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">${inq.status}</span>
+                <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30 shrink-0">${inq.status}</span>
             </div>
         `).join('');
     }

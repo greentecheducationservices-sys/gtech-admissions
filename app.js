@@ -6,8 +6,10 @@ const state = {
     stateFilter: 'ALL',
     universities: [],
     inquiries: [],
+    students: [],
     currentStudent: null,
-    currentSlide: 0
+    currentSlide: 0,
+    pendingAction: null // Stores action triggered before login (e.g., { type: 'apply', uniName: '...' })
 };
 
 window.onload = async function() {
@@ -18,7 +20,7 @@ window.onload = async function() {
 
     setInterval(() => {
         nextSlide();
-    }, 4000);
+    }, 4500);
 };
 
 // --- MODERN UI TOAST NOTIFICATION ---
@@ -55,11 +57,97 @@ function hideToast() {
     if (toast) toast.classList.add('hidden');
 }
 
-// --- CAROUSEL LOGIC ---
+// --- AUTOMATIC PHOTO CROPPER & PREVIEW (CARDS & CAROUSEL) ---
+function cropImageFileToBlob(file, targetWidth, targetHeight) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                const ctx = canvas.getContext('2d');
+
+                const targetRatio = targetWidth / targetHeight;
+                const imgRatio = img.width / img.height;
+
+                let drawWidth = img.width;
+                let drawHeight = img.height;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                if (imgRatio > targetRatio) {
+                    // Image is wider than target -> crop sides
+                    drawWidth = img.height * targetRatio;
+                    offsetX = (img.width - drawWidth) / 2;
+                } else {
+                    // Image is taller than target -> crop top & bottom
+                    drawHeight = img.width / targetRatio;
+                    offsetY = (img.height - drawHeight) / 2;
+                }
+
+                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, 0, 0, targetWidth, targetHeight);
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error('Failed to crop image.'));
+                    }
+                }, 'image/jpeg', 0.9);
+            };
+            img.onerror = () => reject(new Error('Invalid image file selected.'));
+            img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error('Failed to read image file.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function previewCroppedImage(inputEl, previewImgId, targetWidth, targetHeight) {
+    if (!inputEl.files || !inputEl.files[0]) return;
+    try {
+        const blob = await cropImageFileToBlob(inputEl.files[0], targetWidth, targetHeight);
+        const previewEl = document.getElementById(previewImgId);
+        if (previewEl) {
+            previewEl.src = URL.createObjectURL(blob);
+        }
+        showToast('Photo Cropped', `Image automatically cropped to ${targetWidth}×${targetHeight} fit.`, 'success');
+    } catch (err) {
+        showToast('Crop Error', err.message, 'error');
+    }
+}
+
+async function uploadCroppedImageToBucket(file, prefix, targetWidth, targetHeight) {
+    const croppedBlob = await cropImageFileToBlob(file, targetWidth, targetHeight);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\.[^/.]+$/, '') + '.jpg';
+    const filePath = `${prefix}_${Date.now()}_${safeName}`;
+
+    const { error: uploadError } = await _supabase.storage
+        .from('universities')
+        .upload(filePath, croppedBlob, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: 'image/jpeg'
+        });
+
+    if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}. Ensure the 'universities' bucket exists and has public policies.`);
+    }
+
+    const { data: publicURLData } = _supabase.storage
+        .from('universities')
+        .getPublicUrl(filePath);
+
+    return publicURLData.publicUrl;
+}
+
+// --- CAROUSEL LOGIC (FIXED FOR SLIDE 1 & SLIDE 2) ---
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
-    const slidesCount = carousel.children.length || 1;
+    const slidesCount = carousel.children.length;
+    if (slidesCount <= 1) return;
     state.currentSlide = (state.currentSlide + 1) % slidesCount;
     carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
 }
@@ -67,19 +155,38 @@ function nextSlide() {
 function prevSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
-    const slidesCount = carousel.children.length || 1;
+    const slidesCount = carousel.children.length;
+    if (slidesCount <= 1) return;
     state.currentSlide = (state.currentSlide - 1 + slidesCount) % slidesCount;
     carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
 }
 
 async function loadActiveCarousel() {
-    const { data, error } = await _supabase.from('carousel_images').select('*').eq('is_active', true).order('display_order');
+    const { data, error } = await _supabase
+        .from('carousel_images')
+        .select('*')
+        .eq('is_active', true)
+        .order('id', { ascending: true });
+
     if (!error && data && data.length > 0) {
         const carousel = document.getElementById('about-carousel');
         if (!carousel) return;
-        carousel.innerHTML = data.map(slide => `
+
+        // Ensure at least 2 slides exist if only 1 was uploaded in DB
+        const slides = [...data];
+        if (slides.length === 1) {
+            slides.push({
+                id: 2,
+                image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
+                title: 'Top NIRF Ranked Universities Across India'
+            });
+        }
+
+        state.currentSlide = 0;
+        carousel.style.transform = 'translateX(0%)';
+        carousel.innerHTML = slides.map(slide => `
             <div class="w-full h-full shrink-0 relative">
-                <img src="${slide.image_url}" class="w-full h-full object-cover opacity-50" alt="${slide.title}">
+                <img src="${slide.image_url}" class="w-full h-full object-cover opacity-55" alt="${slide.title}">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex items-end p-8">
                     <div>
                         <span class="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">GTech Admissions</span>
@@ -88,30 +195,15 @@ async function loadActiveCarousel() {
                 </div>
             </div>
         `).join('');
-    }
-}
 
-async function uploadImageToBucket(file, prefix) {
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const filePath = `${prefix}_${Date.now()}_${safeName}`;
-
-    const { error: uploadError } = await _supabase.storage
-        .from('universities')
-        .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true,
-            contentType: file.type || 'image/jpeg'
+        // Update admin previews if present
+        data.forEach(slide => {
+            const prevImg = document.getElementById(`carousel-preview-${slide.id}`);
+            const titleInput = document.getElementById(`carousel-title-${slide.id}`);
+            if (prevImg) prevImg.src = slide.image_url;
+            if (titleInput && slide.title) titleInput.value = slide.title;
         });
-
-    if (uploadError) {
-        throw new Error(`Storage upload failed: ${uploadError.message}. Ensure the 'universities' bucket exists and has public INSERT/SELECT policies.`);
     }
-
-    const { data: publicURLData } = _supabase.storage
-        .from('universities')
-        .getPublicUrl(filePath);
-
-    return publicURLData.publicUrl;
 }
 
 async function handleUploadCarousel(slideNum) {
@@ -126,24 +218,24 @@ async function handleUploadCarousel(slideNum) {
 
     try {
         btn.disabled = true;
-        btn.textContent = 'Uploading...';
-        const imageUrl = await uploadImageToBucket(fileInput.files[0], `carousel_${slideNum}`);
-        const titleText = titleInput.value.trim() || `Carousel Slide ${slideNum}`;
+        btn.textContent = 'Cropping & Uploading...';
+        const imageUrl = await uploadCroppedImageToBucket(fileInput.files[0], `carousel_${slideNum}`, 1600, 640);
+        const titleText = titleInput.value.trim() || `GTech Admissions Slide ${slideNum}`;
 
         const { error: dbError } = await _supabase.from('carousel_images').upsert([
-            { id: slideNum, image_url: imageUrl, title: titleText, is_active: true, display_order: slideNum }
-        ]);
+            { id: Number(slideNum), image_url: imageUrl, title: titleText, is_active: true, display_order: Number(slideNum) }
+        ], { onConflict: 'id' });
 
         if (dbError) throw new Error(dbError.message);
 
-        showToast('Carousel Updated', `Carousel Photo ${slideNum} uploaded and updated successfully!`, 'success');
+        showToast('Carousel Updated', `Carousel Photo ${slideNum} cropped and updated successfully!`, 'success');
         fileInput.value = '';
         await loadActiveCarousel();
     } catch (err) {
         showToast('Upload Failed', err.message, 'error');
     } finally {
         btn.disabled = false;
-        btn.textContent = `Upload Photo ${slideNum}`;
+        btn.textContent = `Crop & Upload Photo ${slideNum}`;
     }
 }
 
@@ -162,6 +254,13 @@ async function fetchInquiriesFromSupabase() {
     const { data, error } = await _supabase.from('inquiries').select('*').order('created_at', { ascending: false });
     if (!error) {
         state.inquiries = data || [];
+    }
+}
+
+async function fetchRegisteredStudentsFromSupabase() {
+    const { data, error } = await _supabase.from('student_profiles').select('*').order('created_at', { ascending: false });
+    if (!error) {
+        state.students = data || [];
     }
 }
 
@@ -228,6 +327,8 @@ function renderUniversities() {
         if (badgeType === 'Entrance Exam Required') badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
         if (badgeType === 'Application Only') badgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/40';
 
+        const safeUniName = uni.name.replace(/'/g, "\\'");
+
         return `
             <div class="bg-slate-900/90 rounded-3xl border border-slate-800 overflow-hidden shadow-xl hover:border-indigo-500/40 transition duration-300 flex flex-col justify-between">
                 <div>
@@ -269,7 +370,7 @@ function renderUniversities() {
                 </div>
 
                 <div class="p-5 pt-0">
-                    <button type="button" onclick="selectUniForScholarship('${uni.name}')" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition">
+                    <button type="button" onclick="selectUniForScholarship('${safeUniName}')" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition">
                         <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Expert Call
                     </button>
                 </div>
@@ -278,17 +379,55 @@ function renderUniversities() {
     }).join('');
 }
 
+// --- AUTH GATE FOR APPLY & SCHOLARSHIP ---
+function requireAuthForApply(e) {
+    if (e) e.preventDefault();
+    if (!state.currentStudent) {
+        state.pendingAction = { type: 'apply', uniName: '' };
+        showToast('Login Required', 'Please login or register to apply for scholarships.', 'error');
+        openStudentLoginModal();
+        return;
+    }
+    prefillScholarshipFormWithStudent();
+    document.getElementById('apply').scrollIntoView({ behavior: 'smooth' });
+}
+
 function selectUniForScholarship(uniName) {
+    if (!state.currentStudent) {
+        state.pendingAction = { type: 'apply', uniName: uniName };
+        showToast('Login Required', 'Please login or register to request a scholarship or expert call.', 'error');
+        openStudentLoginModal();
+        return;
+    }
+    prefillScholarshipFormWithStudent();
     document.getElementById('app-uni').value = uniName;
     document.getElementById('apply').scrollIntoView({ behavior: 'smooth' });
 }
 
+function prefillScholarshipFormWithStudent() {
+    if (!state.currentStudent) return;
+    const nameEl = document.getElementById('app-name');
+    const phoneEl = document.getElementById('app-phone');
+    const emailEl = document.getElementById('app-email');
+    if (nameEl && !nameEl.value) nameEl.value = state.currentStudent.full_name || '';
+    if (phoneEl && !phoneEl.value) phoneEl.value = state.currentStudent.mobile || '';
+    if (emailEl && !emailEl.value) emailEl.value = state.currentStudent.email || '';
+}
+
 async function handleScholarshipInquiry(e) {
     e.preventDefault();
+
+    if (!state.currentStudent) {
+        state.pendingAction = { type: 'submit_form' };
+        showToast('Login Required', 'Please login or register first to submit your scholarship application.', 'error');
+        openStudentLoginModal();
+        return;
+    }
+
     const name = document.getElementById('app-name').value.trim();
     const phone = document.getElementById('app-phone').value.trim();
     const parentPhone = document.getElementById('app-parent-phone').value.trim();
-    const email = document.getElementById('app-email').value.trim().toLowerCase();
+    const email = (document.getElementById('app-email').value.trim() || state.currentStudent.email).toLowerCase();
     const address = document.getElementById('app-address').value.trim();
     const jee = document.getElementById('app-jee').value.trim();
     const inter = document.getElementById('app-inter').value.trim();
@@ -320,6 +459,7 @@ async function handleScholarshipInquiry(e) {
     state.inquiries.unshift(inquiry);
     showToast('Application Submitted', 'Our team will review your application and reach out via WhatsApp within 10 minutes.', 'success');
     e.target.reset();
+    prefillScholarshipFormWithStudent();
 }
 
 function generateReferralCode(e) {
@@ -426,7 +566,7 @@ async function handleStudentAuth(e) {
             .maybeSingle();
 
         if (error || !profile) {
-            showToast('Account Not Found', 'Email not registered yet. Please switch to the Register tab first.', 'error');
+            showToast('Account Not Found', 'Email not registered yet. Please complete registration first.', 'error');
             switchAuthMode('signup');
             document.getElementById('auth-email').value = email;
             return;
@@ -435,10 +575,21 @@ async function handleStudentAuth(e) {
         state.currentStudent = profile;
         localStorage.setItem('gtech_student_session', JSON.stringify(profile));
         updateHeaderForLoggedInStudent(profile);
+        prefillScholarshipFormWithStudent();
 
         document.getElementById('student-login-modal').classList.add('hidden');
         showToast('Welcome Back!', 'You are successfully logged in with GTech!', 'success');
-        openStudentDashboardModal();
+
+        if (state.pendingAction) {
+            const action = state.pendingAction;
+            state.pendingAction = null;
+            if (action.uniName) {
+                document.getElementById('app-uni').value = action.uniName;
+            }
+            document.getElementById('apply').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            openStudentDashboardModal();
+        }
     }
 }
 
@@ -449,6 +600,7 @@ function restoreStudentSession() {
             const profile = JSON.parse(saved);
             state.currentStudent = profile;
             updateHeaderForLoggedInStudent(profile);
+            prefillScholarshipFormWithStudent();
         } catch (e) {
             localStorage.removeItem('gtech_student_session');
         }
@@ -465,20 +617,6 @@ function updateHeaderForLoggedInStudent(profile) {
         loginBtn.classList.add('hidden');
         nameSpan.textContent = `${profile.full_name} (Dashboard)`;
     }
-}
-
-function logoutStudent() {
-    state.currentStudent = null;
-    localStorage.removeItem('gtech_student_session');
-    document.getElementById('student-dashboard-modal').classList.add('hidden');
-
-    const dashBtn = document.getElementById('header-dashboard-btn');
-    const loginBtn = document.getElementById('header-login-btn');
-    if (dashBtn && loginBtn) {
-        dashBtn.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
-    }
-    showToast('Signed Out', 'You have signed out from the Student Dashboard.', 'success');
 }
 
 async function openStudentDashboardModal() {
@@ -541,7 +679,7 @@ function openAdminModal() {
     document.getElementById('admin-modal').classList.add('flex');
 }
 
-function handleAdminLogin(e) {
+async function handleAdminLogin(e) {
     e.preventDefault();
     const userId = document.getElementById('admin-userid-input').value.trim();
     const password = document.getElementById('admin-pass-input').value;
@@ -550,39 +688,37 @@ function handleAdminLogin(e) {
         document.getElementById('admin-modal').classList.add('hidden');
         document.getElementById('admin-dashboard-modal').classList.remove('hidden');
         document.getElementById('admin-dashboard-modal').classList.add('flex');
-        fetchInquiriesFromSupabase().then(() => loadAdminDashboardData());
+        await fetchInquiriesFromSupabase();
+        await fetchRegisteredStudentsFromSupabase();
+        loadAdminDashboardData();
         showToast('Admin Authenticated', 'Welcome to the GTech Admin Control Panel.', 'success');
     } else {
         showToast('Access Denied', 'Invalid User ID or Password.', 'error');
     }
 }
 
-function switchAdminTab(tabName) {
-    const inquiriesTab = document.getElementById('admin-tab-inquiries');
-    const unisTab = document.getElementById('admin-tab-universities');
-    const carouselTab = document.getElementById('admin-tab-carousel');
-    const btnInquiries = document.getElementById('tab-btn-inquiries');
-    const btnUnis = document.getElementById('tab-btn-universities');
-    const btnCarousel = document.getElementById('tab-btn-carousel');
+async function switchAdminTab(tabName) {
+    const tabs = ['inquiries', 'students', 'universities', 'carousel'];
+    tabs.forEach(t => {
+        const panel = document.getElementById(`admin-tab-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (panel) panel.classList.add('hidden');
+        if (btn) btn.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
+    });
 
-    inquiriesTab.classList.add('hidden');
-    unisTab.classList.add('hidden');
-    carouselTab.classList.add('hidden');
-    btnInquiries.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
-    btnUnis.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
-    btnCarousel.className = 'py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap font-bold';
+    const activePanel = document.getElementById(`admin-tab-${tabName}`);
+    const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+    if (activePanel) activePanel.classList.remove('hidden');
+    if (activeBtn) activeBtn.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
 
     if (tabName === 'inquiries') {
-        inquiriesTab.classList.remove('hidden');
-        btnInquiries.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
+        await fetchInquiriesFromSupabase();
         loadAdminDashboardData();
+    } else if (tabName === 'students') {
+        await fetchRegisteredStudentsFromSupabase();
+        loadAdminStudentsTable();
     } else if (tabName === 'universities') {
-        unisTab.classList.remove('hidden');
-        btnUnis.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
         loadAdminUnisTable();
-    } else if (tabName === 'carousel') {
-        carouselTab.classList.remove('hidden');
-        btnCarousel.className = 'py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap font-bold';
     }
 }
 
@@ -590,12 +726,29 @@ function loadAdminDashboardData() {
     const tbody = document.getElementById('admin-inquiries-tbody');
     if (state.inquiries.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No student scholarship inquiries yet.</td></tr>`;
-    } else {
-        tbody.innerHTML = state.inquiries.map(inq => `
+        return;
+    }
+
+    const statusOptions = [
+        'Pending Callback',
+        'Completed',
+        'Visiting',
+        'Application Completed',
+        'Admission Completed'
+    ];
+
+    tbody.innerHTML = state.inquiries.map(inq => {
+        const currentStatus = inq.status || 'Pending Callback';
+        const optionsHtml = statusOptions.map(opt =>
+            `<option value="${opt}" ${currentStatus === opt ? 'selected' : ''}>${opt}</option>`
+        ).join('');
+
+        return `
             <tr class="hover:bg-slate-900/60">
                 <td class="p-3">
                     <strong class="text-white block">${inq.name}</strong>
                     <a href="tel:${inq.phone}" class="text-indigo-300 font-mono text-[10px] hover:underline">${inq.phone}</a>
+                    ${inq.email ? `<span class="text-slate-500 text-[10px] block">${inq.email}</span>` : ''}
                 </td>
                 <td class="p-3">
                     <span class="text-slate-300 block">Parent: ${inq.parent_phone || 'N/A'}</span>
@@ -609,10 +762,55 @@ function loadAdminDashboardData() {
                     <strong class="text-white">${inq.uni}</strong>
                     <span class="text-indigo-400 font-bold block">${inq.branch}</span>
                 </td>
-                <td class="p-3"><span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">● ${inq.status}</span></td>
+                <td class="p-3">
+                    <select onchange="updateInquiryStatus(${inq.id}, this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 focus:outline-none focus:border-indigo-500">
+                        ${optionsHtml}
+                    </select>
+                </td>
             </tr>
-        `).join('');
+        `;
+    }).join('');
+}
+
+async function updateInquiryStatus(inquiryId, newStatus) {
+    const { error } = await _supabase
+        .from('inquiries')
+        .update({ status: newStatus })
+        .eq('id', inquiryId);
+
+    if (error) {
+        showToast('Update Failed', error.message, 'error');
+        return;
     }
+
+    const idx = state.inquiries.findIndex(item => item.id === inquiryId);
+    if (idx !== -1) state.inquiries[idx].status = newStatus;
+
+    showToast('Status Updated', `Call / Application status updated to "${newStatus}".`, 'success');
+}
+
+function loadAdminStudentsTable() {
+    const tbody = document.getElementById('admin-students-tbody');
+    const countBadge = document.getElementById('total-students-count');
+    if (countBadge) countBadge.textContent = `${state.students.length} Registered Students`;
+
+    if (state.students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No students have registered yet.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = state.students.map(stu => {
+        const regDate = stu.created_at ? new Date(stu.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent';
+        return `
+            <tr class="hover:bg-slate-900/60">
+                <td class="p-3 font-bold text-white">${stu.full_name}</td>
+                <td class="p-3 text-indigo-300 font-mono">${stu.email}</td>
+                <td class="p-3 text-emerald-300 font-mono"><a href="tel:${stu.mobile}" class="hover:underline">${stu.mobile}</a></td>
+                <td class="p-3 text-slate-400">${stu.address || 'Ongole'}</td>
+                <td class="p-3 text-slate-400">${regDate}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function loadAdminUnisTable() {
@@ -648,6 +846,7 @@ function openAddUniModal() {
     document.getElementById('modal-uni-admission').value = 'Direct Admission Open';
     document.getElementById('modal-uni-image-url').value = '';
     document.getElementById('modal-uni-file').value = '';
+    document.getElementById('uni-card-preview').src = 'https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop';
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
 }
@@ -665,6 +864,7 @@ function openEditUniModal(id) {
     document.getElementById('modal-uni-appfee').value = uni.application_fee;
     document.getElementById('modal-uni-admission').value = uni.admission_type || 'Direct Admission Open';
     document.getElementById('modal-uni-image-url').value = uni.image;
+    document.getElementById('uni-card-preview').src = uni.image;
     document.getElementById('modal-uni-file').value = '';
 
     const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
@@ -698,10 +898,10 @@ async function handleSaveUni(e) {
 
     try {
         saveBtn.disabled = true;
-        saveBtn.textContent = 'Saving...';
+        saveBtn.textContent = 'Cropping & Saving...';
 
         if (fileInput.files && fileInput.files[0]) {
-            imageUrl = await uploadImageToBucket(fileInput.files[0], 'uni');
+            imageUrl = await uploadCroppedImageToBucket(fileInput.files[0], 'uni', 800, 450);
         }
 
         const branches = {
@@ -723,7 +923,7 @@ async function handleSaveUni(e) {
             hostel_fee: hostelFee,
             application_fee: applicationFee,
             admission_type: admissionType,
-            image: imageUrl || 'https://images.unsplash.com/photo-1523050854058',
+            image: imageUrl || 'https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop',
             nirf: Math.floor(Math.random() * 80) + 20,
             branches: branches
         };
@@ -740,12 +940,12 @@ async function handleSaveUni(e) {
         document.getElementById('uni-modal').classList.add('hidden');
         await fetchUniversitiesFromSupabase();
         loadAdminUnisTable();
-        showToast('University Saved', 'University saved successfully to Supabase database!', 'success');
+        showToast('University Saved', 'University saved with cropped card photo!', 'success');
     } catch (err) {
         showToast('Save Failed', err.message, 'error');
     } finally {
         saveBtn.disabled = false;
-        saveBtn.textContent = 'Save University';
+        saveBtn.textContent = 'Crop & Save University';
     }
 }
 
@@ -761,14 +961,16 @@ async function handleDeleteUni(id) {
 // Global scope exposure
 window.showToast = showToast;
 window.hideToast = hideToast;
+window.previewCroppedImage = previewCroppedImage;
+window.requireAuthForApply = requireAuthForApply;
 window.openStudentLoginModal = openStudentLoginModal;
 window.openStudentDashboardModal = openStudentDashboardModal;
-window.logoutStudent = logoutStudent;
 window.switchAuthMode = switchAuthMode;
 window.handleStudentAuth = handleStudentAuth;
 window.openAdminModal = openAdminModal;
 window.handleAdminLogin = handleAdminLogin;
 window.switchAdminTab = switchAdminTab;
+window.updateInquiryStatus = updateInquiryStatus;
 window.openAddUniModal = openAddUniModal;
 window.openEditUniModal = openEditUniModal;
 window.handleSaveUni = handleSaveUni;

@@ -67,11 +67,11 @@ function showToast(title, message, type = 'success') {
     msgEl.textContent = message;
 
     if (type === 'error') {
-        toast.className = 'fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl bg-slate-900 border border-rose-500/60 text-white shadow-2xl shadow-rose-500/10 max-w-sm transition-all duration-300';
+        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-900 border border-rose-500/60 text-white shadow-2xl shadow-rose-500/10 sm:max-w-sm transition-all duration-300';
         icon.className = 'w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 font-bold text-sm';
         icon.textContent = '!';
     } else {
-        toast.className = 'fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-4 rounded-2xl bg-slate-900 border border-emerald-500/60 text-white shadow-2xl shadow-emerald-500/10 max-w-sm transition-all duration-300';
+        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-900 border border-emerald-500/60 text-white shadow-2xl shadow-emerald-500/10 sm:max-w-sm transition-all duration-300';
         icon.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm';
         icon.textContent = '✓';
     }
@@ -185,33 +185,42 @@ function prevSlide() {
 }
 
 async function loadActiveCarousel() {
+    const carousel = document.getElementById('about-carousel');
+    if (!carousel) return;
+
     const { data, error } = await _supabase
         .from('carousel_images')
         .select('*')
         .eq('is_active', true)
         .order('id', { ascending: true });
 
-    if (!error && data && data.length > 0) {
-        const carousel = document.getElementById('about-carousel');
-        if (!carousel) return;
-
-        const slides = [...data];
-        if (slides.length === 1) {
-            slides.push({
-                id: 2,
-                image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
-                title: 'GTech Carousel Slide 2'
-            });
+    const defaultSlides = [
+        {
+            id: 1,
+            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
+            title: 'GTech Carousel Slide 1'
+        },
+        {
+            id: 2,
+            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
+            title: 'GTech Carousel Slide 2'
         }
+    ];
 
-        state.currentSlide = 0;
-        carousel.style.transform = 'translateX(0%)';
-        carousel.innerHTML = slides.map(slide => `
-            <div class="w-full h-full shrink-0 relative">
-                <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
-            </div>
-        `).join('');
+    let slides = (!error && data && data.length > 0) ? [...data] : defaultSlides;
+    if (slides.length === 1) {
+        slides.push(defaultSlides[1]);
+    }
 
+    state.currentSlide = 0;
+    carousel.style.transform = 'translateX(0%)';
+    carousel.innerHTML = slides.map(slide => `
+        <div class="w-full h-full shrink-0 relative">
+            <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
+        </div>
+    `).join('');
+
+    if (!error && data) {
         data.forEach(slide => {
             const prevImg = document.getElementById(`carousel-preview-${slide.id}`);
             const titleInput = document.getElementById(`carousel-title-${slide.id}`);
@@ -358,7 +367,7 @@ function renderUniversities() {
                         </div>
                     </div>
 
-                    <div class="p-5">
+                    <div class="p-4 sm:p-5">
                         <h3 class="font-black text-base text-white leading-snug">${uni.name}</h3>
                         <p class="text-xs text-slate-400 mt-1 flex items-start gap-1.5">
                             <i class="fa-solid fa-location-dot text-indigo-400 mt-0.5 shrink-0"></i>
@@ -385,7 +394,7 @@ function renderUniversities() {
                     </div>
                 </div>
 
-                <div class="p-5 pt-0">
+                <div class="p-4 sm:p-5 pt-0">
                     <button type="button" onclick="selectUniForScholarship('${safeUniName}')" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition">
                         <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Expert Call
                     </button>
@@ -696,8 +705,8 @@ async function openStudentDashboardModal() {
     await fetchInquiriesFromSupabase();
     await fetchReferralsFromSupabase();
 
-    document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudent.full_name}! Welcome Back.`;
-    document.getElementById('student-dash-email').textContent = `Email: ${state.currentStudent.email} | Phone: ${state.currentStudent.mobile}`;
+    document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudent.full_name}!`;
+    document.getElementById('student-dash-email').textContent = `${state.currentStudent.email} • ${state.currentStudent.mobile}`;
 
     document.getElementById('student-dashboard-modal').classList.remove('hidden');
     document.getElementById('student-dashboard-modal').classList.add('flex');
@@ -754,24 +763,24 @@ function loadStudentDashboardData() {
                     ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-200'
                     : 'bg-slate-900/70 border-slate-800 text-slate-500';
             return `
-                <div class="p-3 rounded-xl border ${cardStyle} transition">
-                    <div class="text-[11px] font-extrabold">${step.title}</div>
-                    <div class="text-[10px] opacity-80 mt-0.5">${step.desc}</div>
+                <div class="p-2.5 sm:p-3 rounded-xl border ${cardStyle} transition min-w-0">
+                    <div class="text-[11px] font-extrabold leading-tight">${step.title}</div>
+                    <div class="text-[10px] opacity-80 mt-0.5 leading-tight">${step.desc}</div>
                 </div>
             `;
         }).join('');
     }
 
     if (myApps.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found for ${stu.email}. Submit your scholarship application from the form below.</p>`;
+        appContainer.innerHTML = `<p class="text-xs text-slate-500 break-words">No applications found for ${stu.email}. Submit your scholarship application from the form below.</p>`;
     } else {
         appContainer.innerHTML = myApps.map(inq => `
-            <div class="p-3.5 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center gap-2">
-                <div>
-                    <strong class="text-white">${inq.uni} (${inq.branch})</strong>
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <strong class="text-white block break-words">${inq.uni} (${inq.branch})</strong>
                     <p class="text-slate-400 text-[10px] mt-0.5">Student: ${inq.name} | PCM: ${inq.pcm}/600</p>
                 </div>
-                <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30 shrink-0">${inq.status}</span>
+                <span class="self-start sm:self-center px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30 shrink-0">${inq.status}</span>
             </div>
         `).join('');
     }
@@ -782,15 +791,15 @@ function loadStudentDashboardData() {
     );
 
     if (myReferrals.length === 0) {
-        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">Click "+ Get / View My Referral Link" above to generate your unique GTech referral ID & share link.</p>`;
+        voucherContainer.innerHTML = `<p class="text-xs text-slate-500">Click "+ Get / View Referral Link" above to generate your unique GTech referral ID & share link.</p>`;
     } else {
         voucherContainer.innerHTML = myReferrals.map(v => `
-            <div class="p-3.5 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <span class="font-mono font-bold text-amber-400 text-sm tracking-wider">${v.code}</span>
+            <div class="p-3 bg-slate-900 rounded-xl border border-amber-500/30 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <span class="font-mono font-bold text-amber-400 text-xs sm:text-sm tracking-wider break-all">${v.code}</span>
                     <p class="text-slate-400 text-[10px] mt-0.5">Status: <strong class="text-emerald-300">${v.reward_status || 'Pending Friend Admission'}</strong></p>
                 </div>
-                <button onclick="navigator.clipboard.writeText('${window.location.origin + window.location.pathname}?ref=${v.code}'); showToast('Copied', 'Referral link copied!', 'success');" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px] shrink-0">Copy Referral Link</button>
+                <button onclick="navigator.clipboard.writeText('${window.location.origin + window.location.pathname}?ref=${v.code}'); showToast('Copied', 'Referral link copied!', 'success');" class="self-start sm:self-center px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-[10px] shrink-0">Copy Referral Link</button>
             </div>
         `).join('');
     }

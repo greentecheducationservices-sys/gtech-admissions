@@ -6,12 +6,12 @@ const state = {
     stateFilter: 'ALL',
     universities: [],
     inquiries: [],
-    currentStudentPhone: null,
-    currentStudentName: 'Harsha',
+    currentStudent: null,
     currentSlide: 0
 };
 
 window.onload = async function() {
+    restoreStudentSession();
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
     await loadActiveCarousel();
@@ -21,6 +21,7 @@ window.onload = async function() {
     }, 4000);
 };
 
+// --- CAROUSEL LOGIC ---
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
@@ -56,41 +57,64 @@ async function loadActiveCarousel() {
     }
 }
 
+// Helper for Storage Image Uploads (with clear diagnostics)
+async function uploadImageToBucket(file, prefix) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filePath = `${prefix}_${Date.now()}_${safeName}`;
+
+    const { error: uploadError } = await _supabase.storage
+        .from('universities')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: file.type || 'image/jpeg'
+        });
+
+    if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}. Ensure the 'universities' bucket exists and has public INSERT/SELECT policies.`);
+    }
+
+    const { data: publicURLData } = _supabase.storage
+        .from('universities')
+        .getPublicUrl(filePath);
+
+    return publicURLData.publicUrl;
+}
+
 async function handleUploadCarousel(slideNum) {
     const fileInput = document.getElementById(`carousel-file-${slideNum}`);
     const titleInput = document.getElementById(`carousel-title-${slideNum}`);
+    const btn = document.getElementById(`btn-upload-carousel-${slideNum}`);
     
     if (!fileInput.files || !fileInput.files[0]) {
         alert(`Please select an image file for Photo ${slideNum}.`);
         return;
     }
 
-    const file = fileInput.files[0];
-    const fileName = `carousel_${slideNum}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    try {
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+        const imageUrl = await uploadImageToBucket(fileInput.files[0], `carousel_${slideNum}`);
+        const titleText = titleInput.value.trim() || `Carousel Slide ${slideNum}`;
 
-    const { error: uploadError } = await _supabase.storage.from('universities').upload(fileName, file);
-    if (uploadError) {
-        alert('Carousel upload failed: ' + uploadError.message);
-        return;
+        const { error: dbError } = await _supabase.from('carousel_images').upsert([
+            { id: slideNum, image_url: imageUrl, title: titleText, is_active: true, display_order: slideNum }
+        ]);
+
+        if (dbError) throw new Error(dbError.message);
+
+        alert(`Carousel Photo ${slideNum} uploaded and updated successfully!`);
+        fileInput.value = '';
+        await loadActiveCarousel();
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = `Upload Photo ${slideNum}`;
     }
-
-    const { data: publicURLData } = _supabase.storage.from('universities').getPublicUrl(fileName);
-    const imageUrl = publicURLData.publicUrl;
-    const titleText = titleInput.value.trim() || `Carousel Slide ${slideNum}`;
-
-    const { error: dbError } = await _supabase.from('carousel_images').upsert([
-        { id: slideNum, image_url: imageUrl, title: titleText, is_active: true, display_order: slideNum }
-    ]);
-
-    if (dbError) {
-        alert('Error saving carousel slide to database: ' + dbError.message);
-        return;
-    }
-
-    alert(`Carousel Photo ${slideNum} uploaded and updated successfully!`);
-    loadActiveCarousel();
 }
 
+// --- UNIVERSITIES & CATALOG ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -231,7 +255,7 @@ async function handleScholarshipInquiry(e) {
     const name = document.getElementById('app-name').value.trim();
     const phone = document.getElementById('app-phone').value.trim();
     const parentPhone = document.getElementById('app-parent-phone').value.trim();
-    const email = document.getElementById('app-email').value.trim();
+    const email = document.getElementById('app-email').value.trim().toLowerCase();
     const address = document.getElementById('app-address').value.trim();
     const jee = document.getElementById('app-jee').value.trim();
     const inter = document.getElementById('app-inter').value.trim();
@@ -292,8 +316,9 @@ function shareWhatsApp() {
     window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
-// Student Authentication
+// --- PASSWORDLESS & OTP-FREE STUDENT AUTHENTICATION ---
 let authMode = 'login';
+
 function openStudentLoginModal() {
     document.getElementById('student-login-modal').classList.remove('hidden');
     document.getElementById('student-login-modal').classList.add('flex');
@@ -307,125 +332,151 @@ function switchAuthMode(mode) {
     const subBtn = document.getElementById('auth-submit-btn');
     const tabLogin = document.getElementById('tab-login');
     const tabSignup = document.getElementById('tab-signup');
-    const tabForgot = document.getElementById('tab-forgot');
     const nameBox = document.getElementById('name-field-box');
     const mobileBox = document.getElementById('mobile-field-box');
-    const passBox = document.getElementById('password-field-box');
-    const otpBox = document.getElementById('otp-field-box');
-
-    tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
-    tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
-    tabForgot.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+    const nameInput = document.getElementById('auth-name');
+    const mobileInput = document.getElementById('auth-mobile');
 
     if (mode === 'signup') {
         tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        title.textContent = 'Register Student Account';
-        subtitle.textContent = 'Sign up with email OTP verification.';
-        subBtn.textContent = 'Send Verification OTP';
+        tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
+        title.textContent = 'Register with GTech';
+        subtitle.textContent = 'Enter your Name, Email, and Phone Number.';
+        subBtn.textContent = 'Register Now';
         nameBox.classList.remove('hidden');
         mobileBox.classList.remove('hidden');
-        passBox.classList.remove('hidden');
-        otpBox.classList.add('hidden');
-    } else if (mode === 'verify_otp') {
-        title.textContent = 'Verify Email OTP';
-        subtitle.textContent = 'Enter the 6-digit code sent to your email.';
-        subBtn.textContent = 'Verify OTP & Complete Registration';
-        nameBox.classList.add('hidden');
-        mobileBox.classList.add('hidden');
-        passBox.classList.add('hidden');
-        otpBox.classList.remove('hidden');
-    } else if (mode === 'forgot') {
-        tabForgot.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
-        title.textContent = 'Forgot Password';
-        subtitle.textContent = 'Enter your email to receive a password reset link.';
-        subBtn.textContent = 'Send Password Reset Link';
-        nameBox.classList.add('hidden');
-        mobileBox.classList.add('hidden');
-        passBox.classList.add('hidden');
-        otpBox.classList.add('hidden');
+        nameInput.required = true;
+        mobileInput.required = true;
     } else {
         tabLogin.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
+        tabSignup.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
         title.textContent = 'Student Portal Login';
-        subtitle.textContent = 'Login with your Email ID and Password.';
-        subBtn.textContent = 'Login to Dashboard';
+        subtitle.textContent = 'Enter your registered email to open your dashboard.';
+        subBtn.textContent = 'Login with Email';
         nameBox.classList.add('hidden');
         mobileBox.classList.add('hidden');
-        passBox.classList.remove('hidden');
-        otpBox.classList.add('hidden');
+        nameInput.required = false;
+        mobileInput.required = false;
     }
 }
 
 async function handleStudentAuth(e) {
     e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
+    const email = document.getElementById('auth-email').value.trim().toLowerCase();
 
     if (authMode === 'signup') {
         const name = document.getElementById('auth-name').value.trim();
         const mobile = document.getElementById('auth-mobile').value.trim();
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        await _supabase.from('email_otps').insert([{ email, otp_code: otpCode, purpose: 'REGISTRATION', verified: false }]);
-        alert(`[DEV SIMULATION EMAIL] Your Email Verification OTP is: ${otpCode}`);
-        switchAuthMode('verify_otp');
-    } 
-    else if (authMode === 'verify_otp') {
-        const enteredOtp = document.getElementById('auth-otp').value.trim();
-        const name = document.getElementById('auth-name').value.trim();
-        const mobile = document.getElementById('auth-mobile').value.trim();
+        const studentRecord = {
+            id: 'stu_' + Date.now(),
+            full_name: name,
+            mobile: mobile,
+            email: email,
+            address: 'Ongole'
+        };
 
-        const { data: otpRecord } = await _supabase.from('email_otps').select('*').eq('email', email).eq('otp_code', enteredOtp).eq('verified', false).single();
-        if (!otpRecord) {
-            alert('Invalid or expired OTP. Please check and try again.');
-            return;
-        }
-
-        await _supabase.from('email_otps').update({ verified: true }).eq('id', otpRecord.id);
-        const { data: authData, error } = await _supabase.auth.signUp({ email, password });
+        const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
         if (error) {
             alert('Registration Error: ' + error.message);
             return;
         }
 
-        state.currentStudentName = name;
-        await _supabase.from('student_profiles').insert([{ id: authData.user?.id || Date.now(), full_name: name, mobile, email, address: 'Ongole' }]);
-
-        alert('Registration Successful! Your account has been created successfully.');
-        document.getElementById('student-login-modal').classList.add('hidden');
-        openStudentLoginModal();
-    }
-    else if (authMode === 'forgot') {
-        alert(`Password reset secure link has been dispatched to ${email}. Check your inbox.`);
+        alert('You are successfully registered with GTech! Please login with your email.');
         switchAuthMode('login');
-    }
-    else {
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            alert('Login Failed: ' + error.message);
+        document.getElementById('auth-email').value = email;
+    } else {
+        const { data: profile, error } = await _supabase
+            .from('student_profiles')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (error || !profile) {
+            alert('Email not registered yet. Please switch to the Register tab first.');
+            switchAuthMode('signup');
+            document.getElementById('auth-email').value = email;
             return;
         }
 
-        const { data: profile } = await _supabase.from('student_profiles').select('*').eq('email', email).single();
-        if (profile) state.currentStudentName = profile.full_name;
+        state.currentStudent = profile;
+        localStorage.setItem('gtech_student_session', JSON.stringify(profile));
+        updateHeaderForLoggedInStudent(profile);
 
         document.getElementById('student-login-modal').classList.add('hidden');
-        document.getElementById('student-dashboard-modal').classList.remove('hidden');
-        document.getElementById('student-dashboard-modal').classList.add('flex');
-        
-        document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudentName}! Welcome Back.`;
-        loadStudentDashboardData();
-        alert('Login Successful! Welcome to Your Student Dashboard.');
+        alert('You are successfully logged in with GTech!');
+        openStudentDashboardModal();
     }
+}
+
+function restoreStudentSession() {
+    const saved = localStorage.getItem('gtech_student_session');
+    if (saved) {
+        try {
+            const profile = JSON.parse(saved);
+            state.currentStudent = profile;
+            updateHeaderForLoggedInStudent(profile);
+        } catch (e) {
+            localStorage.removeItem('gtech_student_session');
+        }
+    }
+}
+
+function updateHeaderForLoggedInStudent(profile) {
+    const dashBtn = document.getElementById('header-dashboard-btn');
+    const loginBtn = document.getElementById('header-login-btn');
+    const nameSpan = document.getElementById('header-student-name');
+
+    if (dashBtn && loginBtn && nameSpan) {
+        dashBtn.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+        nameSpan.textContent = `${profile.full_name} (Dashboard)`;
+    }
+}
+
+function logoutStudent() {
+    state.currentStudent = null;
+    localStorage.removeItem('gtech_student_session');
+    document.getElementById('student-dashboard-modal').classList.add('hidden');
+
+    const dashBtn = document.getElementById('header-dashboard-btn');
+    const loginBtn = document.getElementById('header-login-btn');
+    if (dashBtn && loginBtn) {
+        dashBtn.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+    }
+    alert('Signed out from Student Dashboard.');
+}
+
+async function openStudentDashboardModal() {
+    if (!state.currentStudent) {
+        openStudentLoginModal();
+        return;
+    }
+    await fetchInquiriesFromSupabase();
+    document.getElementById('student-dash-title').textContent = `Hello, ${state.currentStudent.full_name}! Welcome Back.`;
+    document.getElementById('student-dash-email').textContent = `Email: ${state.currentStudent.email} | Phone: ${state.currentStudent.mobile}`;
+    
+    document.getElementById('student-dashboard-modal').classList.remove('hidden');
+    document.getElementById('student-dashboard-modal').classList.add('flex');
+    loadStudentDashboardData();
 }
 
 function loadStudentDashboardData() {
     const appContainer = document.getElementById('student-applications-list');
     const voucherContainer = document.getElementById('student-vouchers-list');
+    const stu = state.currentStudent;
 
-    if (state.inquiries.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found. Submit your scholarship application from the form.</p>`;
+    // Filter applications matching student email or phone
+    const myApps = state.inquiries.filter(inq => 
+        (inq.email && stu.email && inq.email.toLowerCase() === stu.email.toLowerCase()) ||
+        (inq.phone && stu.mobile && inq.phone.includes(stu.mobile))
+    );
+
+    if (myApps.length === 0) {
+        appContainer.innerHTML = `<p class="text-xs text-slate-500">No applications found for ${stu.email}. Submit your scholarship application from the form below.</p>`;
     } else {
-        appContainer.innerHTML = state.inquiries.slice(0, 3).map(inq => `
+        appContainer.innerHTML = myApps.map(inq => `
             <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
                 <div>
                     <strong class="text-white">${inq.uni} (${inq.branch})</strong>
@@ -452,7 +503,7 @@ function loadStudentDashboardData() {
     }
 }
 
-// Admin Panel
+// --- ADMIN PANEL ---
 function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
     document.getElementById('admin-modal').classList.add('flex');
@@ -563,6 +614,7 @@ function openAddUniModal() {
     document.getElementById('modal-uni-appfee').value = '1000';
     document.getElementById('modal-uni-admission').value = 'Direct Admission Open';
     document.getElementById('modal-uni-image-url').value = '';
+    document.getElementById('modal-uni-file').value = '';
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
 }
@@ -580,6 +632,7 @@ function openEditUniModal(id) {
     document.getElementById('modal-uni-appfee').value = uni.application_fee;
     document.getElementById('modal-uni-admission').value = uni.admission_type || 'Direct Admission Open';
     document.getElementById('modal-uni-image-url').value = uni.image;
+    document.getElementById('modal-uni-file').value = '';
 
     const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
     document.getElementById('fee-ece').value = branches['ECE'] || 190000;
@@ -597,6 +650,7 @@ function openEditUniModal(id) {
 
 async function handleSaveUni(e) {
     e.preventDefault();
+    const saveBtn = document.getElementById('btn-save-uni');
     const editId = document.getElementById('edit-uni-id').value;
     const name = document.getElementById('modal-uni-name').value.trim();
     const stateName = document.getElementById('modal-uni-state').value;
@@ -609,53 +663,57 @@ async function handleSaveUni(e) {
     const fileInput = document.getElementById('modal-uni-file');
     let imageUrl = document.getElementById('modal-uni-image-url').value;
 
-    if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const fileName = `uni_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-        const { error: uploadError } = await _supabase.storage.from('universities').upload(fileName, file);
-        if (uploadError) {
-            alert('Image upload failed: ' + uploadError.message);
-            return;
+    try {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        if (fileInput.files && fileInput.files[0]) {
+            imageUrl = await uploadImageToBucket(fileInput.files[0], 'uni');
         }
-        const { data: publicURLData } = _supabase.storage.from('universities').getPublicUrl(fileName);
-        imageUrl = publicURLData.publicUrl;
+
+        const branches = {
+            'ECE': Number(document.getElementById('fee-ece').value),
+            'CSE AI & ML': Number(document.getElementById('fee-cseaiml').value),
+            'AI & DS': Number(document.getElementById('fee-aiandds').value),
+            'Data Science': Number(document.getElementById('fee-ds').value),
+            'CSE': Number(document.getElementById('fee-cse').value),
+            'CSE IT': Number(document.getElementById('fee-cseit').value),
+            'EEE': Number(document.getElementById('fee-eee').value),
+            'Mechanical': Number(document.getElementById('fee-mech').value)
+        };
+
+        const uniPayload = {
+            name,
+            state: stateName,
+            location,
+            address,
+            hostel_fee: hostelFee,
+            application_fee: applicationFee,
+            admission_type: admissionType,
+            image: imageUrl || 'https://images.unsplash.com/photo-1523050854058',
+            nirf: Math.floor(Math.random() * 80) + 20,
+            branches: branches
+        };
+
+        if (editId) {
+            const { error } = await _supabase.from('universities').update(uniPayload).eq('id', editId);
+            if (error) throw new Error(error.message);
+        } else {
+            uniPayload.id = 'uni-' + Date.now();
+            const { error } = await _supabase.from('universities').insert([uniPayload]);
+            if (error) throw new Error(error.message);
+        }
+
+        document.getElementById('uni-modal').classList.add('hidden');
+        await fetchUniversitiesFromSupabase();
+        loadAdminUnisTable();
+        alert('University saved successfully to Supabase database!');
+    } catch (err) {
+        alert(err.message);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save University';
     }
-
-    const branches = {
-        'ECE': Number(document.getElementById('fee-ece').value),
-        'CSE AI & ML': Number(document.getElementById('fee-cseaiml').value),
-        'AI & DS': Number(document.getElementById('fee-aiandds').value),
-        'Data Science': Number(document.getElementById('fee-ds').value),
-        'CSE': Number(document.getElementById('fee-cse').value),
-        'CSE IT': Number(document.getElementById('fee-cseit').value),
-        'EEE': Number(document.getElementById('fee-eee').value),
-        'Mechanical': Number(document.getElementById('fee-mech').value)
-    };
-
-    const uniPayload = {
-        name,
-        state: stateName,
-        location,
-        address,
-        hostel_fee: hostelFee,
-        application_fee: applicationFee,
-        admission_type: admissionType,
-        image: imageUrl || 'https://images.unsplash.com/photo-1523050854058',
-        nirf: Math.floor(Math.random() * 80) + 20,
-        branches: branches
-    };
-
-    if (editId) {
-        await _supabase.from('universities').update(uniPayload).eq('id', editId);
-    } else {
-        uniPayload.id = 'uni-' + Date.now();
-        await _supabase.from('universities').insert([uniPayload]);
-    }
-
-    document.getElementById('uni-modal').classList.add('hidden');
-    await fetchUniversitiesFromSupabase();
-    loadAdminUnisTable();
-    alert('University saved successfully to Supabase database!');
 }
 
 async function handleDeleteUni(id) {
@@ -668,6 +726,8 @@ async function handleDeleteUni(id) {
 
 // Global scope exposure
 window.openStudentLoginModal = openStudentLoginModal;
+window.openStudentDashboardModal = openStudentDashboardModal;
+window.logoutStudent = logoutStudent;
 window.switchAuthMode = switchAuthMode;
 window.handleStudentAuth = handleStudentAuth;
 window.openAdminModal = openAdminModal;

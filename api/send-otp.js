@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://api.mail.hostinger.com/api/v1/mailboxes/${encodeURIComponent(mailboxId)}/send`,
+      `[https://api.mail.hostinger.com/api/v1/mailboxes/$](https://api.mail.hostinger.com/api/v1/mailboxes/$){encodeURIComponent(mailboxId)}/send`,
       {
         method: 'POST',
         headers: {

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>GTech Admissions Portal | Engineering Admissions Consultancy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white overflow-x-hidden">
+
+    <!-- Referral Link Auto-Detection Top Banner -->
+    <div id="referral-applied-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold py-2 px-3 text-center">
+        <i class="fa-solid fa-gift mr-1"></i> Referral Coupon <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Register & submit your admission enquiry.
+    </div>
+
+    <!-- Responsive Student Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800/90 shadow-lg shadow-slate-950/60">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
+            <!-- Brand Identity -->
+            <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
+                <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-emerald-500 flex items-center justify-center text-white font-black text-base sm:text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition shrink-0">
+                    G
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-black text-sm sm:text-lg tracking-tight text-white truncate">GTech Admissions</span>
+                        <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">2026–27</span>
+                    </div>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-tight truncate">Student Admissions & Scholarship Hub</p>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80 text-xs font-bold text-slate-300">
+                <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition">About</a>
+                <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition">Universities</a>
+                <a href="#referral-section" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-amber-300 transition">Refer & Earn</a>
+                <a href="#apply" onclick="requireAuthForApply(event)" class="px-3.5 py-2 rounded-xl hover:bg-slate-800 hover:text-indigo-300 transition">Scholarship</a>
+            </nav>
+
+            <!-- Student Actions -->
+            <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+                <button id="header-dashboard-btn" onclick="openStudentDashboardModal()" class="hidden px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/25 max-w-[148px] sm:max-w-none">
+                    <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
+                    <span id="header-student-name" class="truncate">Dashboard</span>
+                </button>
+
+                <button id="header-login-btn" onclick="openStudentLoginModal()" class="px-2.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700/80 hover:border-emerald-400 text-emerald-300 text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
+                    <span>Login</span>
+                </button>
+
+                <button type="button" onclick="requireAuthForApply(event)" class="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-[11px] sm:text-xs font-extrabold transition shadow-lg shadow-indigo-600/30">
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- Clean Pill Sub-Navigation Strip for Mobile -->
+        <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-slate-900 bg-slate-950/95 px-3 py-2 text-[11px] font-bold scrollbar-none">
+            <a href="#about" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white whitespace-nowrap shrink-0 transition">About</a>
+            <a href="#universities" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 hover:border-indigo-500/50 whitespace-nowrap shrink-0 transition">Universities</a>
+            <a href="#referral-section" class="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 whitespace-nowrap shrink-0 transition">Refer & Earn</a>
+            <a href="#apply" onclick="requireAuthForApply(event)" class="px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/25 whitespace-nowrap shrink-0 transition">Scholarship</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-900 bg-gradient-to-b from-slate-900/50 to-slate-950">
+        <div class="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Certified Educational Admissions Consultancy
+            </span>
+            <h2 class="text-2xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                Secure Branch-Wise Fees & <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-400">Scholarships</span> with GTech
+            </h2>
+            <p class="text-slate-400 text-xs sm:text-sm max-w-2xl mx-auto">
+                Explore transparent branch fee structures, hostel charges, application-only universities, education loan guidance, and merit scholarship assistance.
+            </p>
+        </div>
+    </section>
+
+    <!-- ABOUT GTECH WITH CLEAN CAROUSEL ONLY -->
+    <section id="about" class="py-10 sm:py-14 bg-slate-950 border-b border-slate-900">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Why Choose GTech</span>
+                <h3 class="text-xl sm:text-3xl font-black text-white">5 Years of Trusted Engineering Admissions</h3>
+            </div>
+
+            <!-- Carousel Container Only -->
+            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 mb-8 sm:mb-12 shadow-2xl">
+                <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700 bg-slate-900">
+                    <div class="w-full h-full shrink-0 bg-slate-900 animate-pulse"></div>
+                </div>
+                <button type="button" onclick="prevSlide()" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❮</button>
+                <button type="button" onclick="nextSlide()" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-slate-950/75 border border-slate-800 text-white text-xs sm:text-base flex items-center justify-center hover:bg-indigo-600 transition z-20">❯</button>
+            </div>
+
+            <!-- Professional Software-Grade 4-Card Service Suite -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                <div onclick="requireAuthForApply(event)" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-indigo-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Merit & Fee Waiver</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">Consultant-Backed College Scholarships</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Evaluate your JEE percentile and Inter PCM marks with our senior consultants to unlock maximum tuition fee concessions.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-indigo-400 group-hover:text-indigo-300">
+                        <span>Check Eligibility</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
+                </div>
+
+                <div onclick="requireAuthForApply(event)" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">10-Min Response</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">1-on-1 Expert Admissions Callback</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Speak directly with our senior counselors for branch selection, direct seat availability, and application-only university filings.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-emerald-400 group-hover:text-emerald-300">
+                        <span>Request Callback</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
+                </div>
+
+                <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">Up to ₹1.05 Cr</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">Top Placement Universities</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Gain admission into premier NIRF-ranked engineering institutions boasting global tech placement packages up to ₹1.05 Cr/annum.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-amber-400 group-hover:text-amber-300">
+                        <span>Explore Campuses</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
+                </div>
+
+                <div onclick="requireAuthForApply(event)" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/60 cursor-pointer transition-all duration-300 shadow-xl flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-11 h-11 rounded-2xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-building-columns"></i>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20">Zero-Hassle Support</span>
+                        </div>
+                        <h4 class="font-extrabold text-white text-sm leading-snug">Streamlined Education Loan Process</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">Complete documentation assistance for nationalized & private bank education loans covering tuition and hostel fees.</p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-bold text-sky-400 group-hover:text-sky-300">
+                        <span>Get Loan Guidance</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Region Selector Filter -->
+    <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-6">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">Institutional Database</span>
+                <h3 class="text-xl sm:text-2xl font-black text-white mt-1">University & Branch Fee Matrix</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Showing all branches, tuition fees, hostel fees, and application-only service modes.</p>
+            </div>
+            <div class="w-full md:w-72">
+                <input type="text" id="uni-search" oninput="renderUniversities()" placeholder="Search university, city, or branch..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
+            <button onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 transition whitespace-nowrap shrink-0">All Regions</button>
+            <button onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-amber-500/40 text-amber-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-file-lines mr-1"></i> Entrance Exams</button>
+            <button onclick="setStateFilter('Application Only')" data-state="Application Only" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-blue-500/40 text-blue-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-pen-to-square mr-1"></i> Application Only</button>
+            <button onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
+            <button onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Telangana</button>
+            <button onclick="setStateFilter('Chennai')" data-state="Chennai" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Chennai</button>
+            <button onclick="setStateFilter('Karnataka')" data-state="Karnataka" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Karnataka</button>
+            <button onclick="setStateFilter('UP')" data-state="UP" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">UP</button>
+            <button onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition whitespace-nowrap shrink-0">Maharashtra</button>
+        </div>
+    </section>
+
+    <!-- Universities Grid Container -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
+        <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </main>
+
+    <!-- Scholarship Inquiry / Application Form Section -->
+    <section id="apply" class="py-14 sm:py-16 bg-slate-950 border-t border-slate-900">
+        <div class="max-w-3xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-10 shadow-2xl">
+                <div class="text-center space-y-1.5 mb-6">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">Consultancy Assistance</span>
+                    <h3 class="text-xl font-black text-white">Get Scholarship, Loan Guidance & Expert Callback</h3>
+                    <p class="text-xs text-slate-400">Login or register first, then submit your academic records and JEE scores to secure maximum fee concessions.</p>
+                </div>
+
+                <form onsubmit="handleScholarshipInquiry(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name *</label>
+                            <input type="text" id="app-name" required placeholder="Enter student legal name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Student WhatsApp Number *</label>
+                            <input type="tel" id="app-phone" required placeholder="+91 98765 43210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Parent / Guardian Phone Number *</label>
+                            <input type="tel" id="app-parent-phone" required placeholder="+91 98765 43210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Email Address</label>
+                            <input type="email" id="app-email" placeholder="student@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Residential Address *</label>
+                        <input type="text" id="app-address" required placeholder="Door No, Street, City, District, Pincode" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">JEE Score / Percentile</label>
+                            <input type="text" id="app-jee" placeholder="e.g. 94.5 percentile" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Inter Marks (%) *</label>
+                            <input type="text" id="app-inter" required placeholder="e.g. 960 / 1000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Inter PCM Score (out of 600) *</label>
+                            <input type="number" id="app-pcm" required placeholder="e.g. 520" max="600" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred University *</label>
+                            <input type="text" id="app-uni" required placeholder="Select from catalog" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 mb-1">Preferred Branch *</label>
+                            <select id="app-branch" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                                <option value="ECE">ECE</option>
+                                <option value="CSE AI and ML">CSE AI and ML</option>
+                                <option value="AI and DS">AI and DS</option>
+                                <option value="DS">DS (Data Science)</option>
+                                <option value="CSE">CSE</option>
+                                <option value="CSE IT">CSE IT</option>
+                                <option value="EEE">EEE</option>
+                                <option value="MECHANICAL">MECHANICAL</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-amber-400 mb-1">Referral Coupon (Optional)</label>
+                            <input type="text" id="app-referral-code" placeholder="GTECH-REF-..." class="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3.5 py-2.5 text-xs font-mono text-amber-300 placeholder-slate-600 focus:outline-none focus:border-amber-400">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-xl shadow-indigo-600/30 transition">
+                        Submit Scholarship Application & Request Expert Callback
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5-STEP STUDENT REFERRAL PROGRAM SECTION -->
+    <section id="referral-section" class="py-14 sm:py-16 bg-gradient-to-t from-slate-900/40 to-slate-950 border-t border-slate-900">
+        <div class="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+            <div class="text-center max-w-2xl mx-auto space-y-2">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">GTech Student Referral Program</span>
+                <h3 class="text-2xl sm:text-3xl font-black text-white">Refer Friends & Earn Admission Rewards</h3>
+                <p class="text-xs text-slate-400">Login to get your unique GTech referral ID & link, share it with friends, and earn rewards used toward admission or tuition fees once their admission is confirmed.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">1</span>
+                    <h4 class="text-xs font-extrabold text-white">Student Registers</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">Existing GTech student logs in and gets a unique referral ID & link.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">2</span>
+                    <h4 class="text-xs font-extrabold text-white">Share Referral Link</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">Share easily via WhatsApp, Instagram, or direct link with friends.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">3</span>
+                    <h4 class="text-xs font-extrabold text-white">Friend Applies</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">New student opens the link & submits an admission enquiry.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-black text-[11px]">4</span>
+                    <h4 class="text-xs font-extrabold text-white">Admission Confirmed</h4>
+                    <p class="text-[11px] text-slate-400 leading-snug">GTech verifies the referral coupon and confirms university admission.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-1.5">
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-slate-950 font-black text-[11px]">5</span>
+                    <h4 class="text-xs font-extrabold text-amber-300">Referral Reward</h4>
+                    <p class="text-[11px] text-slate-300 leading-snug">Reward applied toward admission or tuition fee after admission.</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-8 shadow-2xl max-w-2xl mx-auto text-center space-y-4">
+                <div class="space-y-1">
+                    <h4 class="text-base font-black text-white">Your Personal GTech Referral ID & Share Link</h4>
+                    <p class="text-xs text-slate-400">Must be logged in as a registered GTech student to generate your referral link.</p>
+                </div>
+
+                <button type="button" onclick="handleGenerateReferralClick()" class="px-5 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition shadow-lg shadow-amber-500/20 inline-flex items-center gap-2">
+                    <i class="fa-solid fa-ticket"></i> Generate My Referral ID & Share Link
+                </button>
+
+                <div id="generated-code-box" class="hidden mt-4 p-4 rounded-2xl bg-slate-950 border border-amber-500/40 text-center space-y-3">
+                    <div>
+                        <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Your Unique GTech Referral ID:</p>
+                        <div id="generated-code-display" class="text-base sm:text-xl font-mono font-black text-white tracking-widest mt-0.5 break-all"></div>
+                    </div>
+
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-mono text-indigo-300 break-all" id="generated-link-display"></div>
+
+                    <div class="flex flex-wrap justify-center gap-2 pt-1">
+                        <button type="button" onclick="copyReferralLink()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-[11px] text-white rounded-xl border border-slate-700 font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-link"></i> Copy Link
+                        </button>
+                        <button type="button" onclick="shareWhatsApp()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-[11px] text-white rounded-xl font-bold flex items-center gap-1.5">
+                            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                        </button>
+                        <button type="button" onclick="shareInstagram()" class="px-3.5 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-[11px] text-white rounded-xl font-bold flex items-center gap-1.5">
+                            <i class="fa-brands fa-instagram"></i> Instagram
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer with Admin Portal Link -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>© 2026 GTech Admissions Consultancy (Ongole / All India). All rights reserved.</p>
+        <div class="flex items-center gap-4">
+          <button onclick="openStudentLoginModal()" class="hover:text-emerald-400 transition font-bold text-emerald-400">Student Portal Login</button>
+          <button onclick="openAdminModal()" class="hover:text-indigo-400 transition font-bold text-indigo-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-lock text-[10px]"></i> Admin Portal
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- SIMPLE PASSWORDLESS STUDENT LOGIN / SIGNUP MODAL -->
+    <div id="student-login-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 sm:p-8 rounded-3xl max-w-md w-full shadow-2xl relative max-h-[92vh] overflow-y-auto">
+            <button onclick="document.getElementById('student-login-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            <div class="text-center space-y-1 mb-5">
+                <div class="w-10 h-10 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🎓</div>
+                <h3 id="auth-modal-title" class="text-base font-extrabold text-white">Student Portal Login</h3>
+                <p id="auth-modal-subtitle" class="text-[11px] text-slate-400">Sign in instantly with your registered email.</p>
+            </div>
+            
+            <div class="flex rounded-xl bg-slate-950 p-1 mb-5 border border-slate-800 text-xs font-bold">
+                <button type="button" onclick="switchAuthMode('login')" id="tab-login" class="flex-1 py-2 rounded-lg bg-indigo-600 text-white transition">Login</button>
+                <button type="button" onclick="switchAuthMode('signup')" id="tab-signup" class="flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition">Register</button>
+            </div>
+
+            <form id="student-auth-form" onsubmit="handleStudentAuth(event)" class="space-y-3">
+                <div id="name-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Student Full Name *</label>
+                    <input type="text" id="auth-name" placeholder="Enter your full name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Email ID *</label>
+                    <input type="email" id="auth-email" required placeholder="student@gmail.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div id="mobile-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Phone Number *</label>
+                    <input type="tel" id="auth-mobile" placeholder="9876543210" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div id="referral-field-box" class="hidden">
+                    <label class="block text-[11px] font-bold text-amber-400 mb-1">Referral Coupon Code (Optional)</label>
+                    <input type="text" id="auth-referral-code" placeholder="Enter friend's GTECH-REF code if any" class="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3.5 py-2.5 text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-2">Login with Email</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESPONSIVE MOBILE-FRIENDLY STUDENT DASHBOARD MODAL -->
+    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-3.5 sm:p-5 bg-slate-950/95 border-b border-slate-800 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex items-center justify-center font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 shrink-0">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-black text-white text-xs sm:text-base truncate" id="student-dash-title">Welcome Back!</h3>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400 truncate" id="student-dash-email">Track your admission flow & referral rewards.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden')" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5 shrink-0">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
+            </div>
+
+            <div class="p-3.5 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-4 sm:space-y-6">
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-route"></i> Admission Process Flow
+                        </h4>
+                        <span id="dash-current-stage-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">Active</span>
+                    </div>
+                    <div id="admission-process-flow" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+                </div>
+
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
+                    <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-circle-check"></i> My Scholarship Applications & Status
+                    </h4>
+                    <div id="student-applications-list" class="space-y-2"></div>
+                </div>
+
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-3.5 sm:p-5 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-[11px] sm:text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-gift"></i> My Referral ID & Reward Status
+                        </h4>
+                        <button type="button" onclick="document.getElementById('student-dashboard-modal').classList.add('hidden'); handleGenerateReferralClick();" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[10px] sm:text-[11px] transition">
+                            + Get / View Referral Link
+                        </button>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 flex items-start gap-2">
+                        <i class="fa-solid fa-circle-info text-amber-400 mt-0.5 shrink-0"></i>
+                        <div class="leading-relaxed">
+                            <strong class="text-amber-300">Note:</strong> Referral reward amount is used toward <strong>admission processing or tuition fee</strong> adjustments after your referred friend's admission is verified and confirmed by GTech.
+                        </div>
+                    </div>
+
+                    <div id="student-vouchers-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl max-w-sm w-full shadow-2xl relative">
+            <button onclick="document.getElementById('admin-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            <div class="text-center space-y-2 mb-5">
+                <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center mx-auto text-base font-bold">🔒</div>
+                <h3 class="text-base font-extrabold text-white">Admin Control Panel</h3>
+                <p class="text-[11px] text-slate-400">Enter User ID and Password.</p>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">User ID *</label>
+                    <input type="text" id="admin-userid-input" required placeholder="Enter User ID" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Password *</label>
+                    <input type="password" id="admin-pass-input" required placeholder="Enter Password" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30">Authenticate Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESPONSIVE MOBILE + DESKTOP ADMIN DASHBOARD MODAL -->
+    <div id="admin-dashboard-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-x-hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-3.5 sm:p-5 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">📊</div>
+                    <div class="min-w-0">
+                        <h3 class="font-black text-white text-xs sm:text-sm truncate">GTech Admin & Fee Control</h3>
+                        <p class="text-[10px] text-slate-400 truncate hidden sm:block">Manage student signups, call statuses, referral verifications, branch fees, universities, and carousel banners.</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('admin-dashboard-modal').classList.add('hidden')" class="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-[11px] text-rose-300 font-bold shrink-0">Close</button>
+            </div>
+
+            <!-- Scrollable Admin Tabs -->
+            <div class="flex border-b border-slate-800 bg-slate-950 px-3 sm:px-5 gap-2 sm:gap-5 text-[11px] sm:text-xs font-bold overflow-x-auto scrollbar-none">
+                <button onclick="switchAdminTab('inquiries')" id="tab-btn-inquiries" class="py-2.5 border-b-2 border-indigo-500 text-indigo-400 whitespace-nowrap shrink-0">Leads</button>
+                <button onclick="switchAdminTab('students')" id="tab-btn-students" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Students</button>
+                <button onclick="switchAdminTab('referrals')" id="tab-btn-referrals" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Referrals</button>
+                <button onclick="switchAdminTab('universities')" id="tab-btn-universities" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Universities</button>
+                <button onclick="switchAdminTab('carousel')" id="tab-btn-carousel" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap shrink-0">Carousel</button>
+            </div>
+
+            <div class="p-3 sm:p-5 overflow-y-auto overflow-x-hidden flex-1 space-y-4">
+                <!-- Leads Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-inquiries" class="space-y-3">
+                    <div id="admin-inquiries-mobile" class="md:hidden space-y-3"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">Student Name / Phone</th>
+                                    <th class="p-3">Parent Phone / Address</th>
+                                    <th class="p-3">Academics (JEE / Inter / PCM)</th>
+                                    <th class="p-3">University & Branch</th>
+                                    <th class="p-3">Referral Code</th>
+                                    <th class="p-3">Call / Application Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-inquiries-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Registered Students Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-students" class="space-y-3 hidden">
+                    <div class="flex justify-between items-center gap-2">
+                        <h4 class="font-bold text-white text-xs">Registered Students</h4>
+                        <span id="total-students-count" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">0 Students</span>
+                    </div>
+                    <div id="admin-students-mobile" class="md:hidden space-y-2.5"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">Student Name</th>
+                                    <th class="p-3">Email ID</th>
+                                    <th class="p-3">Phone Number</th>
+                                    <th class="p-3">Referred By Coupon</th>
+                                    <th class="p-3">Registered On</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-students-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Referrals Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-referrals" class="space-y-3 hidden">
+                    <h4 class="font-bold text-white text-xs">Student Referral IDs & Reward Verification</h4>
+                    <div id="admin-referrals-mobile" class="md:hidden space-y-2.5"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">Referring Student</th>
+                                    <th class="p-3">Phone / Email</th>
+                                    <th class="p-3">Unique Referral ID</th>
+                                    <th class="p-3">Reward Verification Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-referrals-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Universities Tab (Mobile Cards + Desktop Table) -->
+                <div id="admin-tab-universities" class="space-y-3 hidden">
+                    <div class="flex justify-between items-center gap-2">
+                        <h4 class="font-bold text-white text-xs">University Catalog & Fees</h4>
+                        <button onclick="openAddUniModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition">+ Add University</button>
+                    </div>
+                    <div id="admin-unis-mobile" class="md:hidden space-y-2.5"></div>
+                    <div class="hidden md:block border border-slate-800 rounded-2xl overflow-x-auto bg-slate-950">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-800">
+                                    <th class="p-3">University & Location</th>
+                                    <th class="p-3">Admission Mode</th>
+                                    <th class="p-3">Hostel Fee</th>
+                                    <th class="p-3">App Fee</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-unis-tbody" class="divide-y divide-slate-900 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Carousel Tab -->
+                <div id="admin-tab-carousel" class="space-y-4 hidden">
+                    <div>
+                        <h4 class="font-bold text-white text-xs">Manage Carousel Slides (Auto-Cropped to 1600×640 Banner Size)</h4>
+                        <p class="text-[10px] text-slate-400">Any uploaded photo is automatically center-cropped to fit the exact carousel banner aspect ratio.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
+                            <h5 class="text-xs font-bold text-indigo-400">Carousel Photo 1</h5>
+                            <div class="w-full aspect-[5/2] rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                                <img id="carousel-preview-1" src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover" alt="Slide 1 Preview">
+                            </div>
+                            <input type="file" id="carousel-file-1" accept="image/*" onchange="previewCroppedImage(this, 'carousel-preview-1', 1600, 640)" class="w-full text-xs text-slate-300">
+                            <input type="text" id="carousel-title-1" placeholder="Slide Title 1" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="button" id="btn-upload-carousel-1" onclick="handleUploadCarousel(1)" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition">Crop & Upload Photo 1</button>
+                        </div>
+                        <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-3">
+                            <h5 class="text-xs font-bold text-emerald-400">Carousel Photo 2</h5>
+                            <div class="w-full aspect-[5/2] rounded-xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center">
+                                <img id="carousel-preview-2" src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover" alt="Slide 2 Preview">
+                            </div>
+                            <input type="file" id="carousel-file-2" accept="image/*" onchange="previewCroppedImage(this, 'carousel-preview-2', 1600, 640)" class="w-full text-xs text-slate-300">
+                            <input type="text" id="carousel-title-2" placeholder="Slide Title 2" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+                            <button type="button" id="btn-upload-carousel-2" onclick="handleUploadCarousel(2)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition">Crop & Upload Photo 2</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD / EDIT UNIVERSITY MODAL -->
+    <div id="uni-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="document.getElementById('uni-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-500 hover:text-white">✕</button>
+            <h3 id="uni-modal-title" class="text-base font-black text-white mb-3">Add University & Fees</h3>
+            <form onsubmit="handleSaveUni(event)" class="space-y-3">
+                <input type="hidden" id="edit-uni-id">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">University Name *</label>
+                    <input type="text" id="modal-uni-name" required placeholder="e.g. VIT Vellore" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Region *</label>
+                        <select id="modal-uni-state" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="UP">UP</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">City / Location *</label>
+                        <input type="text" id="modal-uni-loc" required placeholder="Chennai, TN" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-300 mb-1">Full College Address *</label>
+                    <input type="text" id="modal-uni-address" required placeholder="Vandalur-Kelambakkam Road, Chennai" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Hostel Fee (₹/yr) *</label>
+                        <input type="number" id="modal-uni-hostelfee" required placeholder="95000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Application Fee (₹) *</label>
+                        <input type="number" id="modal-uni-appfee" required placeholder="1200" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Service Mode *</label>
+                        <select id="modal-uni-admission" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white">
+                            <option value="Direct Admission Open">Direct Admission & Application</option>
+                            <option value="Application Only">Application Only (No Direct Admission)</option>
+                            <option value="Entrance Exam Required">Entrance Exam Required</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-300 mb-1">Card Photo (Auto-Cropped 16:9)</label>
+                        <input type="file" id="modal-uni-file" accept="image/*" onchange="previewCroppedImage(this, 'uni-card-preview', 800, 450)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-1.5 text-xs text-white file:bg-indigo-600 file:border-0 file:rounded-lg file:text-white file:text-[10px]">
+                        <input type="hidden" id="modal-uni-image-url">
+                    </div>
+                </div>
+
+                <div class="w-full aspect-[16/9] rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+                    <img id="uni-card-preview" src="https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover" alt="University Card Preview">
+                </div>
+
+                <div class="border-t border-slate-800 pt-3">
+                    <label class="block text-[11px] font-bold text-indigo-400 mb-2">Branch Tuition Fees (₹ / Year)</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div><span class="text-[10px] text-slate-400">ECE</span><input type="number" id="fee-ece" value="190000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">CSE AI & ML</span><input type="number" id="fee-cseaiml" value="230000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">AI & DS</span><input type="number" id="fee-aiandds" value="225000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">Data Science</span><input type="number" id="fee-ds" value="215000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">CSE</span><input type="number" id="fee-cse" value="210000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">CSE IT</span><input type="number" id="fee-cseit" value="200000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">EEE</span><input type="number" id="fee-eee" value="175000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                        <div><span class="text-[10px] text-slate-400">Mechanical</span><input type="number" id="fee-mech" value="160000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white"></div>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-save-uni" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30 mt-3">Crop & Save University</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modern UI Toast Notification Container -->
+    <div id="gtech-toast" class="fixed bottom-4 right-4 left-4 sm:left-auto z-[100] hidden items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-900 border border-emerald-500/50 text-white shadow-2xl shadow-emerald-500/10 sm:max-w-sm transition-all duration-300">
+        <div id="gtech-toast-icon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm">
+            ✓
+        </div>
+        <div class="flex-1 min-w-0">
+            <p id="gtech-toast-title" class="text-xs font-black text-white">Success</p>
+            <p id="gtech-toast-msg" class="text-[11px] text-slate-300 mt-0.5 leading-snug"></p>
+        </div>
+        <button onclick="hideToast()" class="text-slate-500 hover:text-white text-xs ml-2">✕</button>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>

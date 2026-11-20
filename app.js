@@ -1,4 +1,4 @@
-const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
+const SUPABASE_URL = '[https://yefezksjguqjabhjlwqj.supabase.co](https://yefezksjguqjabhjlwqj.supabase.co)';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -26,7 +26,6 @@ window.onload = async function() {
     }, 4500);
 };
 
-// --- DETECT INCOMING REFERRAL LINK (?ref=GTECH-REF-...) ---
 function detectIncomingReferralLink() {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -53,7 +52,6 @@ function detectIncomingReferralLink() {
     }
 }
 
-// --- MODERN UI TOAST NOTIFICATION ---
 let toastTimeout;
 function showToast(title, message, type = 'success') {
     const toast = document.getElementById('gtech-toast');
@@ -87,7 +85,6 @@ function hideToast() {
     if (toast) toast.classList.add('hidden');
 }
 
-// --- AUTOMATIC PHOTO CROPPER & PREVIEW ---
 function cropImageFileToBlob(file, targetWidth, targetHeight) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -165,7 +162,6 @@ async function uploadCroppedImageToBucket(file, prefix, targetWidth, targetHeigh
     return publicURLData.publicUrl;
 }
 
-// --- CAROUSEL LOGIC ---
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
@@ -197,12 +193,12 @@ async function loadActiveCarousel() {
     const defaultSlides = [
         {
             id: 1,
-            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
+            image_url: '[https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop)',
             title: 'GTech Carousel Slide 1'
         },
         {
             id: 2,
-            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
+            image_url: '[https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop)',
             title: 'GTech Carousel Slide 2'
         }
     ];
@@ -263,7 +259,6 @@ async function handleUploadCarousel(slideNum) {
     }
 }
 
-// --- UNIVERSITIES & CATALOG ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -404,7 +399,6 @@ function renderUniversities() {
     }).join('');
 }
 
-// --- AUTH GATE FOR APPLY, SCHOLARSHIP & REFERRAL ---
 function requireAuthForApply(e) {
     if (e) e.preventDefault();
     if (!state.currentStudent) {
@@ -498,7 +492,6 @@ async function handleScholarshipInquiry(e) {
     prefillScholarshipFormWithStudent();
 }
 
-// --- 5-STEP REFERRAL SYSTEM (LOGIN REQUIRED FIRST) ---
 async function handleGenerateReferralClick() {
     if (!state.currentStudent) {
         state.pendingAction = { type: 'referral' };
@@ -548,7 +541,7 @@ function shareWhatsApp() {
     const code = document.getElementById('generated-code-display').textContent;
     const link = document.getElementById('generated-link-display').textContent;
     const text = encodeURIComponent(`Hey! Apply for B.Tech / Engineering admissions through GTech Admissions using my referral link:\n${link}\n\nReferral Coupon Code: *${code}*\nUnlock merit scholarships & fee concessions!`);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    window.open(`[https://api.whatsapp.com/send?text=$](https://api.whatsapp.com/send?text=$){text}`, '_blank');
 }
 
 function shareInstagram() {
@@ -556,11 +549,10 @@ function shareInstagram() {
     navigator.clipboard.writeText(link);
     showToast('Link Copied for Instagram', 'Your referral link is copied! Opening Instagram so you can paste & share it in DM or Story.', 'success');
     setTimeout(() => {
-        window.open('https://www.instagram.com/', '_blank');
+        window.open('[https://www.instagram.com/](https://www.instagram.com/)', '_blank');
     }, 800);
 }
 
-// --- PASSWORDLESS & OTP-FREE STUDENT AUTHENTICATION ---
 let authMode = 'login';
 
 function openStudentLoginModal() {
@@ -570,7 +562,7 @@ function openStudentLoginModal() {
 }
 
 let pendingSignupOtp = null;
-const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000;
 
 function clearSignupOtpState() {
     pendingSignupOtp = null;
@@ -899,7 +891,6 @@ function loadStudentDashboardData() {
     }
 }
 
-// --- ADMIN PANEL (MOBILE + DESKTOP RESPONSIVE) ---
 function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
     document.getElementById('admin-modal').classList.add('flex');
@@ -1243,7 +1234,7 @@ function openAddUniModal() {
     document.getElementById('modal-uni-admission').value = 'Direct Admission Open';
     document.getElementById('modal-uni-image-url').value = '';
     document.getElementById('modal-uni-file').value = '';
-    document.getElementById('uni-card-preview').src = 'https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop';
+    document.getElementById('uni-card-preview').src = '[https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop](https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop)';
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
 }
@@ -1320,7 +1311,7 @@ async function handleSaveUni(e) {
             hostel_fee: hostelFee,
             application_fee: applicationFee,
             admission_type: admissionType,
-            image: imageUrl || 'https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop',
+            image: imageUrl || '[https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop](https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop)',
             nirf: Math.floor(Math.random() * 80) + 20,
             branches: branches
         };
@@ -1355,7 +1346,6 @@ async function handleDeleteUni(id) {
     }
 }
 
-// Global scope exposure
 window.showToast = showToast;
 window.hideToast = hideToast;
 window.previewCroppedImage = previewCroppedImage;

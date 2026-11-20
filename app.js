@@ -569,8 +569,24 @@ function openStudentLoginModal() {
     switchAuthMode('login');
 }
 
+let pendingSignupOtp = null;
+const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function clearSignupOtpState() {
+    pendingSignupOtp = null;
+    const otpBox = document.getElementById('otp-field-box');
+    const otpInput = document.getElementById('auth-otp');
+    if (otpBox) otpBox.classList.add('hidden');
+    if (otpInput) {
+        otpInput.required = false;
+        otpInput.value = '';
+    }
+}
+
 function switchAuthMode(mode) {
     authMode = mode;
+    clearSignupOtpState();
+
     const title = document.getElementById('auth-modal-title');
     const subtitle = document.getElementById('auth-modal-subtitle');
     const subBtn = document.getElementById('auth-submit-btn');
@@ -582,12 +598,14 @@ function switchAuthMode(mode) {
     const nameInput = document.getElementById('auth-name');
     const mobileInput = document.getElementById('auth-mobile');
 
+    subBtn.disabled = false;
+
     if (mode === 'signup') {
         tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
         title.textContent = 'Register with GTech';
-        subtitle.textContent = 'Enter your Name, Email, Phone Number & optional Referral Coupon.';
-        subBtn.textContent = 'Register Now';
+        subtitle.textContent = 'Verify your email with a 6-digit OTP to complete registration.';
+        subBtn.textContent = 'Send OTP';
         nameBox.classList.remove('hidden');
         mobileBox.classList.remove('hidden');
         refBox.classList.remove('hidden');
@@ -613,30 +631,101 @@ function switchAuthMode(mode) {
 async function handleStudentAuth(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim().toLowerCase();
+    const subBtn = document.getElementById('auth-submit-btn');
 
     if (authMode === 'signup') {
+        if (pendingSignupOtp && pendingSignupOtp.email === email) {
+            const enteredOtp = (document.getElementById('auth-otp')?.value || '').trim();
+
+            if (Date.now() > pendingSignupOtp.expiresAt) {
+                clearSignupOtpState();
+                subBtn.textContent = 'Send OTP';
+                showToast('OTP Expired', 'Your OTP expired after 10 minutes. Please send a new OTP.', 'error');
+                return;
+            }
+
+            if (enteredOtp !== pendingSignupOtp.otp) {
+                showToast('Invalid OTP', 'Please enter the exact 6-digit OTP sent to your email.', 'error');
+                return;
+            }
+
+            subBtn.disabled = true;
+            subBtn.textContent = 'Registering...';
+
+            const studentRecord = {
+                id: 'stu_' + Date.now(),
+                full_name: pendingSignupOtp.name,
+                mobile: pendingSignupOtp.mobile,
+                email: pendingSignupOtp.email,
+                address: 'Ongole',
+                referred_by_code: pendingSignupOtp.refCoupon || state.incomingReferralCode || null
+            };
+
+            const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
+            subBtn.disabled = false;
+
+            if (error) {
+                subBtn.textContent = 'Verify OTP & Register';
+                showToast('Registration Failed', error.message, 'error');
+                return;
+            }
+
+            clearSignupOtpState();
+            showToast('Registration Complete', 'Your email is verified! Please login with your email.', 'success');
+            switchAuthMode('login');
+            document.getElementById('auth-email').value = email;
+            return;
+        }
+
         const name = document.getElementById('auth-name').value.trim();
         const mobile = document.getElementById('auth-mobile').value.trim();
         const refCoupon = document.getElementById('auth-referral-code').value.trim().toUpperCase();
 
-        const studentRecord = {
-            id: 'stu_' + Date.now(),
-            full_name: name,
-            mobile: mobile,
-            email: email,
-            address: 'Ongole',
-            referred_by_code: refCoupon || state.incomingReferralCode || null
-        };
-
-        const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
-        if (error) {
-            showToast('Registration Failed', error.message, 'error');
+        if (!name || !mobile) {
+            showToast('Missing Details', 'Please enter your full name and mobile number.', 'error');
             return;
         }
 
-        showToast('Registration Complete', 'You are successfully registered with GTech! Please login with your email.', 'success');
-        switchAuthMode('login');
-        document.getElementById('auth-email').value = email;
+        const otp = String(Math.floor(100000 + Math.random() * 900000));
+        subBtn.disabled = true;
+        subBtn.textContent = 'Sending OTP...';
+
+        try {
+            const res = await fetch('/api/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, name, otp }),
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Failed to send verification email');
+            }
+
+            pendingSignupOtp = {
+                name,
+                mobile,
+                email,
+                refCoupon,
+                otp,
+                expiresAt: Date.now() + SIGNUP_OTP_TTL_MS
+            };
+
+            const otpBox = document.getElementById('otp-field-box');
+            const otpInput = document.getElementById('auth-otp');
+            if (otpBox) otpBox.classList.remove('hidden');
+            if (otpInput) {
+                otpInput.required = true;
+                otpInput.focus();
+            }
+            subBtn.textContent = 'Verify OTP & Register';
+            showToast('OTP Sent', `6-digit OTP sent to ${email}. Check Inbox or Spam.`, 'success');
+        } catch (err) {
+            subBtn.textContent = 'Send OTP';
+            showToast('OTP Error', err.message || 'Could not send OTP email.', 'error');
+        } finally {
+            subBtn.disabled = false;
+        }
     } else {
         const { data: profile, error } = await _supabase
             .from('student_profiles')

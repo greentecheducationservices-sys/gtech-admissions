@@ -1,4 +1,4 @@
-const SUPABASE_URL = '[https://yefezksjguqjabhjlwqj.supabase.co](https://yefezksjguqjabhjlwqj.supabase.co)';
+const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -26,6 +26,7 @@ window.onload = async function() {
     }, 4500);
 };
 
+// --- DETECT INCOMING REFERRAL LINK (?ref=GTECH-REF-...) ---
 function detectIncomingReferralLink() {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -52,6 +53,7 @@ function detectIncomingReferralLink() {
     }
 }
 
+// --- MODERN UI TOAST NOTIFICATION ---
 let toastTimeout;
 function showToast(title, message, type = 'success') {
     const toast = document.getElementById('gtech-toast');
@@ -85,6 +87,7 @@ function hideToast() {
     if (toast) toast.classList.add('hidden');
 }
 
+// --- AUTOMATIC PHOTO CROPPER & PREVIEW ---
 function cropImageFileToBlob(file, targetWidth, targetHeight) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -162,6 +165,7 @@ async function uploadCroppedImageToBucket(file, prefix, targetWidth, targetHeigh
     return publicURLData.publicUrl;
 }
 
+// --- CAROUSEL LOGIC ---
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
@@ -193,12 +197,12 @@ async function loadActiveCarousel() {
     const defaultSlides = [
         {
             id: 1,
-            image_url: '[https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop)',
+            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
             title: 'GTech Carousel Slide 1'
         },
         {
             id: 2,
-            image_url: '[https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop)',
+            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
             title: 'GTech Carousel Slide 2'
         }
     ];
@@ -259,6 +263,7 @@ async function handleUploadCarousel(slideNum) {
     }
 }
 
+// --- UNIVERSITIES & CATALOG ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -399,6 +404,7 @@ function renderUniversities() {
     }).join('');
 }
 
+// --- AUTH GATE FOR APPLY, SCHOLARSHIP & REFERRAL ---
 function requireAuthForApply(e) {
     if (e) e.preventDefault();
     if (!state.currentStudent) {
@@ -492,6 +498,7 @@ async function handleScholarshipInquiry(e) {
     prefillScholarshipFormWithStudent();
 }
 
+// --- 5-STEP REFERRAL SYSTEM (LOGIN REQUIRED FIRST) ---
 async function handleGenerateReferralClick() {
     if (!state.currentStudent) {
         state.pendingAction = { type: 'referral' };
@@ -541,7 +548,7 @@ function shareWhatsApp() {
     const code = document.getElementById('generated-code-display').textContent;
     const link = document.getElementById('generated-link-display').textContent;
     const text = encodeURIComponent(`Hey! Apply for B.Tech / Engineering admissions through GTech Admissions using my referral link:\n${link}\n\nReferral Coupon Code: *${code}*\nUnlock merit scholarships & fee concessions!`);
-    window.open(`[https://api.whatsapp.com/send?text=$](https://api.whatsapp.com/send?text=$){text}`, '_blank');
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
 }
 
 function shareInstagram() {
@@ -549,10 +556,11 @@ function shareInstagram() {
     navigator.clipboard.writeText(link);
     showToast('Link Copied for Instagram', 'Your referral link is copied! Opening Instagram so you can paste & share it in DM or Story.', 'success');
     setTimeout(() => {
-        window.open('[https://www.instagram.com/](https://www.instagram.com/)', '_blank');
+        window.open('https://www.instagram.com/', '_blank');
     }, 800);
 }
 
+// --- PASSWORDLESS & OTP-FREE STUDENT AUTHENTICATION ---
 let authMode = 'login';
 
 function openStudentLoginModal() {
@@ -561,24 +569,8 @@ function openStudentLoginModal() {
     switchAuthMode('login');
 }
 
-let pendingSignupOtp = null;
-const SIGNUP_OTP_TTL_MS = 10 * 60 * 1000;
-
-function clearSignupOtpState() {
-    pendingSignupOtp = null;
-    const otpBox = document.getElementById('otp-field-box');
-    const otpInput = document.getElementById('auth-otp');
-    if (otpBox) otpBox.classList.add('hidden');
-    if (otpInput) {
-        otpInput.required = false;
-        otpInput.value = '';
-    }
-}
-
 function switchAuthMode(mode) {
     authMode = mode;
-    clearSignupOtpState();
-
     const title = document.getElementById('auth-modal-title');
     const subtitle = document.getElementById('auth-modal-subtitle');
     const subBtn = document.getElementById('auth-submit-btn');
@@ -590,14 +582,12 @@ function switchAuthMode(mode) {
     const nameInput = document.getElementById('auth-name');
     const mobileInput = document.getElementById('auth-mobile');
 
-    subBtn.disabled = false;
-
     if (mode === 'signup') {
         tabSignup.className = 'flex-1 py-2 rounded-lg bg-indigo-600 text-white transition';
         tabLogin.className = 'flex-1 py-2 rounded-lg text-slate-400 hover:text-white transition';
         title.textContent = 'Register with GTech';
-        subtitle.textContent = 'Verify your email with a 6-digit OTP to complete registration.';
-        subBtn.textContent = 'Send OTP';
+        subtitle.textContent = 'Enter your Name, Email, Phone Number & optional Referral Coupon.';
+        subBtn.textContent = 'Register Now';
         nameBox.classList.remove('hidden');
         mobileBox.classList.remove('hidden');
         refBox.classList.remove('hidden');
@@ -623,101 +613,30 @@ function switchAuthMode(mode) {
 async function handleStudentAuth(e) {
     e.preventDefault();
     const email = document.getElementById('auth-email').value.trim().toLowerCase();
-    const subBtn = document.getElementById('auth-submit-btn');
 
     if (authMode === 'signup') {
-        if (pendingSignupOtp && pendingSignupOtp.email === email) {
-            const enteredOtp = (document.getElementById('auth-otp')?.value || '').trim();
-
-            if (Date.now() > pendingSignupOtp.expiresAt) {
-                clearSignupOtpState();
-                subBtn.textContent = 'Send OTP';
-                showToast('OTP Expired', 'Your OTP expired after 10 minutes. Please send a new OTP.', 'error');
-                return;
-            }
-
-            if (enteredOtp !== pendingSignupOtp.otp) {
-                showToast('Invalid OTP', 'Please enter the exact 6-digit OTP sent to your email.', 'error');
-                return;
-            }
-
-            subBtn.disabled = true;
-            subBtn.textContent = 'Registering...';
-
-            const studentRecord = {
-                id: 'stu_' + Date.now(),
-                full_name: pendingSignupOtp.name,
-                mobile: pendingSignupOtp.mobile,
-                email: pendingSignupOtp.email,
-                address: 'Ongole',
-                referred_by_code: pendingSignupOtp.refCoupon || state.incomingReferralCode || null
-            };
-
-            const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
-            subBtn.disabled = false;
-
-            if (error) {
-                subBtn.textContent = 'Verify OTP & Register';
-                showToast('Registration Failed', error.message, 'error');
-                return;
-            }
-
-            clearSignupOtpState();
-            showToast('Registration Complete', 'Your email is verified! Please login with your email.', 'success');
-            switchAuthMode('login');
-            document.getElementById('auth-email').value = email;
-            return;
-        }
-
         const name = document.getElementById('auth-name').value.trim();
         const mobile = document.getElementById('auth-mobile').value.trim();
         const refCoupon = document.getElementById('auth-referral-code').value.trim().toUpperCase();
 
-        if (!name || !mobile) {
-            showToast('Missing Details', 'Please enter your full name and mobile number.', 'error');
+        const studentRecord = {
+            id: 'stu_' + Date.now(),
+            full_name: name,
+            mobile: mobile,
+            email: email,
+            address: 'Ongole',
+            referred_by_code: refCoupon || state.incomingReferralCode || null
+        };
+
+        const { error } = await _supabase.from('student_profiles').upsert([studentRecord], { onConflict: 'email' });
+        if (error) {
+            showToast('Registration Failed', error.message, 'error');
             return;
         }
 
-        const otp = String(Math.floor(100000 + Math.random() * 900000));
-        subBtn.disabled = true;
-        subBtn.textContent = 'Sending OTP...';
-
-        try {
-            const res = await fetch('/api/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, name, otp }),
-            });
-            const data = await res.json().catch(() => ({}));
-
-            if (!res.ok || !data.success) {
-                throw new Error(data.error || 'Failed to send verification email');
-            }
-
-            pendingSignupOtp = {
-                name,
-                mobile,
-                email,
-                refCoupon,
-                otp,
-                expiresAt: Date.now() + SIGNUP_OTP_TTL_MS
-            };
-
-            const otpBox = document.getElementById('otp-field-box');
-            const otpInput = document.getElementById('auth-otp');
-            if (otpBox) otpBox.classList.remove('hidden');
-            if (otpInput) {
-                otpInput.required = true;
-                otpInput.focus();
-            }
-            subBtn.textContent = 'Verify OTP & Register';
-            showToast('OTP Sent', `6-digit OTP sent to ${email}. Check Inbox or Spam.`, 'success');
-        } catch (err) {
-            subBtn.textContent = 'Send OTP';
-            showToast('OTP Error', err.message || 'Could not send OTP email.', 'error');
-        } finally {
-            subBtn.disabled = false;
-        }
+        showToast('Registration Complete', 'You are successfully registered with GTech! Please login with your email.', 'success');
+        switchAuthMode('login');
+        document.getElementById('auth-email').value = email;
     } else {
         const { data: profile, error } = await _supabase
             .from('student_profiles')
@@ -891,6 +810,7 @@ function loadStudentDashboardData() {
     }
 }
 
+// --- ADMIN PANEL (MOBILE + DESKTOP RESPONSIVE) ---
 function openAdminModal() {
     document.getElementById('admin-modal').classList.remove('hidden');
     document.getElementById('admin-modal').classList.add('flex');
@@ -1234,7 +1154,7 @@ function openAddUniModal() {
     document.getElementById('modal-uni-admission').value = 'Direct Admission Open';
     document.getElementById('modal-uni-image-url').value = '';
     document.getElementById('modal-uni-file').value = '';
-    document.getElementById('uni-card-preview').src = '[https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop](https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop)';
+    document.getElementById('uni-card-preview').src = 'https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop';
     document.getElementById('uni-modal').classList.remove('hidden');
     document.getElementById('uni-modal').classList.add('flex');
 }
@@ -1311,7 +1231,7 @@ async function handleSaveUni(e) {
             hostel_fee: hostelFee,
             application_fee: applicationFee,
             admission_type: admissionType,
-            image: imageUrl || '[https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop](https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop)',
+            image: imageUrl || 'https://images.unsplash.com/photo-1523050854058?q=80&w=800&auto=format&fit=crop',
             nirf: Math.floor(Math.random() * 80) + 20,
             branches: branches
         };
@@ -1346,6 +1266,7 @@ async function handleDeleteUni(id) {
     }
 }
 
+// Global scope exposure
 window.showToast = showToast;
 window.hideToast = hideToast;
 window.previewCroppedImage = previewCroppedImage;

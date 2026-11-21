@@ -16,6 +16,7 @@ const state = {
     financeRecord: null,
     pendingRegistration: null,
     pendingLoginEmail: '',
+    pendingPostLoginAction: null,
     currentSlide: 0,
     incomingReferralCode: '',
     activeDashboardTab: 'dashboard',
@@ -23,7 +24,7 @@ const state = {
     loginCooldownTimer: null
 };
 
-// --- EMAIL NOTIFICATION HELPER (SENDS TO STUDENT MAIL & ADMIN MAIL ON UPDATES) ---
+// --- EMAIL NOTIFICATION HELPER ---
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
     const payload = {
         to: to || ADMIN_EMAIL,
@@ -437,16 +438,29 @@ function renderUniversities() {
     }).join('');
 }
 
-// --- SCHOLARSHIP & VISITING APPLICATION MODAL ---
+// --- SCHOLARSHIP & VISITING APPLICATION MODAL (REQUIRES STUDENT LOGIN FIRST) ---
 function openScholarshipModal(uniName = '', assistanceType = '') {
+    // If candidate is not logged in, navigate to the login modal and save target action
+    if (!state.currentStudent) {
+        state.pendingPostLoginAction = {
+            type: 'scholarship_form',
+            uniName: uniName || '',
+            assistanceType: assistanceType || 'Scholarship Based on Marks'
+        };
+        const formLabel = assistanceType || 'Scholarship / Visiting Application';
+        openAuthModal('login', `Please sign in or register first to access the ${formLabel} form.`);
+        showToast('Login Required', `Please login or register first to open ${formLabel}.`, 'error');
+        return;
+    }
+
     const modal = document.getElementById('scholarship-app-modal');
     if (!modal) return;
 
     const uniInput = document.getElementById('guide-uni');
     const assistSelect = document.getElementById('guide-assistance');
 
-    if (uniInput && uniName) {
-        uniInput.value = uniName;
+    if (uniInput) {
+        uniInput.value = uniName || '';
     }
     if (assistSelect && assistanceType) {
         assistSelect.value = assistanceType;
@@ -598,8 +612,20 @@ async function handleGuidanceSubmission(e) {
 }
 
 // --- AUTH MODAL & OTP HANDLERS ---
-function openAuthModal(mode = 'login') {
+function openAuthModal(mode = 'login', noticeText = '') {
     const modal = document.getElementById('student-auth-modal');
+    const noticeBox = document.getElementById('auth-redirect-notice');
+    const noticeMsg = document.getElementById('auth-redirect-notice-text');
+
+    if (noticeBox && noticeMsg) {
+        if (noticeText) {
+            noticeMsg.textContent = noticeText;
+            noticeBox.classList.remove('hidden');
+        } else {
+            noticeBox.classList.add('hidden');
+        }
+    }
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     switchStudentAuthMode(mode);
@@ -609,6 +635,17 @@ function closeAuthModal() {
     const modal = document.getElementById('student-auth-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+}
+
+function continueAfterAuth() {
+    closeAuthModal();
+    if (state.pendingPostLoginAction && state.pendingPostLoginAction.type === 'scholarship_form') {
+        const pending = state.pendingPostLoginAction;
+        state.pendingPostLoginAction = null;
+        openScholarshipModal(pending.uniName, pending.assistanceType);
+    } else {
+        openStudentDashboardModal('dashboard');
+    }
 }
 
 function switchStudentAuthMode(mode) {
@@ -956,14 +993,13 @@ async function handleVerifyLoginOtp() {
 
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
-        closeAuthModal();
-        await openStudentDashboardModal('dashboard');
         showToast('Welcome Back', `Signed in as ${profile.full_name}.`, 'success');
+        continueAfterAuth();
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
         verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verify & Open Portal';
+        verifyBtn.textContent = 'Verify & Continue';
     }
 }
 
@@ -1066,7 +1102,7 @@ async function handleStudentLogout() {
     showToast('Signed Out', 'You have signed out of your student portal.', 'success');
 }
 
-// --- STUDENT PORTAL TABS ---
+// --- STUDENT PORTAL TABS (PREMIUM SEGMENTED PILL STYLING) ---
 function switchDashboardSection(tabName) {
     state.activeDashboardTab = tabName;
     const tabs = ['dashboard', 'referral'];
@@ -1078,10 +1114,10 @@ function switchDashboardSection(tabName) {
 
         if (t === tabName) {
             sectionEl.classList.remove('hidden');
-            btnEl.className = 'px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-indigo-600 text-white text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 shadow-xs transition';
+            btnEl.className = 'flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-white text-indigo-950 text-[10px] sm:text-xs font-black whitespace-nowrap shrink-0 shadow-sm transition flex items-center justify-center gap-1';
         } else {
             sectionEl.classList.add('hidden');
-            btnEl.className = 'px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-sky-50 text-slate-700 hover:bg-sky-100 hover:text-indigo-700 border border-sky-200/70 text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition';
+            btnEl.className = 'flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center justify-center gap-1';
         }
     });
 }
@@ -1412,7 +1448,7 @@ function shareReferralInstagram() {
     window.open('https://www.instagram.com/', '_blank', 'noopener');
 }
 
-// --- REALTIME WATCHER: SENDS STUDENT EMAIL ON APPLICATION APPROVAL / STATUS OR REFERRAL UPDATE ---
+// --- REALTIME WATCHER ---
 function subscribeToStudentMailUpdates() {
     _supabase
         .channel('gtech-student-updates')
@@ -1509,6 +1545,7 @@ window.openScholarshipModal = openScholarshipModal;
 window.closeScholarshipModal = closeScholarshipModal;
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
+window.continueAfterAuth = continueAfterAuth;
 window.switchStudentAuthMode = switchStudentAuthMode;
 window.handleSendRegistrationOtp = handleSendRegistrationOtp;
 window.handleVerifyRegistrationOtp = handleVerifyRegistrationOtp;

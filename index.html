@@ -50,9 +50,9 @@
             </nav>
 
             <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-                <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 max-w-[165px] sm:max-w-none">
+                <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none">
                     <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
-                    <span id="header-student-name" class="truncate">Dashboard</span>
+                    <span id="header-student-name" class="truncate">Student Portal</span>
                 </button>
 
                 <button id="header-login-btn" type="button" onclick="openAuthModal('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
@@ -564,38 +564,38 @@
         </div>
     </div>
 
-    <!-- AUTHENTICATED STUDENT PORTAL MODAL (NO PROFILE EDIT) -->
-    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/65 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
-        <div class="bg-gradient-to-b from-emerald-50 via-white to-teal-50/70 border-2 border-emerald-200 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-3.5 sm:p-5 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white flex flex-wrap items-center justify-between gap-2">
+    <!-- AUTHENTICATED STUDENT PORTAL MODAL (REFRESHED SKY / INDIGO / EMERALD UI) -->
+    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-sm hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
+        <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/50 border border-sky-200/90 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Refreshed Light-Accent Header with Clean Sign Out & Done Pills -->
+            <div class="p-3.5 sm:p-5 bg-white border-b border-sky-100 flex flex-wrap items-center justify-between gap-2.5">
                 <div class="flex items-center gap-2.5 min-w-0">
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/15 text-emerald-100 flex items-center justify-center font-black text-xs sm:text-sm shrink-0">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-600 text-white flex items-center justify-center font-black text-sm shadow-sm shrink-0">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-black text-white text-xs sm:text-sm truncate" id="dash-topbar-name">Student Portal</h3>
-                        <p class="text-[10px] sm:text-[11px] text-emerald-100/90 font-mono truncate" id="dash-topbar-id">Gtech ID: GTECH6001</p>
+                        <h3 class="font-black text-slate-900 text-xs sm:text-sm truncate" id="dash-topbar-name">Student Portal</h3>
+                        <p class="text-[10px] sm:text-[11px] text-indigo-700 font-mono font-bold truncate" id="dash-topbar-id">Gtech ID: GTECH6001</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1.5 bg-emerald-950/50 p-1 rounded-xl border border-emerald-600/40 text-[11px] sm:text-xs font-extrabold">
-                    <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="px-3 py-1.5 rounded-lg bg-white text-emerald-900 shadow-xs transition">
+                <div class="flex items-center gap-1 bg-sky-50 p-1 rounded-2xl border border-sky-200/80 text-[11px] sm:text-xs font-extrabold">
+                    <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white shadow-xs transition">
                         Student Portal
                     </button>
-                    <button type="button" id="dash-tab-btn-applications" onclick="switchDashboardSection('applications')" class="px-3 py-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition">
-                        My Applications
-                    </button>
-                    <button type="button" id="dash-tab-btn-referral" onclick="switchDashboardSection('referral')" class="px-3 py-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition">
+                    <button type="button" id="dash-tab-btn-referral" onclick="switchDashboardSection('referral')" class="px-3.5 py-1.5 rounded-xl text-slate-700 hover:bg-white hover:text-indigo-700 transition">
                         My Referral
                     </button>
                 </div>
 
-                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <button type="button" onclick="handleStudentLogout()" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] sm:text-xs font-bold transition">
-                        Logout
+                <div class="flex items-center gap-2 shrink-0">
+                    <button type="button" onclick="handleStudentLogout()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 border border-slate-200 hover:border-amber-200 text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-[11px]"></i>
+                        <span>Sign Out</span>
                     </button>
-                    <button type="button" onclick="closeStudentDashboardModal()" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-[11px] sm:text-xs font-bold transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-xmark"></i> Close
+                    <button type="button" onclick="closeStudentDashboardModal()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-extrabold shadow-xs transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-check text-[11px]"></i>
+                        <span>Done</span>
                     </button>
                 </div>
             </div>
@@ -603,156 +603,86 @@
             <div class="p-3.5 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-5 sm:space-y-6">
                 <!-- VIEW 1: STUDENT PORTAL -->
                 <div id="dash-section-dashboard" class="space-y-5">
-                    <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-emerald-200 bg-white shadow-sm">
-                        <div class="absolute inset-0 bg-cover bg-center opacity-10" style="background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop');"></div>
-                        <div class="relative z-10 p-5 sm:p-6 bg-gradient-to-r from-emerald-50/90 via-white/95 to-teal-50/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div class="space-y-1">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                    <i class="fa-solid fa-circle-check"></i> Verified Student Account
-                                </span>
-                                <h4 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-                                    WELCOME TO GTECH FAMILY!
-                                </h4>
-                                <p class="text-sm sm:text-base font-extrabold text-emerald-700" id="student-welcome-name">
-                                    Hello, Student!
-                                </p>
-                                <p class="text-xs text-slate-600">
-                                    Your Admission Journey, Scholarships &amp; Opportunities – All in One Place.
-                                </p>
-                            </div>
-                            <div class="shrink-0 px-4 py-2.5 rounded-2xl bg-white border border-emerald-200 shadow-xs text-left sm:text-right">
-                                <span class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">Gtech ID</span>
-                                <span id="student-dash-id" class="text-sm sm:text-base font-mono font-black text-emerald-700">GTECH6001</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 1. MY APPLICATIONS AND ENQUIRIES -->
-                    <div class="bg-white border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <h4 class="font-black text-xs sm:text-sm uppercase tracking-wider text-emerald-800 flex items-center gap-2">
-                                <i class="fa-solid fa-file-circle-check"></i> 1. My Applications &amp; Enquiries
+                    <!-- Welcome Banner -->
+                    <div class="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/90 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal
+                            </span>
+                            <h4 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
+                                WELCOME TO GTECH FAMILY!
                             </h4>
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="closeStudentDashboardModal(); openScholarshipModal('', 'Visiting Application')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-extrabold transition">
-                                    + Visiting Application
-                                </button>
-                                <button type="button" onclick="closeStudentDashboardModal(); openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold transition">
-                                    + Scholarship Application
-                                </button>
-                            </div>
+                            <p class="text-sm sm:text-base font-extrabold text-indigo-700" id="student-welcome-name">
+                                Hello, Student!
+                            </p>
+                            <p class="text-xs text-slate-600">
+                                Track your applied scholarship universities, fee structure, approved scholarship, and admission status.
+                            </p>
                         </div>
-                        <div id="dash-overview-applications-list" class="space-y-2"></div>
+                        <div class="shrink-0 px-4 py-3 rounded-2xl bg-white border border-indigo-200 shadow-xs text-left sm:text-right">
+                            <span class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">Gtech ID</span>
+                            <span id="student-dash-id" class="text-sm sm:text-base font-mono font-black text-indigo-700">GTECH6001</span>
+                        </div>
                     </div>
 
-                    <!-- 2. ADMISSION STATUS -->
-                    <div class="bg-white border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <h4 class="font-black text-xs sm:text-sm uppercase tracking-wider text-teal-800 flex items-center gap-2">
-                                <i class="fa-solid fa-route"></i> 2. Admission Status
-                            </h4>
-                            <span id="dash-current-stage-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>
-                        </div>
-                        <div id="admission-process-flow" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
-                    </div>
-
-                    <!-- 3. SCHOLARSHIP AND FEE DETAILS -->
-                    <div class="bg-white border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs">
+                    <!-- 1. APPLIED SCHOLARSHIP UNIVERSITIES (UNIVERSITY-WISE + STATUS BUTTON) -->
+                    <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <h4 class="font-black text-xs sm:text-sm uppercase tracking-wider text-emerald-800 flex items-center gap-2">
-                                    <i class="fa-solid fa-wallet"></i> 3. Scholarship &amp; Fee Details
+                                <h4 class="font-black text-xs sm:text-sm uppercase tracking-wider text-indigo-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-building-columns"></i> 1. Applied Scholarship Universities
                                 </h4>
-                                <p class="text-[11px] text-slate-500 mt-0.5">Private account ledger fetched from your student record.</p>
+                                <p class="text-[11px] text-slate-500 mt-0.5">University-wise applications. Click <strong>Status</strong> to view fee structure, scholarship status &amp; admin-approved scholarship amount.</p>
                             </div>
-                            <span id="finance-record-status" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">Live Record</span>
+                            <button type="button" onclick="closeStudentDashboardModal(); openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold shadow-xs transition">
+                                + Apply University Scholarship
+                            </button>
                         </div>
 
-                        <div id="student-finance-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                            <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">Total University Fee</span>
-                                <strong id="fin-total-fee" class="text-lg font-black text-slate-900 mt-1 block">₹0</strong>
-                            </div>
+                        <div id="applied-scholarship-universities-list" class="space-y-3"></div>
+                    </div>
 
-                            <div class="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Scholarship Amount</span>
-                                <strong id="fin-scholarship" class="text-lg font-black text-emerald-700 mt-1 block">₹0</strong>
+                    <!-- 2. ADMISSION STATUS OF APPLIED UNIVERSITIES -->
+                    <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-3 shadow-xs">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h4 class="font-black text-xs sm:text-sm uppercase tracking-wider text-sky-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-route"></i> 2. Admission Status of Applied Universities
+                                </h4>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Live admission progress for each university you have applied to.</p>
                             </div>
-
-                            <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-800 block">Application Fee</span>
-                                <strong id="fin-app-fee" class="text-lg font-black text-indigo-700 mt-1 block">₹0</strong>
-                            </div>
-
-                            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">Hostel Fee</span>
-                                <strong id="fin-hostel-fee" class="text-lg font-black text-amber-700 mt-1 block">₹0</strong>
-                            </div>
-
-                            <div class="p-4 rounded-2xl bg-teal-50/70 border border-teal-200">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-teal-800 block">Referral Earnings</span>
-                                <strong id="fin-referral" class="text-lg font-black text-teal-700 mt-1 block">₹0</strong>
-                            </div>
-
-                            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-300">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Paid Amount</span>
-                                <strong id="fin-paid" class="text-lg font-black text-emerald-700 mt-1 block">₹0</strong>
-                            </div>
-
-                            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 sm:col-span-2">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">Pending Amount</span>
-                                <strong id="fin-pending" class="text-xl font-black text-amber-700 mt-1 block">₹0</strong>
-                            </div>
+                            <span id="dash-current-stage-badge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Active</span>
                         </div>
+
+                        <div id="applied-universities-admission-status" class="space-y-2.5"></div>
                     </div>
                 </div>
 
-                <!-- VIEW 2: MY APPLICATIONS -->
-                <div id="dash-section-applications" class="hidden space-y-4">
-                    <div class="bg-white border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                                <h4 class="font-black text-sm sm:text-base text-slate-900">My Scholarship, Visiting &amp; Admission Applications</h4>
-                                <p class="text-xs text-slate-500">All applications submitted under your registered email &amp; phone.</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="closeStudentDashboardModal(); openScholarshipModal('', 'Visiting Application')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition">
-                                    + Visiting Application
-                                </button>
-                                <button type="button" onclick="closeStudentDashboardModal(); openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold transition">
-                                    + Scholarship Application
-                                </button>
-                            </div>
-                        </div>
-                        <div id="student-applications-full-list" class="space-y-3"></div>
-                    </div>
-                </div>
-
-                <!-- VIEW 3: MY REFERRAL -->
+                <!-- VIEW 2: MY REFERRAL (ONLY MY REFERRAL VISIBLE AMOUNTS) -->
                 <div id="dash-section-referral" class="hidden space-y-4">
-                    <div class="bg-white border border-emerald-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-5 shadow-xs">
+                    <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-5 shadow-xs">
                         <div>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
                                 <i class="fa-solid fa-share-nodes"></i> Student Referral Hub
                             </span>
-                            <h4 class="text-base sm:text-xl font-black text-slate-900 mt-1">My Referral Code, Link &amp; Earnings</h4>
+                            <h4 class="text-base sm:text-xl font-black text-slate-900 mt-1">My Referral</h4>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+                            <div class="p-4 rounded-2xl bg-sky-50/70 border border-sky-200 space-y-3">
                                 <div>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Your Referral Code (Gtech ID)</span>
-                                    <div class="flex items-center justify-between gap-2 mt-1 bg-white border border-emerald-200 rounded-xl px-3.5 py-2.5">
-                                        <strong id="my-referral-code-text" class="text-base font-mono font-black text-emerald-800">GTECH6001</strong>
-                                        <button type="button" onclick="copyMyReferralCode()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">Your Referral Code (Gtech ID)</span>
+                                    <div class="flex items-center justify-between gap-2 mt-1 bg-white border border-sky-200 rounded-xl px-3.5 py-2.5">
+                                        <strong id="my-referral-code-text" class="text-base font-mono font-black text-indigo-800">GTECH6001</strong>
+                                        <button type="button" onclick="copyMyReferralCode()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition">
                                             <i class="fa-regular fa-copy mr-1"></i> Copy Code
                                         </button>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Your Referral Link</span>
-                                    <div class="flex items-center justify-between gap-2 mt-1 bg-white border border-emerald-200 rounded-xl px-3 py-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">Your Referral Link</span>
+                                    <div class="flex items-center justify-between gap-2 mt-1 bg-white border border-sky-200 rounded-xl px-3 py-2">
                                         <input type="text" id="my-referral-link-input" readonly class="w-full text-xs font-mono text-slate-700 bg-transparent focus:outline-none">
                                         <button type="button" onclick="copyMyReferralLink()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold shrink-0 transition">
                                             Copy Link
@@ -761,10 +691,10 @@
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2 pt-1">
-                                    <button type="button" onclick="shareReferralWhatsApp()" class="flex-1 py-2.5 px-3 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                                    <button type="button" onclick="shareReferralWhatsApp()" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
                                         <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
                                     </button>
-                                    <button type="button" onclick="shareReferralInstagram()" class="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-95 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                                    <button type="button" onclick="shareReferralInstagram()" class="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
                                         <i class="fa-brands fa-instagram text-sm"></i> Instagram
                                     </button>
                                     <button type="button" onclick="copyMyReferralCode()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
@@ -774,27 +704,44 @@
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="p-4 rounded-2xl bg-teal-50 border border-teal-200 flex flex-col justify-center">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-teal-800">Referral Amount Earned</span>
-                                    <strong id="ref-tab-amount" class="text-2xl font-black text-teal-800 mt-1">₹0</strong>
-                                    <span class="text-[11px] text-teal-700 mt-1">Credited on confirmed referral admissions</span>
+                                <div class="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 flex flex-col justify-center">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-800">My Referral Visible Amount</span>
+                                    <strong id="ref-tab-amount" class="text-2xl font-black text-indigo-900 mt-1">₹0</strong>
+                                    <span class="text-[11px] text-indigo-700 mt-1">Visible referral amount credited to your Gtech ID</span>
                                 </div>
 
-                                <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col justify-center">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-800">Admissions Pending Through Your Referrals</span>
-                                    <strong id="ref-tab-pending-count" class="text-2xl font-black text-amber-700 mt-1">0</strong>
-                                    <span class="text-[11px] text-amber-700 mt-1">Students referred &amp; currently in process</span>
+                                <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex flex-col justify-center">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-800">Referred Admissions</span>
+                                    <strong id="ref-tab-pending-count" class="text-2xl font-black text-amber-800 mt-1">0</strong>
+                                    <span class="text-[11px] text-amber-700 mt-1">Students joined using your referral</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="space-y-2">
-                            <h5 class="text-xs font-black uppercase tracking-wider text-slate-700">Referred Students &amp; Pending Admission Status</h5>
+                            <h5 class="text-xs font-black uppercase tracking-wider text-slate-700">Referred Students &amp; Status</h5>
                             <div id="my-referred-students-list" class="space-y-2"></div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- UNIVERSITY STATUS POP-UP MODAL (UNIVERSITY NAME, FEE STRUCTURE, SCHOLARSHIP STATUS & APPROVED AMOUNT) -->
+    <div id="university-status-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white border border-indigo-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden gtech-pop-in">
+            <div class="px-5 py-4 bg-gradient-to-r from-indigo-600 to-sky-600 text-white flex items-center justify-between gap-2">
+                <div>
+                    <span class="block text-[10px] font-bold uppercase tracking-wider text-indigo-100">University Scholarship &amp; Fee Status</span>
+                    <h4 id="uni-status-modal-title" class="text-sm sm:text-base font-black truncate">University Name</h4>
+                </div>
+                <button type="button" onclick="closeUniversityStatusModal()" class="px-3 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition">
+                    Close
+                </button>
+            </div>
+
+            <div id="uni-status-modal-body" class="p-5 sm:p-6 space-y-4 text-xs"></div>
         </div>
     </div>
 

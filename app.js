@@ -70,7 +70,7 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
     return false;
 }
 
-// --- REALTIME WATCHER: SENDS STUDENT EMAIL ON APPLICATION APPROVAL / STATUS OR REFERRAL / FEE UPDATE ---
+// --- REALTIME WATCHER: SENDS STUDENT EMAIL ON APPLICATION APPROVAL / STATUS OR REFERRAL UPDATE ---
 function subscribeToStudentMailUpdates() {
     _supabase
         .channel('gtech-student-updates')
@@ -89,17 +89,16 @@ function subscribeToStudentMailUpdates() {
                         ccAdmin: false,
                         eventType: isApproved ? 'application_approved' : 'application_status_updated',
                         subject: isApproved
-                            ? `Gtech Admissions: Application Approved (${updated.assistance_type || 'Application'})`
+                            ? `Gtech Admissions: Application Approved (${updated.uni || 'University'})`
                             : `Gtech Admissions Update: Status Changed to ${updated.status}`,
                         text: [
                             `Hello ${updated.name || 'Student'},`,
                             ``,
                             isApproved
-                                ? `Good news! Your ${updated.assistance_type || 'application'} (${updated.branch || ''}) has been APPROVED by the Gtech Admissions team.`
-                                : `Your ${updated.assistance_type || 'application'} (${updated.branch || ''}) status has been updated to: ${updated.status}.`,
-                            `Preferred University: ${updated.uni || 'Not Specified'}`,
+                                ? `Good news! Your application for ${updated.uni || 'your chosen university'} (${updated.branch || ''}) has been APPROVED.`
+                                : `Your application status for ${updated.uni || 'your chosen university'} (${updated.branch || ''}) has been updated to: ${updated.status}.`,
                             ``,
-                            `Sign in to your Gtech Student Portal using your registered email to view your Gtech ID and live status.`,
+                            `Sign in to your Gtech Student Portal using your registered email to view your Gtech ID and status.`,
                             `— Gtech Admissions (Admissions and Guidance Portal)`
                         ].join('\n'),
                         details: updated
@@ -122,31 +121,28 @@ function subscribeToStudentMailUpdates() {
 
                 const referralChanged = Number(fin.referral_earnings || 0) !== Number(old.referral_earnings || 0);
                 const scholarshipChanged = Number(fin.scholarship_amount || 0) !== Number(old.scholarship_amount || 0);
-                const paymentChanged = Number(fin.paid_amount || 0) !== Number(old.paid_amount || 0);
-                const pendingChanged = Number(fin.pending_amount || 0) !== Number(old.pending_amount || 0);
+                const statusChanged = String(fin.scholarship_status || '') !== String(old.scholarship_status || '');
 
-                if (referralChanged || scholarshipChanged || paymentChanged || pendingChanged || payload.eventType === 'INSERT') {
-                    const subject = referralChanged
-                        ? `Gtech Admissions: Referral Amount Credited (₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')})`
-                        : `Gtech Admissions: Scholarship, Fee & Payment Update`;
-
+                if (referralChanged || scholarshipChanged || statusChanged || payload.eventType === 'INSERT') {
                     await sendMailNotification({
                         to: fin.email,
                         ccAdmin: false,
-                        eventType: referralChanged ? 'referral_amount_updated' : 'finance_or_payment_updated',
-                        subject,
+                        eventType: referralChanged ? 'referral_amount_updated' : 'scholarship_status_updated',
+                        subject: referralChanged
+                            ? `Gtech Admissions: Referral Amount Updated (₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')})`
+                            : `Gtech Admissions: Scholarship Status Updated`,
                         text: [
                             `Hello Student,`,
                             ``,
-                            `There is an update on your Gtech Admissions account statement:`,
-                            `• Referral Amount Earned: ₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')}`,
-                            `• Scholarship Amount: ₹${Number(fin.scholarship_amount || 0).toLocaleString('en-IN')}`,
-                            `• Paid Amount: ₹${Number(fin.paid_amount || 0).toLocaleString('en-IN')}`,
-                            `• Pending Amount: ₹${Number(fin.pending_amount || 0).toLocaleString('en-IN')}`,
+                            `Your Gtech Admissions portal has a new update:`,
+                            referralChanged ? `• Referral Amount: ₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')}` : '',
+                            scholarshipChanged || statusChanged
+                                ? `• Scholarship Status: ${fin.scholarship_status || (Number(fin.scholarship_amount || 0) > 0 ? 'Approved' : 'Under Review')}`
+                                : '',
                             ``,
-                            `Sign in to your Gtech Student Portal to view full details.`,
+                            `Sign in to your Gtech Student Portal with your Gtech ID to view details.`,
                             `— Gtech Admissions (Admissions and Guidance Portal)`
-                        ].join('\n'),
+                        ].filter(Boolean).join('\n'),
                         details: fin
                     });
 
@@ -616,7 +612,7 @@ async function handleGuidanceSubmission(e) {
         phone,
         email,
         branch: course,
-        uni: preferredUni || 'Not Specified',
+        uni: preferredUni || 'General Scholarship Pool',
         assistance_type: assistanceType,
         inter_1st_marks: inter1st || null,
         inter_2nd_marks: inter2nd || null,
@@ -659,7 +655,6 @@ async function handleGuidanceSubmission(e) {
 
         state.inquiries.unshift(payload);
 
-        // Send confirmation email to Student & Admin
         await sendMailNotification({
             to: email,
             ccAdmin: true,
@@ -676,7 +671,7 @@ async function handleGuidanceSubmission(e) {
                 `• Phone: ${phone}`,
                 `• Email: ${email}`,
                 `• Course: ${course}`,
-                `• Preferred University: ${preferredUni || 'Not Specified'}`,
+                `• University: ${payload.uni}`,
                 `• Marks Summary: ${marksSummary || 'Not Provided'}`,
                 `• Status: Pending Callback`,
                 ``,
@@ -687,7 +682,7 @@ async function handleGuidanceSubmission(e) {
 
         showToast(
             'Application Submitted',
-            'Application submitted! Email update sent and our expert will reach you within 10 mins.',
+            'Application submitted! Update sent to your mail and our expert will reach you within 10 mins.',
             'success'
         );
         e.target.reset();
@@ -956,7 +951,7 @@ async function handleVerifyRegistrationOtp() {
                 `Your Gtech ID is: ${profile.student_id}`,
                 `Your Referral Code is: ${profile.student_id}`,
                 ``,
-                `Sign in to your Gtech Student Portal anytime using ${profile.email} to track applications, approvals, and referral earnings.`,
+                `Sign in to your Gtech Student Portal anytime using ${profile.email} to track applications, approvals, and referral updates.`,
                 `— Gtech Admissions`
             ].join('\n'),
             details: profile
@@ -1142,7 +1137,7 @@ async function handleStudentLogout() {
     localStorage.removeItem('gtech_student_session');
     resetHeaderToLoggedOut();
     closeStudentDashboardModal();
-    showToast('Logged Out', 'You have signed out of your student portal.', 'success');
+    showToast('Signed Out', 'You have signed out of your student portal.', 'success');
 }
 
 function resetHeaderToLoggedOut() {
@@ -1161,14 +1156,14 @@ function updateHeaderForLoggedInStudent(profile) {
     if (dashBtn && loginBtn && nameSpan) {
         dashBtn.classList.remove('hidden');
         loginBtn.classList.add('hidden');
-        nameSpan.textContent = profile.full_name || 'Dashboard';
+        nameSpan.textContent = profile.full_name || 'Student Portal';
     }
 }
 
 // --- STUDENT PORTAL TABS ---
 function switchDashboardSection(tabName) {
     state.activeDashboardTab = tabName;
-    const tabs = ['dashboard', 'applications', 'referral'];
+    const tabs = ['dashboard', 'referral'];
 
     tabs.forEach(t => {
         const sectionEl = document.getElementById(`dash-section-${t}`);
@@ -1177,10 +1172,10 @@ function switchDashboardSection(tabName) {
 
         if (t === tabName) {
             sectionEl.classList.remove('hidden');
-            btnEl.className = 'px-3 py-1.5 rounded-lg bg-white text-emerald-900 shadow-xs transition';
+            btnEl.className = 'px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white shadow-xs transition';
         } else {
             sectionEl.classList.add('hidden');
-            btnEl.className = 'px-3 py-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition';
+            btnEl.className = 'px-3.5 py-1.5 rounded-xl text-slate-700 hover:bg-white hover:text-indigo-700 transition';
         }
     });
 }
@@ -1246,6 +1241,135 @@ function closeStudentDashboardModal() {
     modal.classList.remove('flex');
 }
 
+// --- GROUP APPLIED UNIVERSITIES UNIVERSITY-WISE ---
+function getUniversityWiseApplications(student) {
+    const myApps = state.inquiries.filter(inq =>
+        (inq.email && student.email && inq.email.toLowerCase() === student.email.toLowerCase()) ||
+        (inq.phone && student.mobile && String(inq.phone).includes(String(student.mobile)))
+    );
+
+    const groupedMap = new Map();
+    myApps.forEach(app => {
+        const uniName = (app.uni || 'General Scholarship Pool').trim() || 'General Scholarship Pool';
+        const key = uniName.toLowerCase();
+        if (!groupedMap.has(key)) {
+            groupedMap.set(key, {
+                uniName,
+                applications: []
+            });
+        }
+        groupedMap.get(key).applications.push(app);
+    });
+
+    return Array.from(groupedMap.values());
+}
+
+function openUniversityStatusModal(uniName) {
+    const modal = document.getElementById('university-status-modal');
+    const titleEl = document.getElementById('uni-status-modal-title');
+    const bodyEl = document.getElementById('uni-status-modal-body');
+    if (!modal || !titleEl || !bodyEl) return;
+
+    const matchedUni = state.universities.find(
+        u => u.name && u.name.trim().toLowerCase() === String(uniName || '').trim().toLowerCase()
+    );
+
+    const fin = state.financeRecord || {};
+    const stuApps = state.currentStudent ? getUniversityWiseApplications(state.currentStudent) : [];
+    const group = stuApps.find(g => g.uniName.toLowerCase() === String(uniName || '').trim().toLowerCase());
+    const latestApp = group?.applications?.[0] || {};
+
+    // Admin-controlled scholarship status & approved amount
+    const rawAdminStatus = String(
+        fin.scholarship_status || latestApp.scholarship_status || latestApp.status || 'Under Review'
+    ).trim();
+
+    const approvedAmount = Number(fin.scholarship_amount || latestApp.scholarship_amount || 0);
+    const isScholarshipApproved =
+        rawAdminStatus.toLowerCase().includes('approv') ||
+        Boolean(fin.scholarship_approved === true || latestApp.scholarship_approved === true) ||
+        approvedAmount > 0;
+
+    titleEl.textContent = uniName;
+
+    let branchFeeHtml = '';
+    if (matchedUni && matchedUni.branches) {
+        const branches = typeof matchedUni.branches === 'string'
+            ? JSON.parse(matchedUni.branches)
+            : matchedUni.branches;
+        branchFeeHtml = Object.entries(branches).map(([branch, fee]) => `
+            <div class="flex items-center justify-between py-1.5 border-b border-sky-100 last:border-none">
+                <span class="font-bold text-slate-700">${branch}</span>
+                <span class="font-extrabold text-indigo-700">${formatINR(fee)}/yr</span>
+            </div>
+        `).join('');
+    } else if (fin.total_university_fee) {
+        branchFeeHtml = `
+            <div class="flex items-center justify-between py-1.5">
+                <span class="font-bold text-slate-700">University Tuition Fee</span>
+                <span class="font-extrabold text-indigo-700">${formatINR(fin.total_university_fee)}</span>
+            </div>
+        `;
+    } else {
+        branchFeeHtml = `<p class="text-slate-500">Fee structure will be updated by admin shortly.</p>`;
+    }
+
+    const hostelFeeText = matchedUni?.hostel_fee
+        ? `${formatINR(matchedUni.hostel_fee)}/yr`
+        : (fin.hostel_fee ? formatINR(fin.hostel_fee) : 'As per university');
+
+    const appFeeText = matchedUni?.application_fee
+        ? formatINR(matchedUni.application_fee)
+        : (fin.application_fee ? formatINR(fin.application_fee) : 'As per university');
+
+    bodyEl.innerHTML = `
+        <div class="p-3.5 rounded-2xl bg-sky-50/80 border border-sky-200 space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">University Name</span>
+            <strong class="text-sm font-black text-slate-900 block">${uniName}</strong>
+            ${matchedUni?.address ? `<span class="text-[11px] text-slate-600 block">${matchedUni.address}</span>` : ''}
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-white border border-sky-200 space-y-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-800 block">Fee Structure</span>
+            <div class="max-h-40 overflow-y-auto pr-1">${branchFeeHtml}</div>
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <div class="p-2 rounded-xl bg-amber-50 border border-amber-200">
+                    <span class="text-[10px] text-amber-800 font-semibold block">Hostel Fee</span>
+                    <strong class="text-slate-900">${hostelFeeText}</strong>
+                </div>
+                <div class="p-2 rounded-xl bg-sky-50 border border-sky-200">
+                    <span class="text-[10px] text-sky-800 font-semibold block">Application Fee</span>
+                    <strong class="text-slate-900">${appFeeText}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 rounded-2xl ${isScholarshipApproved ? 'bg-emerald-50 border border-emerald-300' : 'bg-amber-50 border border-amber-200'} space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider ${isScholarshipApproved ? 'text-emerald-800' : 'text-amber-800'}">Scholarship Status</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${isScholarshipApproved ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-900 border border-amber-300'}">${isScholarshipApproved ? 'Approved' : rawAdminStatus}</span>
+            </div>
+            ${isScholarshipApproved
+                ? `<div class="pt-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Approved Scholarship Amount</span>
+                    <strong class="text-xl font-black text-emerald-800">${formatINR(approvedAmount)}</strong>
+                   </div>`
+                : `<p class="text-[11px] text-amber-800">Scholarship amount will become visible once approved by admin.</p>`
+            }
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeUniversityStatusModal() {
+    const modal = document.getElementById('university-status-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
 function renderStudentDashboard() {
     const stu = state.currentStudent;
     if (!stu) return;
@@ -1258,137 +1382,99 @@ function renderStudentDashboard() {
     document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
     document.getElementById('student-dash-id').textContent = gtechCode;
 
-    // 1. MY APPLICATIONS & ENQUIRIES
-    const myApps = state.inquiries.filter(inq =>
-        (inq.email && stu.email && inq.email.toLowerCase() === stu.email.toLowerCase()) ||
-        (inq.phone && stu.mobile && String(inq.phone).includes(String(stu.mobile)))
-    );
+    // 1. APPLIED SCHOLARSHIP UNIVERSITIES (UNIVERSITY-WISE + STATUS OPTION)
+    const uniGroups = getUniversityWiseApplications(stu);
+    const uniListEl = document.getElementById('applied-scholarship-universities-list');
 
-    const appCardsHtml = myApps.length === 0
-        ? `<p class="text-xs text-slate-500">No applications or enquiries submitted yet. Use "+ Scholarship Application" or "+ Visiting Application" to apply.</p>`
-        : myApps.map(inq => `
-            <div class="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-200/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <strong class="text-slate-900 block break-words">${inq.assistance_type || 'Scholarship Based on Marks'} • ${inq.branch || 'Course'}</strong>
-                    <p class="text-slate-600 text-[11px] mt-0.5">Preferred University: ${inq.uni || 'Not Specified'}</p>
-                    ${inq.jee_score ? `<p class="text-indigo-700 text-[10px] font-semibold mt-0.5">${inq.jee_score}</p>` : ''}
-                </div>
-                <span class="self-start sm:self-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] border border-emerald-200 shrink-0">${inq.status || 'Pending Callback'}</span>
-            </div>
-        `).join('');
-
-    document.getElementById('dash-overview-applications-list').innerHTML = appCardsHtml;
-    document.getElementById('student-applications-full-list').innerHTML = appCardsHtml;
-
-    // 2. ADMISSION STATUS
-    let activeStepIndex = 0;
-    let latestStatusLabel = 'Registered';
-    if (myApps.length > 0) {
-        activeStepIndex = 1;
-        latestStatusLabel = myApps[0].status || 'Pending Callback';
-        const lower = latestStatusLabel.toLowerCase();
-        if (lower.includes('visiting') || lower.includes('completed')) activeStepIndex = 2;
-        if (lower.includes('application')) activeStepIndex = 3;
-        if (lower.includes('admission') || lower.includes('approved')) activeStepIndex = 4;
-    }
-
-    document.getElementById('dash-current-stage-badge').textContent = latestStatusLabel;
-
-    const steps = [
-        { title: '1. Registered', desc: 'Gtech ID Active' },
-        { title: '2. Applied', desc: 'Form submitted' },
-        { title: '3. Free Visit', desc: 'Campus visit' },
-        { title: '4. University Filing', desc: 'Seat processing' },
-        { title: '5. Approved / Done', desc: 'Confirmed' }
-    ];
-
-    document.getElementById('admission-process-flow').innerHTML = steps.map((step, idx) => {
-        const done = idx <= activeStepIndex;
-        const current = idx === activeStepIndex;
-        const style = current
-            ? 'bg-emerald-600 border-emerald-700 text-white shadow-xs'
-            : done
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                : 'bg-slate-50 border-slate-200 text-slate-400';
-        return `
-            <div class="p-2.5 sm:p-3 rounded-xl border ${style} transition min-w-0">
-                <div class="text-[11px] font-extrabold leading-tight">${step.title}</div>
-                <div class="text-[10px] opacity-85 mt-0.5 leading-tight">${step.desc}</div>
-            </div>
-        `;
-    }).join('');
-
-    // 3. SCHOLARSHIP & FEE DETAILS
-    const fin = state.financeRecord;
-    const statusBadge = document.getElementById('finance-record-status');
-
-    let referralEarnings = 0;
-    if (fin) {
-        statusBadge.textContent = 'Verified Ledger';
-        const totalFee = Number(fin.total_university_fee || 0);
-        const scholarship = Number(fin.scholarship_amount || 0);
-        const appFee = Number(fin.application_fee || 0);
-        const hostelFee = Number(fin.hostel_fee || 0);
-        referralEarnings = Number(fin.referral_earnings || 0);
-        const paidAmount = Number(fin.paid_amount || 0);
-        const computedPending = fin.pending_amount !== undefined && fin.pending_amount !== null
-            ? Number(fin.pending_amount)
-            : Math.max(0, totalFee + appFee + hostelFee - scholarship - referralEarnings - paidAmount);
-
-        document.getElementById('fin-total-fee').textContent = formatINR(totalFee);
-        document.getElementById('fin-scholarship').textContent = formatINR(scholarship);
-        document.getElementById('fin-app-fee').textContent = formatINR(appFee);
-        document.getElementById('fin-hostel-fee').textContent = formatINR(hostelFee);
-        document.getElementById('fin-referral').textContent = formatINR(referralEarnings);
-        document.getElementById('fin-paid').textContent = formatINR(paidAmount);
-        document.getElementById('fin-pending').textContent = formatINR(computedPending);
+    if (uniGroups.length === 0) {
+        uniListEl.innerHTML = `<p class="text-xs text-slate-500 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">No scholarship university applications submitted yet. Click "+ Apply University Scholarship" to get started.</p>`;
     } else {
-        statusBadge.textContent = 'Awaiting Fee Update';
-        document.getElementById('fin-total-fee').textContent = formatINR(0);
-        document.getElementById('fin-scholarship').textContent = formatINR(0);
-        document.getElementById('fin-app-fee').textContent = formatINR(0);
-        document.getElementById('fin-hostel-fee').textContent = formatINR(0);
-        document.getElementById('fin-referral').textContent = formatINR(0);
-        document.getElementById('fin-paid').textContent = formatINR(0);
-        document.getElementById('fin-pending').textContent = formatINR(0);
+        uniListEl.innerHTML = uniGroups.map(group => {
+            const safeUni = group.uniName.replace(/'/g, "\\'");
+            const coursesText = group.applications
+                .map(a => `${a.assistance_type || 'Scholarship Based on Marks'} (${a.branch || 'Course'})`)
+                .join(' • ');
+
+            return `
+                <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <strong class="text-sm font-black text-slate-900 block break-words">${group.uniName}</strong>
+                        <p class="text-[11px] text-slate-600 mt-0.5">${coursesText}</p>
+                    </div>
+                    <button type="button" onclick="openUniversityStatusModal('${safeUni}')" class="self-start sm:self-center px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-xs transition flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                        <span>Status</span>
+                    </button>
+                </div>
+            `;
+        }).join('');
     }
 
-    // MY REFERRAL TAB DATA
+    // 2. ADMISSION STATUS OF APPLIED UNIVERSITIES
+    const admStatusEl = document.getElementById('applied-universities-admission-status');
+    const stageBadge = document.getElementById('dash-current-stage-badge');
+
+    if (uniGroups.length === 0) {
+        stageBadge.textContent = 'No Applications';
+        admStatusEl.innerHTML = `<p class="text-xs text-slate-500 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">Your university admission status will appear here once you apply.</p>`;
+    } else {
+        const latestStatus = uniGroups[0].applications[0]?.status || 'Pending Callback';
+        stageBadge.textContent = latestStatus;
+
+        admStatusEl.innerHTML = uniGroups.map(group => {
+            const latest = group.applications[0] || {};
+            const admState = latest.admission_status || latest.status || 'Pending Callback';
+            return `
+                <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="min-w-0">
+                        <strong class="text-slate-900 font-extrabold block">${group.uniName}</strong>
+                        <span class="text-[11px] text-slate-600">${latest.branch || 'Program'} • ${latest.assistance_type || 'Application'}</span>
+                    </div>
+                    <span class="self-start sm:self-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] border border-indigo-200 shrink-0">${admState}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // MY REFERRAL TAB DATA (ONLY MY REFERRAL VISIBLE AMOUNTS)
+    const fin = state.financeRecord || {};
+    const visibleReferralAmount = Number(fin.referral_earnings || 0);
     const shareLink = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(myRefCode)}`;
+
     document.getElementById('my-referral-code-text').textContent = myRefCode;
     document.getElementById('my-referral-link-input').value = shareLink;
-    document.getElementById('ref-tab-amount').textContent = formatINR(referralEarnings);
+    document.getElementById('ref-tab-amount').textContent = formatINR(visibleReferralAmount);
 
     const referralInquiries = state.inquiries.filter(inq =>
         inq.referral_code && String(inq.referral_code).toUpperCase() === myRefCode
     );
 
-    const pendingCount = Math.max(state.referredStudents.length, referralInquiries.length);
-    document.getElementById('ref-tab-pending-count').textContent = String(pendingCount);
+    const referredCount = Math.max(state.referredStudents.length, referralInquiries.length);
+    document.getElementById('ref-tab-pending-count').textContent = String(referredCount);
 
     const refListEl = document.getElementById('my-referred-students-list');
     if (state.referredStudents.length === 0 && referralInquiries.length === 0) {
-        refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No pending referral admissions yet. Share your referral link on WhatsApp or Instagram to invite students.</p>`;
+        refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No referred students yet. Share your referral link on WhatsApp or Instagram to invite students.</p>`;
     } else {
         const items = state.referredStudents.length > 0
             ? state.referredStudents.map(rs => ({
                 name: rs.full_name || 'Referred Student',
                 id: rs.student_id || rs.id || '',
-                status: 'Admission Pending'
+                status: 'Registered'
             }))
             : referralInquiries.map(ri => ({
                 name: ri.name || 'Referred Applicant',
                 id: ri.branch || '',
-                status: ri.status || 'Admission Pending'
+                status: ri.status || 'In Process'
             }));
 
         refListEl.innerHTML = items.map(item => `
-            <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between gap-2 text-xs">
+            <div class="p-3 rounded-xl bg-sky-50/60 border border-sky-200 flex items-center justify-between gap-2 text-xs">
                 <div>
                     <strong class="text-slate-900 block">${item.name}</strong>
                     ${item.id ? `<span class="text-[11px] font-mono text-slate-600">${item.id}</span>` : ''}
                 </div>
-                <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">${item.status}</span>
+                <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-bold text-[10px]">${item.status}</span>
             </div>
         `).join('');
     }
@@ -1447,6 +1533,8 @@ window.handleStudentLogout = handleStudentLogout;
 window.openStudentDashboardModal = openStudentDashboardModal;
 window.closeStudentDashboardModal = closeStudentDashboardModal;
 window.switchDashboardSection = switchDashboardSection;
+window.openUniversityStatusModal = openUniversityStatusModal;
+window.closeUniversityStatusModal = closeUniversityStatusModal;
 window.copyMyReferralCode = copyMyReferralCode;
 window.copyMyReferralLink = copyMyReferralLink;
 window.shareReferralWhatsApp = shareReferralWhatsApp;

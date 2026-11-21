@@ -1,46 +1,34 @@
-body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: #f0f9ff;
     border-radius: 8px;
 }
-
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #bae6fd;
     border-radius: 8px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #0284c7;
 }
-
 .scrollbar-none::-webkit-scrollbar {
     display: none;
 }
-
 .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
-
 #about-carousel {
     display: flex;
     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
 }
-
-.backdrop-blur-xs {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+.backdrop-blur-sm {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
-
 .backdrop-blur-md {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -49,7 +37,7 @@ body {
 @keyframes gtechPopIn {
     0% {
         opacity: 0;
-        transform: scale(0.96) translateY(8px);
+        transform: scale(0.94) translateY(8px);
     }
     100% {
         opacity: 1;
@@ -58,19 +46,19 @@ body {
 }
 
 .gtech-pop-in {
-    animation: gtechPopIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: gtechPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .reg-otp-box,
 .login-otp-box {
-    caret-color: #2563eb;
+    caret-color: #059669;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 .reg-otp-box:focus,
 .login-otp-box:focus {
     transform: translateY(-1px);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
 #student-finance-cards > div {
@@ -79,5 +67,5 @@ body {
 
 #student-finance-cards > div:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
 }

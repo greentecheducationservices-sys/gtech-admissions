@@ -1,4 +1,4 @@
-const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
+const SUPABASE_URL = '[https://yefezksjguqjabhjlwqj.supabase.co](https://yefezksjguqjabhjlwqj.supabase.co)';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -366,12 +366,12 @@ async function loadActiveCarousel() {
     const defaultSlides = [
         {
             id: 1,
-            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
+            image_url: '[https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop)',
             title: 'Gtech Carousel Slide 1'
         },
         {
             id: 2,
-            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
+            image_url: '[https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop)',
             title: 'Gtech Carousel Slide 2'
         }
     ];
@@ -1172,10 +1172,10 @@ function switchDashboardSection(tabName) {
 
         if (t === tabName) {
             sectionEl.classList.remove('hidden');
-            btnEl.className = 'px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white shadow-xs transition';
+            btnEl.className = 'px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-indigo-600 text-white text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 shadow-xs transition';
         } else {
             sectionEl.classList.add('hidden');
-            btnEl.className = 'px-3.5 py-1.5 rounded-xl text-slate-700 hover:bg-white hover:text-indigo-700 transition';
+            btnEl.className = 'px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-sky-50 text-slate-700 hover:bg-sky-100 hover:text-indigo-700 border border-sky-200/70 text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition';
         }
     });
 }
@@ -1501,7 +1501,7 @@ function shareReferralWhatsApp() {
     const code = document.getElementById('my-referral-code-text')?.textContent || '';
     const link = document.getElementById('my-referral-link-input')?.value || '';
     const msg = encodeURIComponent(`Join Gtech Admissions (Admissions and Guidance Portal) for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Use my Referral Code ${code}: ${link}`);
-    window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
+    window.open(`[https://wa.me/?text=$](https://wa.me/?text=$){msg}`, '_blank', 'noopener');
 }
 
 function shareReferralInstagram() {
@@ -1510,7 +1510,7 @@ function shareReferralInstagram() {
         navigator.clipboard.writeText(link).catch(() => {});
     }
     showToast('Ready for Instagram', 'Your referral link is copied—paste it into your Instagram DM or Bio!', 'success');
-    window.open('https://www.instagram.com/', '_blank', 'noopener');
+    window.open('[https://www.instagram.com/](https://www.instagram.com/)', '_blank', 'noopener');
 }
 
 // Global scope exposure

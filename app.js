@@ -1,4 +1,4 @@
-const SUPABASE_URL = '[https://yefezksjguqjabhjlwqj.supabase.co](https://yefezksjguqjabhjlwqj.supabase.co)';
+const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -21,7 +21,7 @@ const state = {
     loginCooldownTimer: null
 };
 
-window.onload = async function() {
+window.onload = async function () {
     detectIncomingReferralLink();
     listenToAuthChanges();
     await restoreStudentSession();
@@ -241,32 +241,44 @@ async function loadActiveCarousel() {
     const { data, error } = await _supabase
         .from('carousel_images')
         .select('*')
-        .eq('is_active', true)
         .order('id', { ascending: true });
 
     const defaultSlides = [
         {
             id: 1,
-            image_url: '[https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop)',
+            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
             title: 'GTech Carousel Slide 1'
         },
         {
             id: 2,
-            image_url: '[https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop)',
+            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
             title: 'GTech Carousel Slide 2'
         }
     ];
 
-    let slides = (!error && data && data.length > 0) ? [...data] : defaultSlides;
+    const validAdminSlides = (!error && Array.isArray(data))
+        ? data
+            .filter(row => row.is_active !== false)
+            .map(row => ({
+                ...row,
+                resolvedUrl: row.image_url || row.url || row.image || ''
+            }))
+            .filter(row => row.resolvedUrl)
+        : [];
+
+    let slides = validAdminSlides.length > 0
+        ? validAdminSlides
+        : defaultSlides.map(s => ({ ...s, resolvedUrl: s.image_url }));
+
     if (slides.length === 1) {
-        slides.push(defaultSlides[1]);
+        slides.push({ ...slides[0] });
     }
 
     state.currentSlide = 0;
     carousel.style.transform = 'translateX(0%)';
     carousel.innerHTML = slides.map(slide => `
         <div class="w-full h-full shrink-0 relative">
-            <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
+            <img src="${slide.resolvedUrl}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
         </div>
     `).join('');
 }
@@ -311,7 +323,7 @@ function renderUniversities() {
         } else if (state.stateFilter === 'Application Only') {
             matchesState = uni.admission_type === 'Application Only';
         } else if (state.stateFilter !== 'ALL') {
-            matchesState = uni.state === stateNameFilterMatch(uni.state, state.stateFilter);
+            matchesState = uni.state === state.stateFilter;
         }
 
         const matchesQuery =
@@ -400,10 +412,6 @@ function renderUniversities() {
             </div>
         `;
     }).join('');
-}
-
-function stateNameFilterMatch(uniState, selectedState) {
-    return uniState === selectedState ? uniState : null;
 }
 
 // --- SCHOLARSHIP AND EXPERT CALL APPLICATION MODAL ---
@@ -1232,7 +1240,7 @@ function shareReferralWhatsApp() {
     const code = document.getElementById('my-referral-code-text')?.textContent || '';
     const link = document.getElementById('my-referral-link-input')?.value || '';
     const msg = encodeURIComponent(`Join GTech Admissions (GreenTech Education Consultancy and Services) for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Use my Referral Code ${code}: ${link}`);
-    window.open(`[https://wa.me/?text=$](https://wa.me/?text=$){msg}`, '_blank', 'noopener');
+    window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
 }
 
 function shareReferralInstagram() {
@@ -1241,7 +1249,7 @@ function shareReferralInstagram() {
         navigator.clipboard.writeText(link).catch(() => {});
     }
     showToast('Ready for Instagram', 'Your referral link is copied—paste it into your Instagram DM or Bio!', 'success');
-    window.open('[https://www.instagram.com/](https://www.instagram.com/)', '_blank', 'noopener');
+    window.open('https://www.instagram.com/', '_blank', 'noopener');
 }
 
 // Global scope exposure

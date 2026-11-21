@@ -2,29 +2,27 @@ const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Optional backend endpoint for custom OTP rate limiting & email delivery.
-// Falls back cleanly to Supabase Email OTP when unset.
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
 
 const state = {
     stateFilter: 'ALL',
     universities: [],
     inquiries: [],
+    referredStudents: [],
     currentStudent: null,
     authUser: null,
     financeRecord: null,
-    referralStats: { total: 0, successful: 0 },
     pendingRegistration: null,
     pendingLoginEmail: '',
     currentSlide: 0,
     incomingReferralCode: '',
+    activeDashboardTab: 'dashboard',
     regCooldownTimer: null,
     loginCooldownTimer: null
 };
 
 window.onload = async function() {
     detectIncomingReferralLink();
-    setupDropdownOutsideClick();
     listenToAuthChanges();
     await restoreStudentSession();
     await fetchUniversitiesFromSupabase();
@@ -42,6 +40,17 @@ function sanitizeNumericInput(inputEl, maxLength = 15) {
     const cleaned = String(inputEl.value || '').replace(/\D+/g, '').slice(0, maxLength);
     if (inputEl.value !== cleaned) {
         inputEl.value = cleaned;
+    }
+}
+
+function calculatePcmMarks() {
+    const phy = Number(document.getElementById('guide-physics')?.value || 0);
+    const math = Number(document.getElementById('guide-maths')?.value || 0);
+    const chemLab = Number(document.getElementById('guide-chemistry-lab')?.value || 0);
+    const total = phy + math + chemLab;
+    const pcmEl = document.getElementById('guide-pcm-total');
+    if (pcmEl) {
+        pcmEl.value = total > 0 ? `${total} / 600` : '';
     }
 }
 
@@ -110,59 +119,42 @@ function startOtpCountdown(type, seconds = 60) {
     }
 }
 
-// --- HEADER PROFILE DROPDOWN CONTROLS ---
-function toggleProfileDropdown(event) {
-    if (event) event.stopPropagation();
-    const menu = document.getElementById('header-profile-menu');
-    const trigger = document.getElementById('header-profile-trigger');
-    if (!menu || !trigger) return;
+// --- SEQUENTIAL STUDENT ID GENERATOR (STARTS FROM GTECH6001) ---
+async function generateNextGtechStudentId() {
+    let maxNumber = 6000;
+    try {
+        const { data } = await _supabase
+            .from('student_profiles')
+            .select('id, student_id');
 
-    const isHidden = menu.classList.contains('hidden');
-    if (isHidden) {
-        menu.classList.remove('hidden');
-        trigger.setAttribute('aria-expanded', 'true');
-    } else {
-        menu.classList.add('hidden');
-        trigger.setAttribute('aria-expanded', 'false');
-    }
-}
-
-function closeProfileDropdown() {
-    const menu = document.getElementById('header-profile-menu');
-    const trigger = document.getElementById('header-profile-trigger');
-    if (menu) menu.classList.add('hidden');
-    if (trigger) trigger.setAttribute('aria-expanded', 'false');
-}
-
-function setupDropdownOutsideClick() {
-    document.addEventListener('click', (e) => {
-        const wrapper = document.getElementById('header-profile-wrapper');
-        if (wrapper && !wrapper.contains(e.target)) {
-            closeProfileDropdown();
+        if (Array.isArray(data)) {
+            data.forEach(row => {
+                [row.student_id, row.id].forEach(val => {
+                    const match = String(val || '').toUpperCase().match(/^GTECH(\d+)$/);
+                    if (match) {
+                        const num = parseInt(match[1], 10);
+                        if (!Number.isNaN(num) && num > maxNumber) {
+                            maxNumber = num;
+                        }
+                    }
+                });
+            });
         }
-    });
-}
-
-async function openDashboardSection(sectionKey = 'overview') {
-    closeProfileDropdown();
-    closeAuthModal();
-    await openStudentDashboardModal();
-
-    const map = {
-        overview: 'dash-sec-overview',
-        applications: 'dash-sec-applications',
-        profile: 'dash-sec-profile',
-        referral: 'dash-sec-referral'
-    };
-    const targetId = map[sectionKey];
-    if (targetId) {
-        setTimeout(() => {
-            document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 120);
+    } catch (err) {
+        console.warn('Sequence check note:', err.message);
     }
+
+    const lastLocal = parseInt(localStorage.getItem('gtech_last_seq_num') || '6000', 10);
+    if (!Number.isNaN(lastLocal) && lastLocal > maxNumber) {
+        maxNumber = lastLocal;
+    }
+
+    const nextNum = maxNumber + 1;
+    localStorage.setItem('gtech_last_seq_num', String(nextNum));
+    return `GTECH${nextNum}`;
 }
 
-// --- REFERRAL LINK AUTO-FILL & CODE HELPERS ---
+// --- REFERRAL CODE CAPTURE ---
 function detectIncomingReferralLink() {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -189,49 +181,6 @@ function detectIncomingReferralLink() {
     }
 }
 
-function generateUniqueReferralCode(fullName) {
-    const prefix = (fullName || 'GTECH')
-        .replace(/[^a-zA-Z]/g, '')
-        .toUpperCase()
-        .slice(0, 4)
-        .padEnd(4, 'G');
-    const randomPart = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}${randomPart}`;
-}
-
-function getStudentReferralCode(student) {
-    if (!student) return '';
-    return (student.referral_code || student.student_id || student.id || '').toString().trim().toUpperCase();
-}
-
-function getStudentReferralLink(student) {
-    const code = getStudentReferralCode(student);
-    const baseUrl = `${window.location.origin}${window.location.pathname}`;
-    return `${baseUrl}?ref=${encodeURIComponent(code)}`;
-}
-
-async function copyMyReferralCode() {
-    if (!state.currentStudent) return;
-    const code = getStudentReferralCode(state.currentStudent);
-    await navigator.clipboard.writeText(code);
-    showToast('Referral Code Copied', `Code ${code} copied to clipboard.`, 'success');
-}
-
-async function copyMyReferralLink() {
-    if (!state.currentStudent) return;
-    const link = getStudentReferralLink(state.currentStudent);
-    await navigator.clipboard.writeText(link);
-    showToast('Referral Link Copied', 'Shareable invite link copied to clipboard.', 'success');
-}
-
-function shareReferralOnWhatsApp() {
-    if (!state.currentStudent) return;
-    const code = getStudentReferralCode(state.currentStudent);
-    const link = getStudentReferralLink(state.currentStudent);
-    const message = `Join GTech Admissions for Engineering, Degree & Medical Admissions, Scholarships & Loan Guidance! Use my referral code *${code}* or register directly here: ${link}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
-}
-
 // --- TOAST NOTIFICATIONS ---
 let toastTimeout;
 function showToast(title, message, type = 'success') {
@@ -246,12 +195,12 @@ function showToast(title, message, type = 'success') {
     msgEl.textContent = message;
 
     if (type === 'error') {
-        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border border-rose-200 text-slate-900 shadow-2xl sm:max-w-sm transition-all duration-300';
-        icon.className = 'px-2.5 py-1.5 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 font-bold text-sm';
+        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border border-rose-300 text-slate-900 shadow-2xl sm:max-w-sm transition-all duration-300';
+        icon.className = 'w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 font-bold text-sm';
         icon.textContent = '!';
     } else {
-        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border border-emerald-200 text-slate-900 shadow-2xl sm:max-w-sm transition-all duration-300';
-        icon.className = 'px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-sm';
+        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border border-emerald-300 text-slate-900 shadow-2xl sm:max-w-sm transition-all duration-300';
+        icon.className = 'w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-sm';
         icon.textContent = '✓';
     }
 
@@ -299,12 +248,12 @@ async function loadActiveCarousel() {
         {
             id: 1,
             image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
-            title: 'GTech Admissions Campus Guidance'
+            title: 'GTech Carousel Slide 1'
         },
         {
             id: 2,
             image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
-            title: 'GTech Student Scholarship Hub'
+            title: 'GTech Carousel Slide 2'
         }
     ];
 
@@ -342,9 +291,9 @@ function setStateFilter(stateName) {
     state.stateFilter = stateName;
     document.querySelectorAll('.state-btn').forEach(btn => {
         if (btn.getAttribute('data-state') === stateName) {
-            btn.className = 'state-btn px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition whitespace-nowrap shrink-0';
+            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0';
         } else {
-            btn.className = 'state-btn px-4 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition whitespace-nowrap shrink-0';
+            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0';
         }
     });
     renderUniversities();
@@ -377,8 +326,8 @@ function renderUniversities() {
 
     if (filtered.length === 0) {
         grid.innerHTML = `
-            <div class="col-span-full py-12 text-center bg-white rounded-3xl border border-slate-200 shadow-2xs">
-                <p class="text-slate-500 font-semibold text-xs sm:text-sm">No universities match your filter in this category.</p>
+            <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-sky-100">
+                <p class="text-slate-600 font-semibold text-xs">No universities match your filter in this category.</p>
             </div>
         `;
         return;
@@ -389,61 +338,62 @@ function renderUniversities() {
         const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
         for (const [branch, fee] of Object.entries(branches)) {
             branchRows += `
-                <div class="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-b-0 text-xs">
-                    <span class="text-slate-700 font-semibold">${branch}</span>
-                    <span class="text-emerald-700 font-bold">₹${Number(fee).toLocaleString('en-IN')}/yr</span>
+                <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px]">
+                    <span class="text-slate-700 font-bold">${branch}</span>
+                    <span class="text-emerald-700 font-extrabold">₹${Number(fee).toLocaleString('en-IN')}/yr</span>
                 </div>
             `;
         }
 
         const badgeType = uni.admission_type || 'Direct Admission Open';
-        let badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-        if (badgeType === 'Entrance Exam Required') badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
-        if (badgeType === 'Application Only') badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
+        let badgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+        if (badgeType === 'Entrance Exam Required') badgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
+        if (badgeType === 'Application Only') badgeClass = 'bg-sky-50 text-sky-800 border-sky-200';
 
         const safeUniName = uni.name.replace(/'/g, "\\'");
 
         return `
-            <div class="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col justify-between">
+            <div class="bg-white rounded-3xl border border-sky-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-sky-300 transition duration-300 flex flex-col justify-between">
                 <div>
-                    <div class="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                    <div class="relative aspect-[16/9] w-full overflow-hidden bg-sky-50">
                         <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
-                        <span class="absolute top-3 left-3 px-3 py-1 rounded-xl text-[11px] font-bold bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 shadow-xs">${uni.state}</span>
-                        <div class="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">
-                            <span class="text-[11px] font-mono font-bold text-slate-800 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-xl border border-slate-200 shadow-xs">NIRF #${uni.nirf || 50}</span>
-                            <span class="text-[11px] font-bold px-2.5 py-1 rounded-xl border bg-white/95 backdrop-blur-xs shadow-xs ${badgeClass}">${badgeType}</span>
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
+                        <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${uni.state}</span>
+                        <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
+                            <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${badgeType}</span>
                         </div>
                     </div>
 
-                    <div class="p-5 sm:p-6">
-                        <h3 class="font-extrabold text-base sm:text-lg text-slate-900 leading-snug">${uni.name}</h3>
-                        <p class="text-xs text-slate-500 mt-1 flex items-start gap-1.5">
-                            <i class="fa-solid fa-location-dot text-blue-600 mt-0.5 shrink-0"></i>
+                    <div class="p-4 sm:p-5">
+                        <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
+                        <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
+                            <i class="fa-solid fa-location-dot text-sky-600 mt-0.5 shrink-0"></i>
                             <span>${uni.address}</span>
                         </p>
 
-                        <div class="mt-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                            <p class="text-[11px] font-bold text-slate-600 mb-2 uppercase tracking-wider">Branch Tuition Fees (Per Year)</p>
-                            <div class="space-y-0.5 max-h-44 overflow-y-auto pr-1">
+                        <div class="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
+                            <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Branch Tuition Fees (Per Year):</p>
+                            <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
                                 ${branchRows}
                             </div>
                         </div>
 
-                        <div class="mt-3.5 grid grid-cols-2 gap-2.5 text-xs">
-                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                                <span class="text-[11px] text-slate-500 block">Hostel Fee</span>
-                                <strong class="text-slate-900 text-xs sm:text-sm">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</strong>
+                        <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
+                                <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
+                                <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</strong>
                             </div>
-                            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                                <span class="text-[11px] text-slate-500 block">Application Fee</span>
-                                <strong class="text-blue-700 text-xs sm:text-sm">₹${Number(uni.application_fee).toLocaleString('en-IN')}</strong>
+                            <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-100">
+                                <span class="text-[10px] text-sky-800 block font-semibold">Application Fee</span>
+                                <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee).toLocaleString('en-IN')}</strong>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-5 sm:p-6 pt-0">
-                    <button type="button" onclick="selectUniForGuidance('${safeUniName}')" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20 transition">
+                <div class="p-4 sm:p-5 pt-0">
+                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Guidance')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition">
                         <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Expert Call
                     </button>
                 </div>
@@ -452,22 +402,31 @@ function renderUniversities() {
     }).join('');
 }
 
-function focusGuidanceSection(assistanceType) {
+// --- SCHOLARSHIP AND EXPERT CALL APPLICATION MODAL ---
+function openScholarshipModal(uniName = '', assistanceType = '') {
+    const modal = document.getElementById('scholarship-app-modal');
+    if (!modal) return;
+
+    const uniInput = document.getElementById('guide-uni');
     const assistSelect = document.getElementById('guide-assistance');
+
+    if (uniInput && uniName) {
+        uniInput.value = uniName;
+    }
     if (assistSelect && assistanceType) {
         assistSelect.value = assistanceType;
     }
+
     prefillGuidanceFormWithStudent();
-    document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' });
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
-function selectUniForGuidance(uniName) {
-    const uniInput = document.getElementById('guide-uni');
-    if (uniInput) {
-        uniInput.value = uniName;
-    }
-    prefillGuidanceFormWithStudent();
-    document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' });
+function closeScholarshipModal() {
+    const modal = document.getElementById('scholarship-app-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
 }
 
 function prefillGuidanceFormWithStudent() {
@@ -480,7 +439,6 @@ function prefillGuidanceFormWithStudent() {
     if (emailEl && !emailEl.value) emailEl.value = state.currentStudent.email || '';
 }
 
-// --- SCHOLARSHIP, LOAN GUIDANCE & EXPERT CALLBACK SUBMISSION ---
 async function handleGuidanceSubmission(e) {
     e.preventDefault();
     const submitBtn = document.getElementById('btn-submit-guidance');
@@ -492,10 +450,26 @@ async function handleGuidanceSubmission(e) {
     const preferredUni = document.getElementById('guide-uni').value.trim();
     const assistanceType = document.getElementById('guide-assistance').value;
 
+    const interMarks = document.getElementById('guide-inter-marks').value.trim();
+    const physics = document.getElementById('guide-physics').value.trim();
+    const maths = document.getElementById('guide-maths').value.trim();
+    const chemLab = document.getElementById('guide-chemistry-lab').value.trim();
+    const pcmTotal = document.getElementById('guide-pcm-total').value.trim();
+    const jeeMarks = document.getElementById('guide-jee').value.trim();
+    const eamcetRank = document.getElementById('guide-eamcet').value.trim();
+
     if (!name || !phone || !email || !course || !assistanceType) {
         showToast('Missing Details', 'Please fill out all required fields.', 'error');
         return;
     }
+
+    const academicSummary = [
+        interMarks ? `Inter: ${interMarks}/1000` : '',
+        pcmTotal ? `PCM: ${pcmTotal}` : '',
+        (physics || maths || chemLab) ? `(P:${physics || 0}, M:${maths || 0}, C+Lab:${chemLab || 0})` : '',
+        jeeMarks ? `JEE: ${jeeMarks}` : '',
+        eamcetRank ? `EAMCET: ${eamcetRank}` : ''
+    ].filter(Boolean).join(' | ');
 
     const payload = {
         id: Date.now(),
@@ -505,6 +479,13 @@ async function handleGuidanceSubmission(e) {
         branch: course,
         uni: preferredUni || 'Not Specified',
         assistance_type: assistanceType,
+        inter_marks: interMarks || null,
+        pcm_marks: pcmTotal || null,
+        physics_marks: physics || null,
+        maths_marks: maths || null,
+        chemistry_lab_marks: chemLab || null,
+        jee_score: academicSummary || jeeMarks || null,
+        eamcet_rank: eamcetRank || null,
         referral_code: state.currentStudent?.referred_by_code || state.incomingReferralCode || null,
         status: 'Pending Callback'
     };
@@ -512,18 +493,25 @@ async function handleGuidanceSubmission(e) {
     try {
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Submitting Request...';
+            submitBtn.querySelector('span').textContent = 'Submitting Application...';
         }
 
         let { error } = await _supabase.from('inquiries').insert([payload]);
 
-        if (error && error.message && error.message.includes('assistance_type')) {
-            const { assistance_type, ...fallbackPayload } = payload;
-            const fallbackRes = await _supabase.from('inquiries').insert([{
-                ...fallbackPayload,
-                jee_score: assistanceType
-            }]);
-            error = fallbackRes.error;
+        if (error) {
+            const coreFallback = {
+                id: payload.id,
+                name: payload.name,
+                phone: payload.phone,
+                email: payload.email,
+                branch: payload.branch,
+                uni: payload.uni,
+                jee_score: `${assistanceType}${academicSummary ? ' • ' + academicSummary : ''}`,
+                referral_code: payload.referral_code,
+                status: 'Pending Callback'
+            };
+            const retryRes = await _supabase.from('inquiries').insert([coreFallback]);
+            error = retryRes.error;
         }
 
         if (error) {
@@ -532,13 +520,15 @@ async function handleGuidanceSubmission(e) {
         }
 
         state.inquiries.unshift(payload);
-        showToast('Guidance Request Received', 'Our GTECH team will contact you shortly for your guidance request.', 'success');
+        showToast('Application Submitted', 'Your Scholarship & Expert Call Application has been received.', 'success');
         e.target.reset();
+        document.getElementById('guide-pcm-total').value = '';
         prefillGuidanceFormWithStudent();
+        closeScholarshipModal();
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'GET FREE EXPERT GUIDANCE';
+            submitBtn.querySelector('span').textContent = 'SUBMIT SCHOLARSHIP & EXPERT CALL FORM';
         }
     }
 }
@@ -547,15 +537,14 @@ async function handleGuidanceSubmission(e) {
 function openAuthModal(mode = 'register') {
     const modal = document.getElementById('student-auth-modal');
     modal.classList.remove('hidden');
-    modal.scrollTop = 0;
-    document.body.classList.add('overflow-hidden');
+    modal.classList.add('flex');
     switchStudentAuthMode(mode);
 }
 
 function closeAuthModal() {
     const modal = document.getElementById('student-auth-modal');
     modal.classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
+    modal.classList.remove('flex');
 }
 
 function switchStudentAuthMode(mode) {
@@ -570,13 +559,13 @@ function switchStudentAuthMode(mode) {
     if (mode === 'login') {
         regView.classList.add('hidden');
         loginView.classList.remove('hidden');
-        loginTab.className = 'py-2.5 px-3 rounded-xl bg-white text-blue-700 shadow-2xs transition';
-        regTab.className = 'py-2.5 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition';
+        loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
+        regTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
     } else {
         loginView.classList.add('hidden');
         regView.classList.remove('hidden');
-        regTab.className = 'py-2.5 px-3 rounded-xl bg-white text-blue-700 shadow-2xs transition';
-        loginTab.className = 'py-2.5 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition';
+        regTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
+        loginTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
         if (state.incomingReferralCode) {
             const refInput = document.getElementById('reg-referral');
             if (refInput && !refInput.value) refInput.value = state.incomingReferralCode;
@@ -601,51 +590,6 @@ async function isEmailAlreadyRegistered(email) {
     return Boolean(data && data.email);
 }
 
-// Validate referral code against genuine records in student_profiles
-async function validateReferralCodeInDatabase(rawCode, applicantEmail, applicantPhone) {
-    const cleanCode = String(rawCode || '').trim().toUpperCase();
-    if (!cleanCode) {
-        return { valid: false, message: 'Referral code is mandatory to register.' };
-    }
-
-    // Check by referral_code first, then fallback to student_id / id
-    let { data: referrer, error } = await _supabase
-        .from('student_profiles')
-        .select('id, student_id, referral_code, email, mobile, full_name')
-        .eq('referral_code', cleanCode)
-        .maybeSingle();
-
-    if (!referrer && !error) {
-        const byStudentId = await _supabase
-            .from('student_profiles')
-            .select('id, student_id, referral_code, email, mobile, full_name')
-            .or(`student_id.eq.${cleanCode},id.eq.${cleanCode}`)
-            .maybeSingle();
-        referrer = byStudentId.data;
-        error = byStudentId.error;
-    }
-
-    if (error || !referrer) {
-        return {
-            valid: false,
-            message: 'Invalid referral code. Please enter a verified referral code from an existing GTech member.'
-        };
-    }
-
-    // Prevent self-referral by email or mobile
-    if (
-        (referrer.email && applicantEmail && referrer.email.toLowerCase() === applicantEmail.toLowerCase()) ||
-        (referrer.mobile && applicantPhone && String(referrer.mobile) === String(applicantPhone))
-    ) {
-        return {
-            valid: false,
-            message: 'Self-referrals are not permitted. Please use a valid referral code from another member.'
-        };
-    }
-
-    return { valid: true, code: cleanCode, referrer };
-}
-
 async function requestEmailOtp(email, purpose) {
     if (OTP_BACKEND_URL) {
         const res = await fetch(`${OTP_BACKEND_URL}/send-otp`, {
@@ -663,7 +607,7 @@ async function requestEmailOtp(email, purpose) {
     const { error } = await _supabase.auth.signInWithOtp({
         email,
         options: {
-            shouldCreateUser: purpose === 'register',
+            shouldCreateUser: true,
             emailRedirectTo: window.location.origin + window.location.pathname
         }
     });
@@ -694,7 +638,7 @@ async function verifyEmailOtpCode(email, code, purpose) {
     return { verified: true, user: data?.user || null };
 }
 
-// --- 4. STUDENT REGISTRATION FLOW (WITH MANDATORY REFERRAL VALIDATION) ---
+// --- 1. REGISTRATION FLOW ---
 async function handleSendRegistrationOtp(e) {
     if (e) e.preventDefault();
     const errId = 'reg-error-msg';
@@ -703,11 +647,11 @@ async function handleSendRegistrationOtp(e) {
     const fullName = document.getElementById('reg-name').value.trim();
     const phone = document.getElementById('reg-phone').value.replace(/\D+/g, '').trim();
     const email = document.getElementById('reg-email').value.trim().toLowerCase();
-    const referralInput = document.getElementById('reg-referral').value.trim().toUpperCase();
+    const referralCode = document.getElementById('reg-referral').value.trim().toUpperCase();
     const sendBtn = document.getElementById('btn-send-reg-otp');
 
-    if (!fullName || !phone || !email || !referralInput) {
-        showInlineError(errId, 'Student Name, Phone Number, Email Address, and Referral Code are all required.');
+    if (!fullName || !phone || !email) {
+        showInlineError(errId, 'Student Name, Phone Number, and Email Address are required.');
         return;
     }
 
@@ -718,7 +662,7 @@ async function handleSendRegistrationOtp(e) {
 
     try {
         sendBtn.disabled = true;
-        sendBtn.querySelector('span').textContent = 'Validating & Sending OTP...';
+        sendBtn.querySelector('span').textContent = 'Checking & Sending...';
 
         const exists = await isEmailAlreadyRegistered(email);
         if (exists) {
@@ -726,17 +670,11 @@ async function handleSendRegistrationOtp(e) {
             return;
         }
 
-        const refCheck = await validateReferralCodeInDatabase(referralInput, email, phone);
-        if (!refCheck.valid) {
-            showInlineError(errId, refCheck.message);
-            return;
-        }
-
         state.pendingRegistration = {
             full_name: fullName,
             mobile: phone,
             email,
-            referred_by_code: refCheck.code
+            referred_by_code: referralCode || state.incomingReferralCode || null
         };
         localStorage.setItem('gtech_pending_reg', JSON.stringify(state.pendingRegistration));
 
@@ -762,8 +700,8 @@ async function handleVerifyRegistrationOtp() {
     const regData = state.pendingRegistration || JSON.parse(localStorage.getItem('gtech_pending_reg') || 'null');
     const verifyBtn = document.getElementById('btn-verify-reg-otp');
 
-    if (!regData || !regData.email || !regData.referred_by_code) {
-        showInlineError(errId, 'Please complete all registration fields including a valid referral code and click SEND OTP first.');
+    if (!regData || !regData.email) {
+        showInlineError(errId, 'Please enter your registration details and click SEND OTP first.');
         return;
     }
 
@@ -782,25 +720,17 @@ async function handleVerifyRegistrationOtp() {
             return;
         }
 
-        const refCheck = await validateReferralCodeInDatabase(regData.referred_by_code, regData.email, regData.mobile);
-        if (!refCheck.valid) {
-            showInlineError(errId, refCheck.message);
-            return;
-        }
-
         await verifyEmailOtpCode(regData.email, code, 'register');
 
-        const studentId = `GTECH-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
-        const ownReferralCode = generateUniqueReferralCode(regData.full_name);
-
+        const studentId = await generateNextGtechStudentId();
         const newStudent = {
             id: studentId,
             student_id: studentId,
             full_name: regData.full_name,
             mobile: regData.mobile,
             email: regData.email,
-            referral_code: ownReferralCode,
-            referred_by_code: refCheck.code
+            referral_code: studentId,
+            referred_by_code: regData.referred_by_code || null
         };
 
         let { data: inserted, error } = await _supabase
@@ -809,17 +739,17 @@ async function handleVerifyRegistrationOtp() {
             .select()
             .maybeSingle();
 
-        if (error && error.message && (error.message.includes('student_id') || error.message.includes('referral_code'))) {
-            const fallbackStudent = {
+        if (error) {
+            const minimalStudent = {
                 id: studentId,
                 full_name: regData.full_name,
                 mobile: regData.mobile,
                 email: regData.email,
-                referred_by_code: refCheck.code
+                referred_by_code: regData.referred_by_code || null
             };
             const retry = await _supabase
                 .from('student_profiles')
-                .insert([fallbackStudent])
+                .insert([minimalStudent])
                 .select()
                 .maybeSingle();
             inserted = retry.data;
@@ -836,7 +766,6 @@ async function handleVerifyRegistrationOtp() {
 
         const profile = inserted || newStudent;
         profile.student_id = profile.student_id || profile.id || studentId;
-        profile.referral_code = profile.referral_code || ownReferralCode;
 
         state.currentStudent = profile;
         state.pendingRegistration = null;
@@ -853,14 +782,14 @@ async function handleVerifyRegistrationOtp() {
 
         showToast('Registration Successful', `Student ID ${profile.student_id} generated!`, 'success');
     } catch (err) {
-        showInlineError(errId, err.message || 'Invalid or expired OTP code.');
+        showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
         verifyBtn.disabled = false;
         verifyBtn.textContent = 'Verify & Complete Registration';
     }
 }
 
-// --- EMAIL-ONLY LOGIN FLOW ---
+// --- 2. EMAIL-ONLY LOGIN FLOW ---
 async function handleSendLoginOtp(e) {
     if (e) e.preventDefault();
     const errId = 'login-error-msg';
@@ -939,18 +868,17 @@ async function handleVerifyLoginOtp() {
 
         await verifyEmailOtpCode(email, code, 'login');
 
-        profile.student_id = profile.student_id || profile.id || 'GTECH-MEMBER';
-        profile.referral_code = profile.referral_code || profile.student_id;
+        profile.student_id = profile.student_id || profile.id || 'GTECH6001';
         state.currentStudent = profile;
         localStorage.setItem('gtech_student_session', JSON.stringify(profile));
 
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
         closeAuthModal();
-        await openStudentDashboardModal();
+        await openStudentDashboardModal('dashboard');
         showToast('Welcome Back', `Signed in as ${profile.full_name}.`, 'success');
     } catch (err) {
-        showInlineError(errId, err.message || 'Invalid or expired OTP code.');
+        showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
         verifyBtn.disabled = false;
         verifyBtn.textContent = 'Verify & Open Dashboard';
@@ -971,8 +899,7 @@ function listenToAuthChanges() {
                 .maybeSingle();
 
             if (profile) {
-                profile.student_id = profile.student_id || profile.id || 'GTECH-MEMBER';
-                profile.referral_code = profile.referral_code || profile.student_id;
+                profile.student_id = profile.student_id || profile.id || 'GTECH6001';
                 state.currentStudent = profile;
                 localStorage.setItem('gtech_student_session', JSON.stringify(profile));
                 updateHeaderForLoggedInStudent(profile);
@@ -998,8 +925,7 @@ async function restoreStudentSession() {
             .eq('email', email)
             .maybeSingle();
         if (profile) {
-            profile.student_id = profile.student_id || profile.id || 'GTECH-MEMBER';
-            profile.referral_code = profile.referral_code || profile.student_id;
+            profile.student_id = profile.student_id || profile.id || 'GTECH6001';
             state.currentStudent = profile;
             localStorage.setItem('gtech_student_session', JSON.stringify(profile));
             updateHeaderForLoggedInStudent(profile);
@@ -1026,40 +952,52 @@ async function handleStudentLogout() {
     state.authUser = null;
     state.currentStudent = null;
     state.financeRecord = null;
-    state.referralStats = { total: 0, successful: 0 };
     localStorage.removeItem('gtech_student_session');
-    closeProfileDropdown();
     resetHeaderToLoggedOut();
     closeStudentDashboardModal();
     showToast('Logged Out', 'You have signed out of your student portal.', 'success');
 }
 
 function resetHeaderToLoggedOut() {
-    const guestActions = document.getElementById('header-guest-actions');
-    const profileWrapper = document.getElementById('header-profile-wrapper');
-    if (guestActions && profileWrapper) {
-        guestActions.classList.remove('hidden');
-        profileWrapper.classList.add('hidden');
+    const dashBtn = document.getElementById('header-dashboard-btn');
+    const loginBtn = document.getElementById('header-login-btn');
+    if (dashBtn && loginBtn) {
+        dashBtn.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
     }
 }
 
 function updateHeaderForLoggedInStudent(profile) {
-    const guestActions = document.getElementById('header-guest-actions');
-    const profileWrapper = document.getElementById('header-profile-wrapper');
+    const dashBtn = document.getElementById('header-dashboard-btn');
+    const loginBtn = document.getElementById('header-login-btn');
     const nameSpan = document.getElementById('header-student-name');
-    const dropFullName = document.getElementById('dropdown-student-fullname');
-    const dropId = document.getElementById('dropdown-student-id');
-
-    if (guestActions && profileWrapper) {
-        guestActions.classList.add('hidden');
-        profileWrapper.classList.remove('hidden');
+    if (dashBtn && loginBtn && nameSpan) {
+        dashBtn.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+        nameSpan.textContent = profile.full_name || 'Dashboard';
     }
-    if (nameSpan) nameSpan.textContent = profile.full_name || 'Student';
-    if (dropFullName) dropFullName.textContent = profile.full_name || 'Student';
-    if (dropId) dropId.textContent = `ID: ${profile.student_id || profile.id || '—'}`;
 }
 
-// --- 5 & 6. STUDENT DASHBOARD (PRIVATE FINANCIALS + VERIFIED REFERRALS) ---
+// --- STUDENT DASHBOARD TABS (SEPARATE VIEWS FOR DASHBOARD, MY APPLICATIONS, MY REFERRAL) ---
+function switchDashboardSection(tabName) {
+    state.activeDashboardTab = tabName;
+    const tabs = ['dashboard', 'applications', 'referral'];
+
+    tabs.forEach(t => {
+        const sectionEl = document.getElementById(`dash-section-${t}`);
+        const btnEl = document.getElementById(`dash-tab-btn-${t}`);
+        if (!sectionEl || !btnEl) return;
+
+        if (t === tabName) {
+            sectionEl.classList.remove('hidden');
+            btnEl.className = 'px-3 py-1.5 rounded-lg bg-white text-emerald-900 shadow-xs transition';
+        } else {
+            sectionEl.classList.add('hidden');
+            btnEl.className = 'px-3 py-1.5 rounded-lg text-emerald-100 hover:bg-white/10 transition';
+        }
+    });
+}
+
 function formatINR(value) {
     const num = Number(value || 0);
     return `₹${num.toLocaleString('en-IN')}`;
@@ -1075,125 +1013,87 @@ async function fetchStudentFinancialDetails(student) {
         .maybeSingle();
 
     if (error) {
+        console.warn('Financial record fetch note:', error.message);
         return null;
     }
     return data || null;
 }
 
-async function fetchStudentReferralStats(student) {
-    const myCode = getStudentReferralCode(student);
-    if (!myCode) return { total: 0, successful: 0 };
-
-    // Count genuine referred student profiles excluding self
+async function fetchReferredStudents(myCode) {
+    if (!myCode) return [];
     const { data, error } = await _supabase
         .from('student_profiles')
-        .select('id, email, referred_by_code')
+        .select('id, student_id, full_name, created_at, referred_by_code')
         .eq('referred_by_code', myCode);
 
-    if (error || !Array.isArray(data)) {
-        return { total: 0, successful: 0 };
+    if (error) {
+        console.warn('Referral lookup note:', error.message);
+        return [];
     }
-
-    const validReferrals = data.filter(
-        row => row.email && student.email && row.email.toLowerCase() !== student.email.toLowerCase()
-    );
-
-    return {
-        total: validReferrals.length,
-        successful: validReferrals.length
-    };
+    return data || [];
 }
 
-async function openStudentDashboardModal() {
+async function openStudentDashboardModal(defaultTab = 'dashboard') {
     if (!state.currentStudent) {
         openAuthModal('login');
         return;
     }
 
+    const myCode = (state.currentStudent.referral_code || state.currentStudent.student_id || state.currentStudent.id || 'GTECH6001').toUpperCase();
+
     await fetchInquiriesFromSupabase();
     state.financeRecord = await fetchStudentFinancialDetails(state.currentStudent);
-    state.referralStats = await fetchStudentReferralStats(state.currentStudent);
+    state.referredStudents = await fetchReferredStudents(myCode);
 
     const modal = document.getElementById('student-dashboard-modal');
     modal.classList.remove('hidden');
-    modal.scrollTop = 0;
-    document.body.classList.add('overflow-hidden');
+    modal.classList.add('flex');
 
+    switchDashboardSection(defaultTab);
     renderStudentDashboard();
 }
 
 function closeStudentDashboardModal() {
     const modal = document.getElementById('student-dashboard-modal');
     modal.classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
+    modal.classList.remove('flex');
 }
 
 function renderStudentDashboard() {
     const stu = state.currentStudent;
     if (!stu) return;
 
-    const studentId = stu.student_id || stu.id || 'GTECH-MEMBER';
-    const referralCode = getStudentReferralCode(stu);
-    const referralLink = getStudentReferralLink(stu);
+    const studentCode = (stu.student_id || stu.id || 'GTECH6001').toUpperCase();
+    const myRefCode = (stu.referral_code || studentCode).toUpperCase();
 
     document.getElementById('dash-topbar-name').textContent = stu.full_name || 'Student Portal';
-    document.getElementById('dash-topbar-meta').textContent = `${stu.email}${stu.mobile ? ' • ' + stu.mobile : ''}`;
+    document.getElementById('dash-topbar-id').textContent = `Student ID: ${studentCode}`;
     document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
-    document.getElementById('student-dash-id').textContent = studentId;
+    document.getElementById('student-dash-id').textContent = studentCode;
 
-    // Profile Details
-    document.getElementById('prof-name').textContent = stu.full_name || '—';
-    document.getElementById('prof-id').textContent = studentId;
-    document.getElementById('prof-email').textContent = stu.email || '—';
-    document.getElementById('prof-phone').textContent = stu.mobile || '—';
-    document.getElementById('prof-referred-by').textContent = stu.referred_by_code || 'Direct';
-
-    // My Referral Details & Live Stats
-    document.getElementById('dash-my-referral-code').textContent = referralCode;
-    document.getElementById('dash-my-referral-link').textContent = referralLink;
-    document.getElementById('stat-total-referrals').textContent = String(state.referralStats.total);
-    document.getElementById('stat-successful-registrations').textContent = String(state.referralStats.successful);
-
-    // Scholarship & Fee Details (Only display when genuine record exists)
-    const fin = state.financeRecord;
-    const statusBadge = document.getElementById('finance-record-status');
-    const emptyNotice = document.getElementById('student-finance-empty');
-    const cardsGrid = document.getElementById('student-finance-cards');
-
-    if (fin) {
-        statusBadge.textContent = 'Verified Ledger';
-        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200';
-        emptyNotice.classList.add('hidden');
-        cardsGrid.classList.remove('hidden');
-
-        const totalFee = Number(fin.total_university_fee || 0);
-        const scholarship = Number(fin.scholarship_amount || 0);
-        const appFee = Number(fin.application_fee || 0);
-        const hostelFee = Number(fin.hostel_fee || 0);
-        const paidAmount = Number(fin.paid_amount || 0);
-        const computedPending = fin.pending_amount !== undefined && fin.pending_amount !== null
-            ? Number(fin.pending_amount)
-            : Math.max(0, totalFee + appFee + hostelFee - scholarship - paidAmount);
-
-        document.getElementById('fin-total-fee').textContent = formatINR(totalFee);
-        document.getElementById('fin-scholarship').textContent = formatINR(scholarship);
-        document.getElementById('fin-app-fee').textContent = formatINR(appFee);
-        document.getElementById('fin-hostel-fee').textContent = formatINR(hostelFee);
-        document.getElementById('fin-paid').textContent = formatINR(paidAmount);
-        document.getElementById('fin-pending').textContent = formatINR(computedPending);
-    } else {
-        statusBadge.textContent = 'No Active Ledger';
-        statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200';
-        emptyNotice.classList.remove('hidden');
-        cardsGrid.classList.add('hidden');
-    }
-
-    // Admission Status & My Applications
+    // 1. MY APPLICATIONS & ENQUIRIES
     const myApps = state.inquiries.filter(inq =>
         (inq.email && stu.email && inq.email.toLowerCase() === stu.email.toLowerCase()) ||
         (inq.phone && stu.mobile && String(inq.phone).includes(String(stu.mobile)))
     );
 
+    const appCardsHtml = myApps.length === 0
+        ? `<p class="text-xs text-slate-500">No applications or enquiries submitted yet. Click "+ New Scholarship / Expert Application" to apply.</p>`
+        : myApps.map(inq => `
+            <div class="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-200/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <strong class="text-slate-900 block break-words">${inq.assistance_type || 'Scholarship & Expert Application'} • ${inq.branch || 'Course'}</strong>
+                    <p class="text-slate-600 text-[11px] mt-0.5">Preferred University: ${inq.uni || 'Not Specified'}</p>
+                    ${inq.jee_score ? `<p class="text-indigo-700 text-[10px] font-semibold mt-0.5">${inq.jee_score}</p>` : ''}
+                </div>
+                <span class="self-start sm:self-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] border border-emerald-200 shrink-0">${inq.status || 'Pending Callback'}</span>
+            </div>
+        `).join('');
+
+    document.getElementById('dash-overview-applications-list').innerHTML = appCardsHtml;
+    document.getElementById('student-applications-full-list').innerHTML = appCardsHtml;
+
+    // 2. ADMISSION STATUS
     let activeStepIndex = 0;
     let latestStatusLabel = 'Registered';
     if (myApps.length > 0) {
@@ -1208,56 +1108,147 @@ function renderStudentDashboard() {
     document.getElementById('dash-current-stage-badge').textContent = latestStatusLabel;
 
     const steps = [
-        { title: '1. Registered', desc: 'Email & referral verified' },
-        { title: '2. Enquiry Sent', desc: 'Guidance requested' },
-        { title: '3. Call / Visit', desc: 'Counselor review' },
-        { title: '4. Application', desc: 'University filing' },
-        { title: '5. Admission Done', desc: 'Seat confirmed' }
+        { title: '1. Registered', desc: 'ID Active' },
+        { title: '2. Applied', desc: 'Form submitted' },
+        { title: '3. Counselling', desc: 'Expert review' },
+        { title: '4. University Filing', desc: 'Seat processing' },
+        { title: '5. Admission Done', desc: 'Confirmed' }
     ];
 
     document.getElementById('admission-process-flow').innerHTML = steps.map((step, idx) => {
         const done = idx <= activeStepIndex;
         const current = idx === activeStepIndex;
         const style = current
-            ? 'bg-blue-50 border-blue-400 text-blue-900'
+            ? 'bg-emerald-600 border-emerald-700 text-white shadow-xs'
             : done
-                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
                 : 'bg-slate-50 border-slate-200 text-slate-400';
         return `
-            <div class="p-3 rounded-xl border ${style} transition min-w-0">
-                <div class="text-xs font-extrabold leading-tight">${step.title}</div>
-                <div class="text-[11px] opacity-80 mt-0.5 leading-tight">${step.desc}</div>
+            <div class="p-2.5 sm:p-3 rounded-xl border ${style} transition min-w-0">
+                <div class="text-[11px] font-extrabold leading-tight">${step.title}</div>
+                <div class="text-[10px] opacity-85 mt-0.5 leading-tight">${step.desc}</div>
             </div>
         `;
     }).join('');
 
-    const appContainer = document.getElementById('student-applications-list');
-    if (myApps.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-slate-500">No guidance or admission applications submitted yet for ${stu.email}.</p>`;
+    // 3. SCHOLARSHIP & FEE DETAILS
+    const fin = state.financeRecord;
+    const statusBadge = document.getElementById('finance-record-status');
+
+    let referralEarnings = 0;
+    if (fin) {
+        statusBadge.textContent = 'Verified Ledger';
+        const totalFee = Number(fin.total_university_fee || 0);
+        const scholarship = Number(fin.scholarship_amount || 0);
+        const appFee = Number(fin.application_fee || 0);
+        const hostelFee = Number(fin.hostel_fee || 0);
+        referralEarnings = Number(fin.referral_earnings || 0);
+        const paidAmount = Number(fin.paid_amount || 0);
+        const computedPending = fin.pending_amount !== undefined && fin.pending_amount !== null
+            ? Number(fin.pending_amount)
+            : Math.max(0, totalFee + appFee + hostelFee - scholarship - referralEarnings - paidAmount);
+
+        document.getElementById('fin-total-fee').textContent = formatINR(totalFee);
+        document.getElementById('fin-scholarship').textContent = formatINR(scholarship);
+        document.getElementById('fin-app-fee').textContent = formatINR(appFee);
+        document.getElementById('fin-hostel-fee').textContent = formatINR(hostelFee);
+        document.getElementById('fin-referral').textContent = formatINR(referralEarnings);
+        document.getElementById('fin-paid').textContent = formatINR(paidAmount);
+        document.getElementById('fin-pending').textContent = formatINR(computedPending);
     } else {
-        appContainer.innerHTML = myApps.map(inq => `
-            <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <strong class="text-slate-900 block break-words">${inq.assistance_type || 'Guidance Request'} • ${inq.branch || 'Course'}</strong>
-                    <p class="text-slate-500 text-[11px] mt-0.5">Preferred University: ${inq.uni || 'Not Specified'}</p>
+        statusBadge.textContent = 'Awaiting Fee Update';
+        document.getElementById('fin-total-fee').textContent = formatINR(0);
+        document.getElementById('fin-scholarship').textContent = formatINR(0);
+        document.getElementById('fin-app-fee').textContent = formatINR(0);
+        document.getElementById('fin-hostel-fee').textContent = formatINR(0);
+        document.getElementById('fin-referral').textContent = formatINR(0);
+        document.getElementById('fin-paid').textContent = formatINR(0);
+        document.getElementById('fin-pending').textContent = formatINR(0);
+    }
+
+    // MY REFERRAL TAB DATA
+    const shareLink = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(myRefCode)}`;
+    document.getElementById('my-referral-code-text').textContent = myRefCode;
+    document.getElementById('my-referral-link-input').value = shareLink;
+    document.getElementById('ref-tab-amount').textContent = formatINR(referralEarnings);
+
+    const referralInquiries = state.inquiries.filter(inq =>
+        inq.referral_code && String(inq.referral_code).toUpperCase() === myRefCode
+    );
+
+    const pendingCount = Math.max(state.referredStudents.length, referralInquiries.length);
+    document.getElementById('ref-tab-pending-count').textContent = String(pendingCount);
+
+    const refListEl = document.getElementById('my-referred-students-list');
+    if (state.referredStudents.length === 0 && referralInquiries.length === 0) {
+        refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No pending referral admissions yet. Share your referral link on WhatsApp or Instagram to invite students.</p>`;
+    } else {
+        const items = state.referredStudents.length > 0
+            ? state.referredStudents.map(rs => ({
+                name: rs.full_name || 'Referred Student',
+                id: rs.student_id || rs.id || '',
+                status: 'Admission Pending'
+            }))
+            : referralInquiries.map(ri => ({
+                name: ri.name || 'Referred Applicant',
+                id: ri.branch || '',
+                status: ri.status || 'Admission Pending'
+            }));
+
+        refListEl.innerHTML = items.map(item => `
+            <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200 flex items-center justify-between gap-2 text-xs">
+                <div>
+                    <strong class="text-slate-900 block">${item.name}</strong>
+                    ${item.id ? `<span class="text-[11px] font-mono text-slate-600">${item.id}</span>` : ''}
                 </div>
-                <span class="self-start sm:self-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200 shrink-0">${inq.status || 'Pending Callback'}</span>
+                <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px]">${item.status}</span>
             </div>
         `).join('');
     }
+}
+
+// --- REFERRAL SHARE & COPY HELPERS ---
+function copyMyReferralCode() {
+    const code = document.getElementById('my-referral-code-text')?.textContent || '';
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+        showToast('Code Copied', `Referral code ${code} copied to clipboard.`, 'success');
+    });
+}
+
+function copyMyReferralLink() {
+    const link = document.getElementById('my-referral-link-input')?.value || '';
+    if (!link) return;
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('Link Copied', 'Referral link copied to clipboard.', 'success');
+    });
+}
+
+function shareReferralWhatsApp() {
+    const code = document.getElementById('my-referral-code-text')?.textContent || '';
+    const link = document.getElementById('my-referral-link-input')?.value || '';
+    const msg = encodeURIComponent(`Join GTech Admissions (AP, Tamil Nadu, Telangana & Bangalore) for B.Tech, Degree & Medical admissions and scholarships! Use my Referral Code ${code}: ${link}`);
+    window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
+}
+
+function shareReferralInstagram() {
+    const link = document.getElementById('my-referral-link-input')?.value || '';
+    if (link) {
+        navigator.clipboard.writeText(link).catch(() => {});
+    }
+    showToast('Ready for Instagram', 'Your referral link is copied—paste it into your Instagram DM or Bio!', 'success');
+    window.open('https://www.instagram.com/', '_blank', 'noopener');
 }
 
 // Global scope exposure
 window.showToast = showToast;
 window.hideToast = hideToast;
 window.sanitizeNumericInput = sanitizeNumericInput;
+window.calculatePcmMarks = calculatePcmMarks;
 window.handleOtpBoxInput = handleOtpBoxInput;
 window.handleOtpBoxKeydown = handleOtpBoxKeydown;
-window.toggleProfileDropdown = toggleProfileDropdown;
-window.openDashboardSection = openDashboardSection;
-window.copyMyReferralCode = copyMyReferralCode;
-window.copyMyReferralLink = copyMyReferralLink;
-window.shareReferralOnWhatsApp = shareReferralOnWhatsApp;
+window.openScholarshipModal = openScholarshipModal;
+window.closeScholarshipModal = closeScholarshipModal;
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
 window.switchStudentAuthMode = switchStudentAuthMode;
@@ -1268,9 +1259,12 @@ window.handleVerifyLoginOtp = handleVerifyLoginOtp;
 window.handleStudentLogout = handleStudentLogout;
 window.openStudentDashboardModal = openStudentDashboardModal;
 window.closeStudentDashboardModal = closeStudentDashboardModal;
+window.switchDashboardSection = switchDashboardSection;
+window.copyMyReferralCode = copyMyReferralCode;
+window.copyMyReferralLink = copyMyReferralLink;
+window.shareReferralWhatsApp = shareReferralWhatsApp;
+window.shareReferralInstagram = shareReferralInstagram;
 window.setStateFilter = setStateFilter;
-window.selectUniForGuidance = selectUniForGuidance;
-window.focusGuidanceSection = focusGuidanceSection;
 window.handleGuidanceSubmission = handleGuidanceSubmission;
 window.nextSlide = nextSlide;
 window.prevSlide = prevSlide;

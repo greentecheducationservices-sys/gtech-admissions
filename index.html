@@ -19,7 +19,7 @@
 </head>
 <body class="bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 text-slate-800 font-sans selection:bg-sky-600 selection:text-white overflow-x-hidden">
 
-    <!-- Referral Link Auto-Detection Top Banner (Hidden by default so mobile stays clean above header) -->
+    <!-- Referral Link Auto-Detection Top Banner -->
     <div id="referral-applied-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold py-2 px-3 text-center">
         <i class="fa-solid fa-gift mr-1"></i> Referral Code <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Complete registration to link your referral.
     </div>
@@ -414,6 +414,12 @@
             <div class="relative z-10 p-5 sm:p-8 bg-gradient-to-b from-sky-50/90 via-white/95 to-emerald-50/80">
                 <button type="button" onclick="closeAuthModal()" aria-label="Close modal" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-xs font-bold transition">✕</button>
 
+                <!-- Pending Application Context Notice (shown when redirected from Scholarship / Visiting button) -->
+                <div id="auth-redirect-notice" class="hidden mb-4 px-3.5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-800 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-indigo-600 shrink-0"></i>
+                    <span id="auth-redirect-notice-text">Please sign in or register first to open your application form.</span>
+                </div>
+
                 <div class="flex rounded-2xl bg-sky-100/80 p-1 mb-6 border border-sky-200 text-xs font-bold max-w-[260px]">
                     <button type="button" id="mode-tab-login" onclick="switchStudentAuthMode('login')" class="flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition">Login</button>
                     <button type="button" id="mode-tab-register" onclick="switchStudentAuthMode('register')" class="flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition">Register</button>
@@ -503,8 +509,8 @@
                             <span class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">Gtech ID</span>
                             <span id="generated-student-id-display" class="text-base sm:text-lg font-mono font-black text-emerald-700 tracking-wider">GTECH6001</span>
                         </div>
-                        <button type="button" onclick="closeAuthModal(); openStudentDashboardModal('dashboard')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition">
-                            Open Student Portal
+                        <button type="button" onclick="continueAfterAuth()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition">
+                            Continue
                         </button>
                     </div>
                 </div>
@@ -552,7 +558,7 @@
 
                         <div class="flex items-center gap-2.5">
                             <button type="button" id="btn-verify-login-otp" onclick="handleVerifyLoginOtp()" class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition">
-                                Verify &amp; Open Portal
+                                Verify &amp; Continue
                             </button>
                             <button type="button" id="btn-resend-login-otp" disabled onclick="handleSendLoginOtp()" class="px-4 py-3 rounded-2xl bg-white border border-sky-200 text-sky-700 disabled:opacity-45 hover:bg-sky-50 font-bold text-xs transition">
                                 Resend OTP
@@ -564,33 +570,39 @@
         </div>
     </div>
 
-    <!-- AUTHENTICATED STUDENT PORTAL MODAL (REFRESHED SKY / INDIGO / EMERALD UI) -->
-    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/55 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 overflow-x-hidden">
-        <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/50 border border-sky-200/90 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Single-Line Responsive Header: Student Portal | My Referral | Sign Out | Cancel -->
-            <div class="px-2.5 py-2.5 sm:px-5 sm:py-4 bg-white border-b border-sky-100 flex items-center justify-between gap-1.5 sm:gap-3 overflow-x-auto scrollbar-none">
-                <div class="hidden sm:flex items-center gap-2.5 min-w-0 shrink-0">
-                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-600 text-white flex items-center justify-center font-black text-sm shadow-sm shrink-0">
+    <!-- AUTHENTICATED STUDENT PORTAL MODAL (PREMIUM SEGMENTED SINGLE-ROW HEADER) -->
+    <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-x-hidden">
+        <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 border border-indigo-200/80 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Premium Single-Line Header -->
+            <div class="px-2.5 py-2.5 sm:px-5 sm:py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-b border-indigo-800/60 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+                <!-- Brand Identity Pill (Desktop) -->
+                <div class="hidden md:flex items-center gap-2.5 min-w-0 shrink-0">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white flex items-center justify-center font-black text-xs shadow-md shrink-0">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-black text-slate-900 text-sm truncate" id="dash-topbar-name">Student Portal</h3>
-                        <p class="text-[11px] text-indigo-700 font-mono font-bold truncate" id="dash-topbar-id">Gtech ID: GTECH6001</p>
+                        <h3 class="font-extrabold text-white text-xs tracking-wide truncate" id="dash-topbar-name">Student Portal</h3>
+                        <p class="text-[10px] text-sky-300 font-mono font-semibold truncate" id="dash-topbar-id">Gtech ID: GTECH6001</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-indigo-600 text-white text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 shadow-xs transition">
-                        Student Portal
+                <!-- Segmented Navigation Bar: Student Portal | My Referral | Sign Out | Cancel -->
+                <div class="flex items-center justify-between sm:justify-end w-full md:w-auto gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/15 shrink-0">
+                    <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-white text-indigo-950 text-[10px] sm:text-xs font-black whitespace-nowrap shrink-0 shadow-sm transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-user-graduate text-[10px] text-indigo-600"></i>
+                        <span>Student Portal</span>
                     </button>
-                    <button type="button" id="dash-tab-btn-referral" onclick="switchDashboardSection('referral')" class="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-sky-50 text-slate-700 hover:bg-sky-100 hover:text-indigo-700 border border-sky-200/70 text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition">
-                        My Referral
+                    <button type="button" id="dash-tab-btn-referral" onclick="switchDashboardSection('referral')" class="flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-share-nodes text-[10px] text-sky-300"></i>
+                        <span>My Referral</span>
                     </button>
-                    <button type="button" onclick="handleStudentLogout()" class="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 border border-slate-200 hover:border-amber-200 text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition">
-                        Sign Out
+                    <button type="button" onclick="handleStudentLogout()" class="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-400/25 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-right-from-bracket text-[10px]"></i>
+                        <span>Sign Out</span>
                     </button>
-                    <button type="button" onclick="closeStudentDashboardModal()" class="px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition">
-                        Cancel
+                    <button type="button" onclick="closeStudentDashboardModal()" class="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-200 hover:text-white border border-rose-400/30 text-[10px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                        <span>Cancel</span>
                     </button>
                 </div>
             </div>
@@ -723,7 +735,7 @@
         </div>
     </div>
 
-    <!-- UNIVERSITY STATUS POP-UP MODAL (UNIVERSITY NAME, FEE STRUCTURE, SCHOLARSHIP STATUS & APPROVED AMOUNT) -->
+    <!-- UNIVERSITY STATUS POP-UP MODAL -->
     <div id="university-status-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-3 sm:p-4">
         <div class="bg-white border border-indigo-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden gtech-pop-in">
             <div class="px-5 py-4 bg-gradient-to-r from-indigo-600 to-sky-600 text-white flex items-center justify-between gap-2">

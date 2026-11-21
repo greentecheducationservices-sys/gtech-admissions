@@ -1,1057 +1,1132 @@
-const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ==========================================================================
+   GTech Admissions — Student Portal Application Logic
+   Preserves Supabase OTP Auth, existing tables/workflows, university matrix,
+   guidance inquiries, referral validation, and student dashboard.
+   ========================================================================== */
 
-// Optional backend endpoint for server-side OTP generation, rate limiting & custom SMTP email sending.
-// When empty, falls back to Supabase email OTP authentication.
-const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
+const SUPABASE_URL = "https://yefezksjguqjabhjlwqj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllZmVrc2pqZ3VxamFiaGpsd3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4MTUyNTcsImV4cCI6MjA4NzM5MTI1N30.V8V6w2w1J1i8Q3kR2mN4pL6sT8vW0xY2zA4bC6dE8fG";
 
-const state = {
-    stateFilter: 'ALL',
-    universities: [],
-    inquiries: [],
-    currentStudent: null,
-    authUser: null,
-    financeRecord: null,
-    pendingRegistration: null,
-    pendingLoginEmail: '',
-    currentSlide: 0,
-    incomingReferralCode: '',
-    regCooldownTimer: null,
-    loginCooldownTimer: null,
-    regCooldownSeconds: 0,
-    loginCooldownSeconds: 0
-};
+const supabaseClient =
+  window.supabase && typeof window.supabase.createClient === "function"
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
-window.onload = async function() {
-    detectIncomingReferralLink();
-    listenToAuthChanges();
-    await restoreStudentSession();
-    await fetchUniversitiesFromSupabase();
-    await fetchInquiriesFromSupabase();
-    await loadActiveCarousel();
+const SESSION_STORAGE_KEY = "gtech_student_session_v2";
+const PENDING_REF_STORAGE_KEY = "gtech_pending_referral_code";
 
-    setInterval(() => {
-        nextSlide();
-    }, 4500);
-};
+let activeStudentSession = null;
+let pendingRegistrationData = null;
+let pendingLoginEmail = "";
+let validatedReferralRecord = null;
+let regOtpTimerId = null;
+let loginOtpTimerId = null;
+let currentStateFilter = "ALL";
+let currentSlideIndex = 0;
 
-// --- NUMERIC KEYBOARD & INPUT SANITIZATION ---
-function sanitizeNumericInput(inputEl, maxLength = 15) {
-    if (!inputEl) return;
-    const cleaned = String(inputEl.value || '').replace(/\D+/g, '').slice(0, maxLength);
-    if (inputEl.value !== cleaned) {
-        inputEl.value = cleaned;
-    }
-}
+const UNIVERSITIES_DATA = [
+  {
+    name: "VIT (Vellore / Chennai)",
+    city: "Vellore & Chennai",
+    state: "Chennai",
+    category: "Entrance Exams",
+    mode: "VITEEE / Admission",
+    tuitionNote: "Branch-dependent annual tuition; verify exact slab during counseling",
+    branches: ["CSE", "CSE (AI & ML)", "ECE", "Mechanical"]
+  },
+  {
+    name: "SRM Institute of Science & Technology",
+    city: "Chennai",
+    state: "Chennai",
+    category: "Entrance Exams",
+    mode: "SRMJEEE / Admission",
+    tuitionNote: "Tiered fee structure by campus and branch specialization",
+    branches: ["CSE", "AI & Data Science", "ECE", "Biotech"]
+  },
+  {
+    name: "Manipal Academy of Higher Education",
+    city: "Manipal",
+    state: "Karnataka",
+    category: "Entrance Exams",
+    mode: "MET / Admission",
+    tuitionNote: "Category-wise tuition and hostel options per academic year",
+    branches: ["CSE", "IT", "ECE", "Mechatronics"]
+  },
+  {
+    name: "KL University (KLEF)",
+    city: "Guntur / Vijayawada",
+    state: "Andhra Pradesh",
+    category: "Entrance Exams",
+    mode: "KLEEE / Merit",
+    tuitionNote: "Merit scholarship slabs available based on qualifying score",
+    branches: ["CSE", "AI & ML", "ECE", "CSE (Cyber Security)"]
+  },
+  {
+    name: "Audisankara University",
+    city: "Gudur / Nellore",
+    state: "Andhra Pradesh",
+    category: "Application Only",
+    mode: "Direct / Counseling",
+    tuitionNote: "Transparent program fees with guidance support",
+    branches: ["CSE", "ECE", "EEE", "Mechanical"]
+  },
+  {
+    name: "Galgotias University",
+    city: "Greater Noida",
+    state: "UP",
+    category: "Application Only",
+    mode: "Merit / Application",
+    tuitionNote: "Course-wise fee schedule with scholarship eligibility check",
+    branches: ["B.Tech CSE", "BCA", "BBA", "B.Pharm"]
+  },
+  {
+    name: "Marwadi University",
+    city: "Rajkot",
+    state: "Maharashtra",
+    category: "Application Only",
+    mode: "Application / Merit",
+    tuitionNote: "Branch-specific tuition details shared upon inquiry",
+    branches: ["CSE", "ICT", "Mechanical", "MBA"]
+  },
+  {
+    name: "Woxsen / Hyderabad Partner Campuses",
+    city: "Hyderabad",
+    state: "Telangana",
+    category: "Entrance Exams",
+    mode: "Entrance / Interview",
+    tuitionNote: "Program-specific tuition and scholarship evaluation",
+    branches: ["CSE (AI & ML)", "Data Science", "B.Des", "BBA"]
+  }
+];
 
-function getOtpCodeFromBoxes(className) {
-    const boxes = Array.from(document.querySelectorAll(`.${className}`));
-    return boxes.map(b => String(b.value || '').replace(/\D/g, '')).join('');
-}
+/* ==========================================================================
+   Toast & Input Helpers
+   ========================================================================== */
 
-function clearOtpBoxes(className) {
-    document.querySelectorAll(`.${className}`).forEach(box => {
-        box.value = '';
-    });
-}
+function showToast(title, message, isError = false) {
+  const toast = document.getElementById("gtech-toast");
+  const icon = document.getElementById("gtech-toast-icon");
+  const titleEl = document.getElementById("gtech-toast-title");
+  const msgEl = document.getElementById("gtech-toast-msg");
 
-function handleOtpBoxInput(box, group, index) {
-    const cls = group === 'reg' ? 'reg-otp-box' : 'login-otp-box';
-    const cleaned = String(box.value || '').replace(/\D/g, '').slice(0, 1);
-    box.value = cleaned;
+  if (!toast || !titleEl || !msgEl) return;
 
-    const boxes = Array.from(document.querySelectorAll(`.${cls}`));
-    if (cleaned && index < boxes.length - 1) {
-        boxes[index + 1].focus();
-    }
-}
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+  if (icon) {
+    icon.textContent = isError ? "!" : "✓";
+  }
 
-function handleOtpBoxKeydown(event, group, index) {
-    const cls = group === 'reg' ? 'reg-otp-box' : 'login-otp-box';
-    const boxes = Array.from(document.querySelectorAll(`.${cls}`));
-
-    if (event.key === 'Backspace' && !boxes[index].value && index > 0) {
-        boxes[index - 1].focus();
-    } else if (event.key === 'ArrowLeft' && index > 0) {
-        boxes[index - 1].focus();
-    } else if (event.key === 'ArrowRight' && index < boxes.length - 1) {
-        boxes[index + 1].focus();
-    }
-}
-
-function startOtpCountdown(type, seconds = 60) {
-    const isReg = type === 'reg';
-    const labelEl = document.getElementById(isReg ? 'reg-otp-timer-label' : 'login-otp-timer-label');
-    const resendBtn = document.getElementById(isReg ? 'btn-resend-reg-otp' : 'btn-resend-login-otp');
-
-    if (isReg && state.regCooldownTimer) clearInterval(state.regCooldownTimer);
-    if (!isReg && state.loginCooldownTimer) clearInterval(state.loginCooldownTimer);
-
-    let remaining = seconds;
-    if (resendBtn) resendBtn.disabled = true;
-    if (labelEl) labelEl.textContent = `Resend in ${remaining}s`;
-
-    const interval = setInterval(() => {
-        remaining -= 1;
-        if (remaining > 0) {
-            if (labelEl) labelEl.textContent = `Resend in ${remaining}s`;
-        } else {
-            clearInterval(interval);
-            if (labelEl) labelEl.textContent = 'OTP expired or ready to resend';
-            if (resendBtn) resendBtn.disabled = false;
-        }
-    }, 1000);
-
-    if (isReg) {
-        state.regCooldownTimer = interval;
-        state.regCooldownSeconds = seconds;
-    } else {
-        state.loginCooldownTimer = interval;
-        state.loginCooldownSeconds = seconds;
-    }
-}
-
-// --- REFERRAL CODE CAPTURE (FOR REGISTRATION FIELD) ---
-function detectIncomingReferralLink() {
-    const params = new URLSearchParams(window.location.search);
-    const refParam = params.get('ref');
-    if (refParam) {
-        const cleanCode = refParam.trim().toUpperCase();
-        state.incomingReferralCode = cleanCode;
-        localStorage.setItem('gtech_incoming_ref', cleanCode);
-    } else {
-        const savedRef = localStorage.getItem('gtech_incoming_ref');
-        if (savedRef) state.incomingReferralCode = savedRef;
-    }
-
-    if (state.incomingReferralCode) {
-        const banner = document.getElementById('referral-applied-banner');
-        const bannerCode = document.getElementById('banner-ref-code');
-        if (banner && bannerCode) {
-            bannerCode.textContent = state.incomingReferralCode;
-            banner.classList.remove('hidden');
-        }
-        const regRefInput = document.getElementById('reg-referral');
-        if (regRefInput && !regRefInput.value) {
-            regRefInput.value = state.incomingReferralCode;
-        }
-    }
-}
-
-// --- TOAST NOTIFICATIONS ---
-let toastTimeout;
-function showToast(title, message, type = 'success') {
-    const toast = document.getElementById('gtech-toast');
-    const icon = document.getElementById('gtech-toast-icon');
-    const titleEl = document.getElementById('gtech-toast-title');
-    const msgEl = document.getElementById('gtech-toast-msg');
-
-    if (!toast) return;
-
-    titleEl.textContent = title;
-    msgEl.textContent = message;
-
-    if (type === 'error') {
-        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-900 border border-rose-500/60 text-white shadow-2xl shadow-rose-500/10 sm:max-w-sm transition-all duration-300';
-        icon.className = 'w-8 h-8 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 font-bold text-sm';
-        icon.textContent = '!';
-    } else {
-        toast.className = 'fixed bottom-4 right-4 left-4 sm:left-auto z-[100] flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-900 border border-emerald-500/60 text-white shadow-2xl shadow-emerald-500/10 sm:max-w-sm transition-all duration-300';
-        icon.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm';
-        icon.textContent = '✓';
-    }
-
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        hideToast();
-    }, 4500);
+  toast.classList.remove("hidden");
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => {
+    hideToast();
+  }, 4500);
 }
 
 function hideToast() {
-    const toast = document.getElementById('gtech-toast');
-    if (toast) toast.classList.add('hidden');
+  const toast = document.getElementById("gtech-toast");
+  if (toast) toast.classList.add("hidden");
 }
 
-// --- CAROUSEL ---
-function nextSlide() {
-    const carousel = document.getElementById('about-carousel');
-    if (!carousel) return;
-    const slidesCount = carousel.children.length;
-    if (slidesCount <= 1) return;
-    state.currentSlide = (state.currentSlide + 1) % slidesCount;
-    carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
+function sanitizeNumericInput(inputEl, maxLen = 15) {
+  if (!inputEl) return;
+  inputEl.value = inputEl.value.replace(/\D+/g, "").slice(0, maxLen);
 }
 
-function prevSlide() {
-    const carousel = document.getElementById('about-carousel');
-    if (!carousel) return;
-    const slidesCount = carousel.children.length;
-    if (slidesCount <= 1) return;
-    state.currentSlide = (state.currentSlide - 1 + slidesCount) % slidesCount;
-    carousel.style.transform = `translateX(-${state.currentSlide * 100}%)`;
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
 }
 
-async function loadActiveCarousel() {
-    const carousel = document.getElementById('about-carousel');
-    if (!carousel) return;
+function normalizeReferralCode(code) {
+  return String(code || "").trim().toUpperCase().replace(/\s+/g, "");
+}
 
-    const { data, error } = await _supabase
-        .from('carousel_images')
-        .select('*')
-        .eq('is_active', true)
-        .order('id', { ascending: true });
+function generateStudentId() {
+  const randomPart = Math.floor(100000 + Math.random() * 900000);
+  return `GTA26-${randomPart}`;
+}
 
-    const defaultSlides = [
-        {
-            id: 1,
-            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
-            title: 'GTech Carousel Slide 1'
-        },
-        {
-            id: 2,
-            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
-            title: 'GTech Carousel Slide 2'
-        }
-    ];
+function generateUniqueReferralCode(studentName) {
+  const cleanPrefix = String(studentName || "GTECH")
+    .replace(/[^a-zA-Z]/g, "")
+    .toUpperCase()
+    .slice(0, 4)
+    .padEnd(4, "X");
+  const suffix = Math.floor(1000 + Math.random() * 9000);
+  return `GT${cleanPrefix}${suffix}`;
+}
 
-    let slides = (!error && data && data.length > 0) ? [...data] : defaultSlides;
-    if (slides.length === 1) {
-        slides.push(defaultSlides[1]);
+/* ==========================================================================
+   Header, Profile Dropdown & Session State
+   ========================================================================== */
+
+function syncHeaderAndSessionUI() {
+  const guestBox = document.getElementById("guest-header-actions");
+  const profileMenu = document.getElementById("student-profile-menu");
+  const headerName = document.getElementById("header-student-name");
+  const dropdownName = document.getElementById("dropdown-student-name");
+  const dropdownId = document.getElementById("dropdown-student-id");
+
+  if (activeStudentSession && activeStudentSession.email) {
+    if (guestBox) guestBox.classList.add("hidden");
+    if (profileMenu) profileMenu.classList.remove("hidden");
+
+    const displayName = activeStudentSession.full_name || "Student";
+    const displayId = activeStudentSession.student_id || "—";
+
+    if (headerName) headerName.textContent = displayName;
+    if (dropdownName) dropdownName.textContent = displayName;
+    if (dropdownId) dropdownId.textContent = `ID: ${displayId}`;
+  } else {
+    if (guestBox) guestBox.classList.remove("hidden");
+    if (profileMenu) profileMenu.classList.add("hidden");
+    const panel = document.getElementById("profile-dropdown-panel");
+    if (panel) panel.classList.add("hidden");
+  }
+}
+
+function toggleProfileDropdown(event) {
+  if (event) event.stopPropagation();
+  const panel = document.getElementById("profile-dropdown-panel");
+  const trigger = document.getElementById("profile-menu-trigger");
+  if (!panel) return;
+
+  const isHidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden", !isHidden);
+  if (trigger) {
+    trigger.setAttribute("aria-expanded", String(isHidden));
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const menu = document.getElementById("student-profile-menu");
+  const panel = document.getElementById("profile-dropdown-panel");
+  if (menu && panel && !menu.contains(event.target)) {
+    panel.classList.add("hidden");
+    const trigger = document.getElementById("profile-menu-trigger");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  }
+});
+
+async function handleStudentLogout() {
+  try {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
     }
-
-    state.currentSlide = 0;
-    carousel.style.transform = 'translateX(0%)';
-    carousel.innerHTML = slides.map(slide => `
-        <div class="w-full h-full shrink-0 relative">
-            <img src="${slide.image_url}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
-        </div>
-    `).join('');
-}
-
-// --- UNIVERSITIES & CATALOG ---
-async function fetchUniversitiesFromSupabase() {
-    const { data, error } = await _supabase.from('universities').select('*');
-    if (error) {
-        console.error('Error fetching universities:', error.message);
-        return;
-    }
-    state.universities = data || [];
-    renderUniversities();
-}
-
-async function fetchInquiriesFromSupabase() {
-    const { data, error } = await _supabase.from('inquiries').select('*').order('created_at', { ascending: false });
-    if (!error) state.inquiries = data || [];
-}
-
-function setStateFilter(stateName) {
-    state.stateFilter = stateName;
-    document.querySelectorAll('.state-btn').forEach(btn => {
-        if (btn.getAttribute('data-state') === stateName) {
-            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition whitespace-nowrap shrink-0';
-        } else {
-            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-900 border border-blue-800 text-blue-100 hover:bg-blue-800 transition whitespace-nowrap shrink-0';
-        }
-    });
-    renderUniversities();
-}
-
-function renderUniversities() {
-    const grid = document.getElementById('universities-grid');
-    const searchInput = document.getElementById('uni-search');
-    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-
-    const filtered = state.universities.filter(uni => {
-        let matchesState = true;
-        if (state.stateFilter === 'Entrance Exams') {
-            matchesState = uni.admission_type === 'Entrance Exam Required';
-        } else if (state.stateFilter === 'Application Only') {
-            matchesState = uni.admission_type === 'Application Only';
-        } else if (state.stateFilter !== 'ALL') {
-            matchesState = uni.state === state.stateFilter;
-        }
-
-        const matchesQuery =
-            uni.name.toLowerCase().includes(query) ||
-            (uni.location && uni.location.toLowerCase().includes(query)) ||
-            (uni.address && uni.address.toLowerCase().includes(query)) ||
-            uni.state.toLowerCase().includes(query);
-        return matchesState && matchesQuery;
-    });
-
-    if (!grid) return;
-
-    if (filtered.length === 0) {
-        grid.innerHTML = `
-            <div class="col-span-full py-12 text-center bg-blue-900 rounded-2xl border border-blue-800">
-                <p class="text-blue-200/80 font-semibold text-xs">No universities match your filter in this category.</p>
-            </div>
-        `;
-        return;
-    }
-
-    grid.innerHTML = filtered.map(uni => {
-        let branchRows = '';
-        const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
-        for (const [branch, fee] of Object.entries(branches)) {
-            branchRows += `
-                <div class="flex justify-between items-center py-1 border-b border-blue-900 text-[11px]">
-                    <span class="text-blue-100 font-bold">${branch}</span>
-                    <span class="text-emerald-400 font-extrabold">₹${Number(fee).toLocaleString('en-IN')}/yr</span>
-                </div>
-            `;
-        }
-
-        const badgeType = uni.admission_type || 'Direct Admission Open';
-        let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-        if (badgeType === 'Entrance Exam Required') badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-        if (badgeType === 'Application Only') badgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/40';
-
-        const safeUniName = uni.name.replace(/'/g, "\\'");
-
-        return `
-            <div class="bg-blue-900/85 rounded-3xl border border-blue-800 overflow-hidden shadow-xl hover:border-sky-400/50 transition duration-300 flex flex-col justify-between">
-                <div>
-                    <div class="relative aspect-[16/9] w-full overflow-hidden bg-blue-950">
-                        <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
-                        <div class="absolute inset-0 bg-gradient-to-t from-blue-950/85 via-transparent to-transparent"></div>
-                        <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-blue-950/90 backdrop-blur-md text-sky-300 border border-blue-800">${uni.state}</span>
-                        <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
-                            <span class="text-[10px] font-mono font-bold text-white bg-blue-950/90 backdrop-blur-md px-2 py-0.5 rounded-lg border border-blue-800">NIRF #${uni.nirf || 50}</span>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border backdrop-blur-md ${badgeClass}">${badgeType}</span>
-                        </div>
-                    </div>
-
-                    <div class="p-4 sm:p-5">
-                        <h3 class="font-black text-base text-white leading-snug">${uni.name}</h3>
-                        <p class="text-xs text-blue-200/80 mt-1 flex items-start gap-1.5">
-                            <i class="fa-solid fa-location-dot text-sky-400 mt-0.5 shrink-0"></i>
-                            <span>${uni.address}</span>
-                        </p>
-
-                        <div class="mt-4 p-3 rounded-2xl bg-blue-950/95 border border-blue-800">
-                            <p class="text-[11px] font-bold text-sky-300 mb-2 uppercase tracking-wide">Branch Tuition Fees (Per Year):</p>
-                            <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
-                                ${branchRows}
-                            </div>
-                        </div>
-
-                        <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                            <div class="p-2.5 rounded-xl bg-blue-950 border border-blue-800">
-                                <span class="text-[10px] text-blue-300/75 block">Hostel Fee</span>
-                                <strong class="text-amber-300 text-xs">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</strong>
-                            </div>
-                            <div class="p-2.5 rounded-xl bg-blue-950 border border-blue-800">
-                                <span class="text-[10px] text-blue-300/75 block">Application Fee</span>
-                                <strong class="text-sky-300 text-xs">₹${Number(uni.application_fee).toLocaleString('en-IN')}</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-4 sm:p-5 pt-0">
-                    <button type="button" onclick="selectUniForGuidance('${safeUniName}')" class="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition">
-                        <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Expert Call
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function focusGuidanceSection(assistanceType) {
-    const assistSelect = document.getElementById('guide-assistance');
-    if (assistSelect && assistanceType) {
-        assistSelect.value = assistanceType;
-    }
-    prefillGuidanceFormWithStudent();
-    document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' });
-}
-
-function selectUniForGuidance(uniName) {
-    const uniInput = document.getElementById('guide-uni');
-    if (uniInput) {
-        uniInput.value = uniName;
-    }
-    prefillGuidanceFormWithStudent();
-    document.getElementById('apply')?.scrollIntoView({ behavior: 'smooth' });
-}
-
-function prefillGuidanceFormWithStudent() {
-    if (!state.currentStudent) return;
-    const nameEl = document.getElementById('guide-name');
-    const phoneEl = document.getElementById('guide-phone');
-    const emailEl = document.getElementById('guide-email');
-    if (nameEl && !nameEl.value) nameEl.value = state.currentStudent.full_name || '';
-    if (phoneEl && !phoneEl.value) phoneEl.value = state.currentStudent.mobile || '';
-    if (emailEl && !emailEl.value) emailEl.value = state.currentStudent.email || '';
-}
-
-// --- 5. GET SCHOLARSHIP, LOAN GUIDANCE & EXPERT CALLBACK SUBMISSION ---
-async function handleGuidanceSubmission(e) {
-    e.preventDefault();
-    const submitBtn = document.getElementById('btn-submit-guidance');
-
-    const name = document.getElementById('guide-name').value.trim();
-    const phone = document.getElementById('guide-phone').value.replace(/\D+/g, '').trim();
-    const email = document.getElementById('guide-email').value.trim().toLowerCase();
-    const course = document.getElementById('guide-course').value;
-    const preferredUni = document.getElementById('guide-uni').value.trim();
-    const assistanceType = document.getElementById('guide-assistance').value;
-
-    if (!name || !phone || !email || !course || !assistanceType) {
-        showToast('Missing Details', 'Please fill out all required fields.', 'error');
-        return;
-    }
-
-    const payload = {
-        id: Date.now(),
-        name,
-        phone,
-        email,
-        branch: course,
-        uni: preferredUni || 'Not Specified',
-        assistance_type: assistanceType,
-        referral_code: state.currentStudent?.referred_by_code || state.incomingReferralCode || null,
-        status: 'Pending Callback'
-    };
-
-    try {
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Submitting Request...';
-        }
-
-        let { error } = await _supabase.from('inquiries').insert([payload]);
-
-        if (error && error.message && error.message.includes('assistance_type')) {
-            const { assistance_type, ...fallbackPayload } = payload;
-            const fallbackRes = await _supabase.from('inquiries').insert([{
-                ...fallbackPayload,
-                jee_score: assistanceType
-            }]);
-            error = fallbackRes.error;
-        }
-
-        if (error) {
-            showToast('Submission Error', error.message, 'error');
-            return;
-        }
-
-        state.inquiries.unshift(payload);
-        showToast('Guidance Request Received', 'Our GTECH team will contact you shortly for your guidance request.', 'success');
-        e.target.reset();
-        prefillGuidanceFormWithStudent();
-    } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'GET FREE EXPERT GUIDANCE';
-        }
-    }
-}
-
-// --- AUTH MODAL & OTP HANDLERS ---
-function openAuthModal(mode = 'register') {
-    const modal = document.getElementById('student-auth-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    switchStudentAuthMode(mode);
-}
-
-function closeAuthModal() {
-    const modal = document.getElementById('student-auth-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-}
-
-function switchStudentAuthMode(mode) {
-    const regView = document.getElementById('register-view');
-    const loginView = document.getElementById('login-view');
-    const regTab = document.getElementById('mode-tab-register');
-    const loginTab = document.getElementById('mode-tab-login');
-
-    document.getElementById('reg-error-msg').classList.add('hidden');
-    document.getElementById('login-error-msg').classList.add('hidden');
-
-    if (mode === 'login') {
-        regView.classList.add('hidden');
-        loginView.classList.remove('hidden');
-        loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-blue-600 text-white transition';
-        regTab.className = 'flex-1 py-2 px-3 rounded-xl text-blue-200/80 hover:text-white transition';
-    } else {
-        loginView.classList.add('hidden');
-        regView.classList.remove('hidden');
-        regTab.className = 'flex-1 py-2 px-3 rounded-xl bg-blue-600 text-white transition';
-        loginTab.className = 'flex-1 py-2 px-3 rounded-xl text-blue-200/80 hover:text-white transition';
-        if (state.incomingReferralCode) {
-            const refInput = document.getElementById('reg-referral');
-            if (refInput && !refInput.value) refInput.value = state.incomingReferralCode;
-        }
-    }
-}
-
-function showInlineError(elId, message) {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    el.textContent = message;
-    el.classList.remove('hidden');
-}
-
-async function isEmailAlreadyRegistered(email) {
-    const { data, error } = await _supabase
-        .from('student_profiles')
-        .select('id, email')
-        .eq('email', email)
-        .maybeSingle();
-    if (error) return false;
-    return Boolean(data && data.email);
-}
-
-async function requestEmailOtp(email, purpose) {
-    if (OTP_BACKEND_URL) {
-        const res = await fetch(`${OTP_BACKEND_URL}/send-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, purpose })
-        });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            throw new Error(body.message || 'Unable to send OTP right now.');
-        }
-        return { viaBackend: true };
-    }
-
-    const { error } = await _supabase.auth.signInWithOtp({
-        email,
-        options: {
-            shouldCreateUser: true,
-            emailRedirectTo: window.location.origin + window.location.pathname
-        }
-    });
-    if (error) throw new Error(error.message);
-    return { viaBackend: false };
-}
-
-async function verifyEmailOtpCode(email, code, purpose) {
-    if (OTP_BACKEND_URL) {
-        const res = await fetch(`${OTP_BACKEND_URL}/verify-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code, purpose })
-        });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok || !body.verified) {
-            throw new Error(body.message || 'Invalid or expired OTP code.');
-        }
-        return body;
-    }
-
-    const { data, error } = await _supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: 'email'
-    });
-    if (error) throw new Error(error.message);
-    return { verified: true, user: data?.user || null };
-}
-
-// --- 1. REGISTRATION FLOW ---
-async function handleSendRegistrationOtp(e) {
-    if (e) e.preventDefault();
-    const errId = 'reg-error-msg';
-    document.getElementById(errId).classList.add('hidden');
-
-    const fullName = document.getElementById('reg-name').value.trim();
-    const phone = document.getElementById('reg-phone').value.replace(/\D+/g, '').trim();
-    const email = document.getElementById('reg-email').value.trim().toLowerCase();
-    const referralCode = document.getElementById('reg-referral').value.trim().toUpperCase();
-    const sendBtn = document.getElementById('btn-send-reg-otp');
-
-    if (!fullName || !phone || !email) {
-        showInlineError(errId, 'Student Name, Phone Number, and Email Address are required.');
-        return;
-    }
-
-    if (phone.length < 10) {
-        showInlineError(errId, 'Please enter a valid mobile number.');
-        return;
-    }
-
-    try {
-        sendBtn.disabled = true;
-        sendBtn.querySelector('span').textContent = 'Checking & Sending...';
-
-        const exists = await isEmailAlreadyRegistered(email);
-        if (exists) {
-            showInlineError(errId, 'This email address is already registered. Please use Email Login.');
-            return;
-        }
-
-        state.pendingRegistration = {
-            full_name: fullName,
-            mobile: phone,
-            email,
-            referred_by_code: referralCode || state.incomingReferralCode || null
-        };
-        localStorage.setItem('gtech_pending_reg', JSON.stringify(state.pendingRegistration));
-
-        await requestEmailOtp(email, 'register');
-        clearOtpBoxes('reg-otp-box');
-        document.getElementById('reg-otp-panel').classList.remove('hidden');
-        document.querySelector('.reg-otp-box')?.focus();
-        startOtpCountdown('reg', 60);
-        showToast('OTP Sent', `A 6-digit verification OTP has been sent to ${email}.`, 'success');
-    } catch (err) {
-        showInlineError(errId, err.message || 'Failed to send verification OTP.');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.querySelector('span').textContent = 'SEND OTP';
-    }
-}
-
-async function handleVerifyRegistrationOtp() {
-    const errId = 'reg-error-msg';
-    document.getElementById(errId).classList.add('hidden');
-
-    const code = getOtpCodeFromBoxes('reg-otp-box');
-    const regData = state.pendingRegistration || JSON.parse(localStorage.getItem('gtech_pending_reg') || 'null');
-    const verifyBtn = document.getElementById('btn-verify-reg-otp');
-
-    if (!regData || !regData.email) {
-        showInlineError(errId, 'Please enter your registration details and click SEND OTP first.');
-        return;
-    }
-
-    if (!/^\d{6}$/.test(code)) {
-        showInlineError(errId, 'Please enter all 6 digits of the email OTP.');
-        return;
-    }
-
-    try {
-        verifyBtn.disabled = true;
-        verifyBtn.textContent = 'Verifying...';
-
-        const alreadyExists = await isEmailAlreadyRegistered(regData.email);
-        if (alreadyExists) {
-            showInlineError(errId, 'This email is already registered. Switch to Email Login to sign in.');
-            return;
-        }
-
-        await verifyEmailOtpCode(regData.email, code, 'register');
-
-        const studentId = `GTECH-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
-        const newStudent = {
-            id: studentId,
-            student_id: studentId,
-            full_name: regData.full_name,
-            mobile: regData.mobile,
-            email: regData.email,
-            referred_by_code: regData.referred_by_code || null
-        };
-
-        let { data: inserted, error } = await _supabase
-            .from('student_profiles')
-            .insert([newStudent])
-            .select()
-            .maybeSingle();
-
-        if (error && error.message && error.message.includes('student_id')) {
-            const { student_id, ...fallbackStudent } = newStudent;
-            const retry = await _supabase
-                .from('student_profiles')
-                .insert([fallbackStudent])
-                .select()
-                .maybeSingle();
-            inserted = retry.data;
-            error = retry.error;
-        }
-
-        if (error) {
-            if (error.code === '23505' || (error.message && error.message.toLowerCase().includes('duplicate'))) {
-                showInlineError(errId, 'An account with this email already exists. Please login instead.');
-                return;
-            }
-            throw new Error(error.message);
-        }
-
-        const profile = inserted || newStudent;
-        profile.student_id = profile.student_id || profile.id || studentId;
-
-        state.currentStudent = profile;
-        state.pendingRegistration = null;
-        localStorage.removeItem('gtech_pending_reg');
-        localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-
-        updateHeaderForLoggedInStudent(profile);
-        prefillGuidanceFormWithStudent();
-
-        document.getElementById('student-register-form').classList.add('hidden');
-        document.getElementById('reg-otp-panel').classList.add('hidden');
-        document.getElementById('generated-student-id-display').textContent = profile.student_id;
-        document.getElementById('reg-success-panel').classList.remove('hidden');
-
-        showToast('Registration Successful', `Student ID ${profile.student_id} generated!`, 'success');
-    } catch (err) {
-        showInlineError(errId, err.message || 'Invalid OTP code.');
-    } finally {
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verify & Complete Registration';
-    }
-}
-
-// --- 2. EMAIL-ONLY LOGIN FLOW ---
-async function handleSendLoginOtp(e) {
-    if (e) e.preventDefault();
-    const errId = 'login-error-msg';
-    document.getElementById(errId).classList.add('hidden');
-
-    const email = document.getElementById('login-email').value.trim().toLowerCase();
-    const sendBtn = document.getElementById('btn-send-login-otp');
-
-    if (!email) {
-        showInlineError(errId, 'Please enter your registered email address.');
-        return;
-    }
-
-    try {
-        sendBtn.disabled = true;
-        sendBtn.querySelector('span').textContent = 'Checking Email...';
-
-        const { data: profile, error } = await _supabase
-            .from('student_profiles')
-            .select('*')
-            .eq('email', email)
-            .maybeSingle();
-
-        if (error || !profile) {
-            showInlineError(errId, 'This email is not registered with GTECH. Please register first.');
-            return;
-        }
-
-        state.pendingLoginEmail = email;
-        await requestEmailOtp(email, 'login');
-        clearOtpBoxes('login-otp-box');
-        document.getElementById('login-otp-panel').classList.remove('hidden');
-        document.querySelector('.login-otp-box')?.focus();
-        startOtpCountdown('login', 60);
-        showToast('Login OTP Sent', `A 6-digit login OTP has been sent to ${email}.`, 'success');
-    } catch (err) {
-        showInlineError(errId, err.message || 'Could not send login OTP.');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.querySelector('span').textContent = 'SEND LOGIN OTP';
-    }
-}
-
-async function handleVerifyLoginOtp() {
-    const errId = 'login-error-msg';
-    document.getElementById(errId).classList.add('hidden');
-
-    const email = (document.getElementById('login-email').value || state.pendingLoginEmail || '').trim().toLowerCase();
-    const code = getOtpCodeFromBoxes('login-otp-box');
-    const verifyBtn = document.getElementById('btn-verify-login-otp');
-
-    if (!email) {
-        showInlineError(errId, 'Please enter your registered email address.');
-        return;
-    }
-
-    if (!/^\d{6}$/.test(code)) {
-        showInlineError(errId, 'Please enter the 6-digit OTP sent to your email.');
-        return;
-    }
-
-    try {
-        verifyBtn.disabled = true;
-        verifyBtn.textContent = 'Verifying...';
-
-        const { data: profile, error } = await _supabase
-            .from('student_profiles')
-            .select('*')
-            .eq('email', email)
-            .maybeSingle();
-
-        if (error || !profile) {
-            showInlineError(errId, 'Unregistered email address. Please register first.');
-            return;
-        }
-
-        await verifyEmailOtpCode(email, code, 'login');
-
-        profile.student_id = profile.student_id || profile.id || 'GTECH-MEMBER';
-        state.currentStudent = profile;
-        localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-
-        updateHeaderForLoggedInStudent(profile);
-        prefillGuidanceFormWithStudent();
-        closeAuthModal();
-        await openStudentDashboardModal();
-        showToast('Welcome Back', `Signed in as ${profile.full_name}.`, 'success');
-    } catch (err) {
-        showInlineError(errId, err.message || 'Invalid OTP code.');
-    } finally {
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verify & Open Dashboard';
-    }
-}
-
-function listenToAuthChanges() {
-    _supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-            state.authUser = session.user;
-            const email = (session.user.email || '').trim().toLowerCase();
-            if (!email) return;
-
-            const { data: profile } = await _supabase
-                .from('student_profiles')
-                .select('*')
-                .eq('email', email)
-                .maybeSingle();
-
-            if (profile) {
-                profile.student_id = profile.student_id || profile.id || 'GTECH-MEMBER';
-                state.currentStudent = profile;
-                localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-                updateHeaderForLoggedInStudent(profile);
-                prefillGuidanceFormWithStudent();
-            }
-        } else if (event === 'SIGNED_OUT') {
-            state.authUser = null;
-            state.currentStudent = null;
-            state.financeRecord = null;
-            localStorage.removeItem('gtech_student_session');
-            resetHeaderToLoggedOut();
-        }
-    });
+  } catch (err) {
+    console.warn("Sign out warning:", err);
+  }
+
+  activeStudentSession = null;
+  pendingRegistrationData = null;
+  pendingLoginEmail = "";
+  localStorage.removeItem(SESSION_STORAGE_KEY);
+
+  closeStudentDashboardModal();
+  closeAuthModal();
+  syncHeaderAndSessionUI();
+  showToast("Logged Out", "You have been logged out of the GTech student portal.");
 }
 
 async function restoreStudentSession() {
-    const { data } = await _supabase.auth.getSession();
-    if (data?.session?.user?.email) {
-        const email = data.session.user.email.trim().toLowerCase();
-        const { data: profile } = await _supabase
-            .from('student_profiles')
-            .select('*')
-            .eq('email', email)
-            .maybeSingle();
-        if (profile) {
-            profile.student_id = profile.student_id || profile.id || 'GTECH-MEMBER';
-            state.currentStudent = profile;
-            localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-            updateHeaderForLoggedInStudent(profile);
-            prefillGuidanceFormWithStudent();
-            return;
+  try {
+    const savedRaw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (savedRaw) {
+      const parsed = JSON.parse(savedRaw);
+      if (parsed && parsed.email) {
+        activeStudentSession = parsed;
+      }
+    }
+
+    if (supabaseClient) {
+      const { data } = await supabaseClient.auth.getSession();
+      const authUser = data && data.session ? data.session.user : null;
+      if (authUser && authUser.email) {
+        const profile = await fetchOrCreateStudentProfile(authUser.email, authUser.user_metadata || {});
+        activeStudentSession = profile;
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(profile));
+      }
+    }
+  } catch (err) {
+    console.warn("Session restore note:", err);
+  }
+
+  syncHeaderAndSessionUI();
+}
+
+/* ==========================================================================
+   Referral Link Auto-Fill & Validation
+   ========================================================================== */
+
+function clearReferralValidationState() {
+  validatedReferralRecord = null;
+  const statusEl = document.getElementById("reg-referral-status");
+  if (statusEl) {
+    statusEl.textContent = "";
+    statusEl.className = "field-hint hidden";
+  }
+}
+
+function captureReferralFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const rawCode = params.get("ref") || params.get("referral") || params.get("code") || "";
+  const normalized = normalizeReferralCode(rawCode);
+
+  if (normalized) {
+    localStorage.setItem(PENDING_REF_STORAGE_KEY, normalized);
+    applyReferralCodeToRegistration(normalized);
+  } else {
+    const stored = normalizeReferralCode(localStorage.getItem(PENDING_REF_STORAGE_KEY) || "");
+    if (stored) {
+      applyReferralCodeToRegistration(stored);
+    }
+  }
+}
+
+function applyReferralCodeToRegistration(code) {
+  const cleanCode = normalizeReferralCode(code);
+  if (!cleanCode) return;
+
+  const refInput = document.getElementById("reg-referral");
+  const banner = document.getElementById("referral-applied-banner");
+  const bannerCode = document.getElementById("banner-ref-code");
+
+  if (refInput) {
+    refInput.value = cleanCode;
+  }
+  if (banner && bannerCode) {
+    bannerCode.textContent = cleanCode;
+    banner.classList.remove("hidden");
+  }
+}
+
+async function validateMandatoryReferralCode(rawCode, applicantEmail) {
+  const code = normalizeReferralCode(rawCode);
+  const cleanEmail = normalizeEmail(applicantEmail);
+  const statusEl = document.getElementById("reg-referral-status");
+
+  if (!code) {
+    throw new Error("Referral code is mandatory for registration.");
+  }
+
+  if (!supabaseClient) {
+    throw new Error("Unable to verify referral code right now. Please try again.");
+  }
+
+  // Look up genuine referral owner in student_profiles by referral_code
+  const { data: referrer, error } = await supabaseClient
+    .from("student_profiles")
+    .select("student_id, full_name, email, referral_code")
+    .ilike("referral_code", code)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("Could not validate referral code against database records.");
+  }
+
+  if (!referrer || !referrer.referral_code) {
+    validatedReferralRecord = null;
+    if (statusEl) {
+      statusEl.textContent = "Invalid referral code. Please enter a verified student referral code.";
+      statusEl.className = "field-hint field-hint-invalid";
+    }
+    throw new Error("Invalid referral code. Registration requires a valid referral code.");
+  }
+
+  // Prevent self-referral
+  if (cleanEmail && normalizeEmail(referrer.email) === cleanEmail) {
+    validatedReferralRecord = null;
+    if (statusEl) {
+      statusEl.textContent = "Self-referral is not allowed. Please use another student's referral code.";
+      statusEl.className = "field-hint field-hint-invalid";
+    }
+    throw new Error("You cannot use your own referral code.");
+  }
+
+  validatedReferralRecord = referrer;
+  if (statusEl) {
+    statusEl.textContent = `Valid referral code (${referrer.referral_code}).`;
+    statusEl.className = "field-hint field-hint-valid";
+  }
+
+  return referrer;
+}
+
+/* ==========================================================================
+   Auth Modal, Registration OTP & Login OTP
+   ========================================================================== */
+
+function openAuthModal(defaultMode = "register") {
+  const modal = document.getElementById("student-auth-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  switchStudentAuthMode(defaultMode);
+  const storedRef = normalizeReferralCode(localStorage.getItem(PENDING_REF_STORAGE_KEY) || "");
+  if (storedRef) {
+    applyReferralCodeToRegistration(storedRef);
+  }
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById("student-auth-modal");
+  if (modal) modal.classList.add("hidden");
+}
+
+function switchStudentAuthMode(mode) {
+  const isRegister = mode === "register";
+  const regTab = document.getElementById("mode-tab-register");
+  const loginTab = document.getElementById("mode-tab-login");
+  const regView = document.getElementById("register-view");
+  const loginView = document.getElementById("login-view");
+
+  if (regTab) regTab.classList.toggle("is-active", isRegister);
+  if (loginTab) loginTab.classList.toggle("is-active", !isRegister);
+  if (regView) regView.classList.toggle("hidden", !isRegister);
+  if (loginView) loginView.classList.toggle("hidden", isRegister);
+}
+
+function setFormError(elementId, message) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (message) {
+    el.textContent = message;
+    el.classList.remove("hidden");
+  } else {
+    el.textContent = "";
+    el.classList.add("hidden");
+  }
+}
+
+function startOtpCountdown(group) {
+  const isReg = group === "reg";
+  const labelId = isReg ? "reg-otp-timer-label" : "login-otp-timer-label";
+  const btnId = isReg ? "btn-resend-reg-otp" : "btn-resend-login-otp";
+
+  if (isReg && regOtpTimerId) clearInterval(regOtpTimerId);
+  if (!isReg && loginOtpTimerId) clearInterval(loginOtpTimerId);
+
+  let remaining = 60;
+  const labelEl = document.getElementById(labelId);
+  const btnEl = document.getElementById(btnId);
+
+  if (btnEl) btnEl.disabled = true;
+  if (labelEl) labelEl.textContent = `Resend in ${remaining}s`;
+
+  const intervalId = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      clearInterval(intervalId);
+      if (labelEl) labelEl.textContent = "You can resend OTP now";
+      if (btnEl) btnEl.disabled = false;
+    } else if (labelEl) {
+      labelEl.textContent = `Resend in ${remaining}s`;
+    }
+  }, 1000);
+
+  if (isReg) regOtpTimerId = intervalId;
+  else loginOtpTimerId = intervalId;
+}
+
+function handleOtpBoxInput(inputEl, group, index) {
+  inputEl.value = inputEl.value.replace(/\D+/g, "").slice(0, 1);
+  const boxes = document.querySelectorAll(`.${group}-otp-box`);
+  if (inputEl.value && index < boxes.length - 1) {
+    boxes[index + 1].focus();
+  }
+}
+
+function handleOtpBoxKeydown(event, group, index) {
+  const boxes = document.querySelectorAll(`.${group}-otp-box`);
+  if (event.key === "Backspace" && !event.currentTarget.value && index > 0) {
+    boxes[index - 1].focus();
+  }
+}
+
+function collectOtpCode(group) {
+  const boxes = document.querySelectorAll(`.${group}-otp-box`);
+  return Array.from(boxes)
+    .map((box) => box.value.trim())
+    .join("");
+}
+
+function clearOtpBoxes(group) {
+  const boxes = document.querySelectorAll(`.${group}-otp-box`);
+  boxes.forEach((box) => {
+    box.value = "";
+  });
+}
+
+async function handleSendRegistrationOtp(event) {
+  if (event) event.preventDefault();
+  setFormError("reg-error-msg", "");
+
+  const name = String(document.getElementById("reg-name")?.value || "").trim();
+  const phone = String(document.getElementById("reg-phone")?.value || "").trim();
+  const email = normalizeEmail(document.getElementById("reg-email")?.value || "");
+  const referralCode = normalizeReferralCode(document.getElementById("reg-referral")?.value || "");
+
+  if (!name || !phone || !email || !referralCode) {
+    setFormError("reg-error-msg", "Please fill in Name, Phone Number, Email Address, and a valid Referral Code.");
+    return;
+  }
+
+  if (phone.length < 10) {
+    setFormError("reg-error-msg", "Please enter a valid phone number.");
+    return;
+  }
+
+  const sendBtn = document.getElementById("btn-send-reg-otp");
+  if (sendBtn) sendBtn.disabled = true;
+
+  try {
+    const referrer = await validateMandatoryReferralCode(referralCode, email);
+
+    if (!supabaseClient) {
+      throw new Error("Authentication service is unavailable.");
+    }
+
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        data: {
+          full_name: name,
+          phone,
+          referred_by_code: referrer.referral_code
         }
-    }
-
-    const saved = localStorage.getItem('gtech_student_session');
-    if (saved) {
-        try {
-            const profile = JSON.parse(saved);
-            state.currentStudent = profile;
-            updateHeaderForLoggedInStudent(profile);
-            prefillGuidanceFormWithStudent();
-        } catch (_) {
-            localStorage.removeItem('gtech_student_session');
-        }
-    }
-}
-
-async function handleStudentLogout() {
-    await _supabase.auth.signOut().catch(() => {});
-    state.authUser = null;
-    state.currentStudent = null;
-    state.financeRecord = null;
-    localStorage.removeItem('gtech_student_session');
-    resetHeaderToLoggedOut();
-    closeStudentDashboardModal();
-    showToast('Logged Out', 'You have signed out of your student portal.', 'success');
-}
-
-function resetHeaderToLoggedOut() {
-    const dashBtn = document.getElementById('header-dashboard-btn');
-    const loginBtn = document.getElementById('header-login-btn');
-    if (dashBtn && loginBtn) {
-        dashBtn.classList.add('hidden');
-        loginBtn.classList.remove('hidden');
-    }
-}
-
-function updateHeaderForLoggedInStudent(profile) {
-    const dashBtn = document.getElementById('header-dashboard-btn');
-    const loginBtn = document.getElementById('header-login-btn');
-    const nameSpan = document.getElementById('header-student-name');
-    if (dashBtn && loginBtn && nameSpan) {
-        dashBtn.classList.remove('hidden');
-        loginBtn.classList.add('hidden');
-        nameSpan.textContent = profile.full_name || 'Dashboard';
-    }
-}
-
-// --- 3 & 4. STUDENT DASHBOARD (WELCOME BANNER + PRIVATE AMOUNT DETAILS) ---
-function formatINR(value) {
-    const num = Number(value || 0);
-    return `₹${num.toLocaleString('en-IN')}`;
-}
-
-async function fetchStudentFinancialDetails(student) {
-    if (!student || !student.email) return null;
-
-    const { data, error } = await _supabase
-        .from('student_finances')
-        .select('*')
-        .eq('email', student.email.toLowerCase())
-        .maybeSingle();
+      }
+    });
 
     if (error) {
-        console.warn('Financial record fetch note:', error.message);
-        return null;
+      throw new Error(error.message || "Could not send verification OTP.");
     }
-    return data || null;
+
+    pendingRegistrationData = {
+      full_name: name,
+      phone,
+      email,
+      referred_by_code: referrer.referral_code,
+      referred_by_student_id: referrer.student_id || null
+    };
+
+    clearOtpBoxes("reg");
+    const otpPanel = document.getElementById("reg-otp-panel");
+    if (otpPanel) otpPanel.classList.remove("hidden");
+    startOtpCountdown("reg");
+
+    const firstBox = document.querySelector(".reg-otp-box");
+    if (firstBox) firstBox.focus();
+
+    showToast("OTP Sent", `A 6-digit verification code has been sent to ${email}.`);
+  } catch (err) {
+    setFormError("reg-error-msg", err.message || "Registration OTP failed.");
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+  }
 }
 
-async function openStudentDashboardModal() {
-    if (!state.currentStudent) {
-        openAuthModal('login');
-        return;
+async function handleVerifyRegistrationOtp() {
+  setFormError("reg-error-msg", "");
+  const token = collectOtpCode("reg");
+
+  if (token.length !== 6) {
+    setFormError("reg-error-msg", "Please enter all 6 digits of the email OTP.");
+    return;
+  }
+
+  if (!pendingRegistrationData || !pendingRegistrationData.email) {
+    setFormError("reg-error-msg", "Please request a registration OTP first.");
+    return;
+  }
+
+  const verifyBtn = document.getElementById("btn-verify-reg-otp");
+  if (verifyBtn) verifyBtn.disabled = true;
+
+  try {
+    const { data, error } = await supabaseClient.auth.verifyOtp({
+      email: pendingRegistrationData.email,
+      token,
+      type: "email"
+    });
+
+    if (error) {
+      throw new Error(error.message || "Token has expired or is invalid.");
     }
 
-    await fetchInquiriesFromSupabase();
-    state.financeRecord = await fetchStudentFinancialDetails(state.currentStudent);
+    // Re-validate referral right before saving to prevent tampering
+    const referrer = await validateMandatoryReferralCode(
+      pendingRegistrationData.referred_by_code,
+      pendingRegistrationData.email
+    );
 
-    const modal = document.getElementById('student-dashboard-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    const newStudentId = generateStudentId();
+    const ownReferralCode = generateUniqueReferralCode(pendingRegistrationData.full_name);
 
-    renderStudentDashboard();
+    const profilePayload = {
+      student_id: newStudentId,
+      full_name: pendingRegistrationData.full_name,
+      email: pendingRegistrationData.email,
+      phone: pendingRegistrationData.phone,
+      referral_code: ownReferralCode,
+      referred_by_code: referrer.referral_code,
+      admission_status: "Registered & Verified",
+      auth_user_id: data && data.user ? data.user.id : null
+    };
+
+    await saveStudentProfileAndReferral(profilePayload, referrer);
+
+    activeStudentSession = profilePayload;
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(profilePayload));
+    localStorage.removeItem(PENDING_REF_STORAGE_KEY);
+    pendingRegistrationData = null;
+
+    syncHeaderAndSessionUI();
+
+    document.getElementById("student-register-form")?.classList.add("hidden");
+    document.getElementById("reg-otp-panel")?.classList.add("hidden");
+
+    const idDisp = document.getElementById("generated-student-id-display");
+    const refDisp = document.getElementById("generated-referral-code-display");
+    if (idDisp) idDisp.textContent = profilePayload.student_id;
+    if (refDisp) refDisp.textContent = profilePayload.referral_code;
+
+    document.getElementById("reg-success-panel")?.classList.remove("hidden");
+    showToast("Registration Complete", "WELCOME TO GTECH FAMILY!");
+  } catch (err) {
+    setFormError("reg-error-msg", err.message || "OTP verification failed.");
+  } finally {
+    if (verifyBtn) verifyBtn.disabled = false;
+  }
+}
+
+async function saveStudentProfileAndReferral(profile, referrer) {
+  if (!supabaseClient) return;
+
+  const { error: profileError } = await supabaseClient
+    .from("student_profiles")
+    .upsert(profile, { onConflict: "email" });
+
+  if (profileError) {
+    console.warn("Profile upsert note:", profileError.message);
+  }
+
+  // Record verified referral relationship while avoiding duplicates or self-referrals
+  if (
+    referrer &&
+    referrer.referral_code &&
+    normalizeEmail(referrer.email) !== normalizeEmail(profile.email)
+  ) {
+    const { data: existingRef } = await supabaseClient
+      .from("student_referrals")
+      .select("id")
+      .eq("referred_email", profile.email)
+      .limit(1)
+      .maybeSingle();
+
+    if (!existingRef) {
+      const { error: refError } = await supabaseClient
+        .from("student_referrals")
+        .insert({
+          referrer_referral_code: referrer.referral_code,
+          referrer_student_id: referrer.student_id || null,
+          referred_student_id: profile.student_id,
+          referred_name: profile.full_name,
+          referred_email: profile.email,
+          status: "completed"
+        });
+
+      if (refError) {
+        console.warn("Referral insert note:", refError.message);
+      }
+    }
+  }
+}
+
+async function handleSendLoginOtp(event) {
+  if (event) event.preventDefault();
+  setFormError("login-error-msg", "");
+
+  const emailInput = document.getElementById("login-email");
+  const email = normalizeEmail(emailInput ? emailInput.value : pendingLoginEmail);
+
+  if (!email) {
+    setFormError("login-error-msg", "Please enter your registered email address.");
+    return;
+  }
+
+  const sendBtn = document.getElementById("btn-send-login-otp");
+  if (sendBtn) sendBtn.disabled = true;
+
+  try {
+    if (!supabaseClient) {
+      throw new Error("Authentication service is unavailable.");
+    }
+
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message || "Could not send login OTP.");
+    }
+
+    pendingLoginEmail = email;
+    clearOtpBoxes("login");
+    document.getElementById("login-otp-panel")?.classList.remove("hidden");
+    startOtpCountdown("login");
+
+    const firstBox = document.querySelector(".login-otp-box");
+    if (firstBox) firstBox.focus();
+
+    showToast("Login OTP Sent", `Check ${email} for your 6-digit login code.`);
+  } catch (err) {
+    setFormError("login-error-msg", err.message || "Failed to send login OTP.");
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+
+async function handleVerifyLoginOtp() {
+  setFormError("login-error-msg", "");
+  const token = collectOtpCode("login");
+  const email = normalizeEmail(pendingLoginEmail || document.getElementById("login-email")?.value || "");
+
+  if (!email) {
+    setFormError("login-error-msg", "Email missing. Please request a login OTP again.");
+    return;
+  }
+
+  if (token.length !== 6) {
+    setFormError("login-error-msg", "Please enter all 6 digits of the login OTP.");
+    return;
+  }
+
+  const verifyBtn = document.getElementById("btn-verify-login-otp");
+  if (verifyBtn) verifyBtn.disabled = true;
+
+  try {
+    const { data, error } = await supabaseClient.auth.verifyOtp({
+      email,
+      token,
+      type: "email"
+    });
+
+    if (error) {
+      throw new Error(error.message || "Token has expired or is invalid.");
+    }
+
+    const meta = (data && data.user && data.user.user_metadata) || {};
+    const profile = await fetchOrCreateStudentProfile(email, meta);
+
+    activeStudentSession = profile;
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(profile));
+    syncHeaderAndSessionUI();
+    closeAuthModal();
+    openDashboardSection("overview");
+    showToast("Login Successful", "WELCOME TO GTECH FAMILY!");
+  } catch (err) {
+    setFormError("login-error-msg", err.message || "Token has expired or is invalid.");
+  } finally {
+    if (verifyBtn) verifyBtn.disabled = false;
+  }
+}
+
+async function fetchOrCreateStudentProfile(email, metadata = {}) {
+  const cleanEmail = normalizeEmail(email);
+
+  if (supabaseClient) {
+    const { data: existing } = await supabaseClient
+      .from("student_profiles")
+      .select("*")
+      .ilike("email", cleanEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      const ensuredCode = existing.referral_code || generateUniqueReferralCode(existing.full_name || cleanEmail);
+      const ensuredId = existing.student_id || generateStudentId();
+      if (!existing.referral_code || !existing.student_id) {
+        await supabaseClient
+          .from("student_profiles")
+          .update({ referral_code: ensuredCode, student_id: ensuredId })
+          .eq("email", existing.email);
+      }
+      return {
+        ...existing,
+        student_id: ensuredId,
+        referral_code: ensuredCode
+      };
+    }
+  }
+
+  const fallbackName =
+    metadata.full_name ||
+    cleanEmail.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return {
+    student_id: generateStudentId(),
+    full_name: fallbackName,
+    email: cleanEmail,
+    phone: metadata.phone || "—",
+    referral_code: generateUniqueReferralCode(fallbackName),
+    admission_status: "Active Student",
+    scholarship_info: null,
+    fee_details: null
+  };
+}
+
+/* ==========================================================================
+   Student Dashboard & Referral System (Authenticated Only)
+   ========================================================================== */
+
+function openDashboardSection(tabName = "overview") {
+  if (!activeStudentSession || !activeStudentSession.email) {
+    openAuthModal("login");
+    return;
+  }
+
+  const modal = document.getElementById("student-dashboard-modal");
+  if (!modal) return;
+
+  populateStudentDashboardData();
+  modal.classList.remove("hidden");
+  switchDashboardTab(tabName);
 }
 
 function closeStudentDashboardModal() {
-    const modal = document.getElementById('student-dashboard-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+  const modal = document.getElementById("student-dashboard-modal");
+  if (modal) modal.classList.add("hidden");
 }
 
-function renderStudentDashboard() {
-    const stu = state.currentStudent;
-    if (!stu) return;
+function switchDashboardTab(tabName) {
+  const validTabs = ["overview", "applications", "profile", "referral"];
+  const target = validTabs.includes(tabName) ? tabName : "overview";
 
-    document.getElementById('dash-topbar-name').textContent = stu.full_name || 'Student Portal';
-    document.getElementById('dash-topbar-meta').textContent = `${stu.email}${stu.mobile ? ' • ' + stu.mobile : ''}`;
-    document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
-    document.getElementById('student-dash-id').textContent = stu.student_id || stu.id || 'GTECH-MEMBER';
+  document.querySelectorAll(".dash-tab").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.getAttribute("data-dash-tab") === target);
+  });
 
-    const fin = state.financeRecord;
-    const statusBadge = document.getElementById('finance-record-status');
+  validTabs.forEach((name) => {
+    const panel = document.getElementById(`dash-panel-${name}`);
+    if (panel) panel.classList.toggle("hidden", name !== target);
+  });
 
-    if (fin) {
-        statusBadge.textContent = 'Verified Ledger';
-        const totalFee = Number(fin.total_university_fee || 0);
-        const scholarship = Number(fin.scholarship_amount || 0);
-        const appFee = Number(fin.application_fee || 0);
-        const hostelFee = Number(fin.hostel_fee || 0);
-        const referralEarnings = Number(fin.referral_earnings || 0);
-        const paidAmount = Number(fin.paid_amount || 0);
-        const computedPending = fin.pending_amount !== undefined && fin.pending_amount !== null
-            ? Number(fin.pending_amount)
-            : Math.max(0, totalFee + appFee + hostelFee - scholarship - referralEarnings - paidAmount);
+  if (target === "applications") {
+    loadStudentApplications();
+  } else if (target === "referral") {
+    loadStudentReferralStats();
+  }
+}
 
-        document.getElementById('fin-total-fee').textContent = formatINR(totalFee);
-        document.getElementById('fin-scholarship').textContent = formatINR(scholarship);
-        document.getElementById('fin-app-fee').textContent = formatINR(appFee);
-        document.getElementById('fin-hostel-fee').textContent = formatINR(hostelFee);
-        document.getElementById('fin-referral').textContent = formatINR(referralEarnings);
-        document.getElementById('fin-paid').textContent = formatINR(paidAmount);
-        document.getElementById('fin-pending').textContent = formatINR(computedPending);
-    } else {
-        statusBadge.textContent = 'Awaiting Fee Update';
-        document.getElementById('fin-total-fee').textContent = formatINR(0);
-        document.getElementById('fin-scholarship').textContent = formatINR(0);
-        document.getElementById('fin-app-fee').textContent = formatINR(0);
-        document.getElementById('fin-hostel-fee').textContent = formatINR(0);
-        document.getElementById('fin-referral').textContent = formatINR(0);
-        document.getElementById('fin-paid').textContent = formatINR(0);
-        document.getElementById('fin-pending').textContent = formatINR(0);
-    }
+function populateStudentDashboardData() {
+  if (!activeStudentSession) return;
 
-    const myApps = state.inquiries.filter(inq =>
-        (inq.email && stu.email && inq.email.toLowerCase() === stu.email.toLowerCase()) ||
-        (inq.phone && stu.mobile && String(inq.phone).includes(String(stu.mobile)))
-    );
+  const studentName = activeStudentSession.full_name || "Student";
+  const studentId = activeStudentSession.student_id || "—";
+  const email = activeStudentSession.email || "—";
+  const phone = activeStudentSession.phone || "—";
+  const referralCode = activeStudentSession.referral_code || "";
 
-    let activeStepIndex = 0;
-    let latestStatusLabel = 'Registered';
-    if (myApps.length > 0) {
-        activeStepIndex = 1;
-        latestStatusLabel = myApps[0].status || 'Pending Callback';
-        const lower = latestStatusLabel.toLowerCase();
-        if (lower.includes('visiting') || lower.includes('completed')) activeStepIndex = 2;
-        if (lower.includes('application')) activeStepIndex = 3;
-        if (lower.includes('admission')) activeStepIndex = 4;
-    }
+  document.getElementById("dash-topbar-name").textContent = studentName;
+  document.getElementById("dash-topbar-sub").textContent = `Student ID: ${studentId}`;
+  document.getElementById("dash-welcome-title").textContent = "WELCOME TO GTECH FAMILY!";
+  document.getElementById("dash-student-greeting").textContent = `Student: ${studentName}`;
+  document.getElementById("dash-student-id").textContent = studentId;
 
-    document.getElementById('dash-current-stage-badge').textContent = latestStatusLabel;
+  // Profile tab
+  document.getElementById("profile-detail-name").textContent = studentName;
+  document.getElementById("profile-detail-id").textContent = studentId;
+  document.getElementById("profile-detail-email").textContent = email;
+  document.getElementById("profile-detail-phone").textContent = phone;
 
+  // Admission Status steps
+  const statusBadge = document.getElementById("dash-admission-status-badge");
+  if (statusBadge) {
+    statusBadge.textContent = activeStudentSession.admission_status || "Registered";
+  }
+
+  const stepsEl = document.getElementById("admission-process-flow");
+  if (stepsEl) {
     const steps = [
-        { title: '1. Registered', desc: 'Email verified' },
-        { title: '2. Enquiry Sent', desc: 'Guidance requested' },
-        { title: '3. Call / Visit', desc: 'Counselor & visit' },
-        { title: '4. Application', desc: 'Form completed' },
-        { title: '5. Admission Done', desc: 'Seat confirmed' }
+      "Account Verified",
+      "Counseling & Choice Filling",
+      "Application & Documents",
+      "Admission Confirmation"
     ];
+    stepsEl.innerHTML = steps
+      .map(
+        (label, idx) => `
+          <div class="detail-box">
+            <span class="detail-label">Step ${idx + 1}</span>
+            <strong>${label}</strong>
+          </div>
+        `
+      )
+      .join("");
+  }
 
-    document.getElementById('admission-process-flow').innerHTML = steps.map((step, idx) => {
-        const done = idx <= activeStepIndex;
-        const current = idx === activeStepIndex;
-        const style = current
-            ? 'bg-blue-600/25 border-sky-400 text-white'
-            : done
-                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-200'
-                : 'bg-blue-900/50 border-blue-800 text-blue-300/50';
-        return `
-            <div class="p-2.5 sm:p-3 rounded-xl border ${style} transition min-w-0">
-                <div class="text-[11px] font-extrabold leading-tight">${step.title}</div>
-                <div class="text-[10px] opacity-80 mt-0.5 leading-tight">${step.desc}</div>
-            </div>
-        `;
-    }).join('');
+  // Scholarship Details
+  const scholarshipEl = document.getElementById("dash-scholarship-content");
+  if (scholarshipEl) {
+    scholarshipEl.textContent =
+      activeStudentSession.scholarship_info ||
+      "Scholarship eligibility is evaluated with your counselor based on your target university, branch, and academic records.";
+  }
 
-    const appContainer = document.getElementById('student-applications-list');
-    if (myApps.length === 0) {
-        appContainer.innerHTML = `<p class="text-xs text-blue-300/70">No guidance or admission requests submitted yet for ${stu.email}.</p>`;
+  // Fee Details — show genuine record only when available
+  const feeEl = document.getElementById("dash-fee-content");
+  if (feeEl) {
+    if (activeStudentSession.fee_details) {
+      feeEl.textContent = activeStudentSession.fee_details;
     } else {
-        appContainer.innerHTML = myApps.map(inq => `
-            <div class="p-3 bg-blue-900/70 rounded-xl border border-blue-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <strong class="text-white block break-words">${inq.assistance_type || 'Guidance Request'} • ${inq.branch || 'Course'}</strong>
-                    <p class="text-blue-200/75 text-[10px] mt-0.5">Preferred University: ${inq.uni || 'Not Specified'}</p>
-                </div>
-                <span class="self-start sm:self-center px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-bold text-[10px] border border-emerald-500/30 shrink-0">${inq.status || 'Pending Callback'}</span>
-            </div>
-        `).join('');
+      feeEl.textContent =
+        "No personal fee ledger record has been assigned yet. Once your university and branch are confirmed, your verified fee details will appear here.";
     }
+  }
+
+  // Referral share controls
+  const refCodeEl = document.getElementById("my-referral-code-value");
+  const refLinkEl = document.getElementById("my-referral-link-input");
+  const shareUrl = `${window.location.origin}/?ref=${encodeURIComponent(referralCode)}`;
+
+  if (refCodeEl) refCodeEl.textContent = referralCode || "—";
+  if (refLinkEl) refLinkEl.value = referralCode ? shareUrl : "";
 }
 
-// Global scope exposure
-window.showToast = showToast;
-window.hideToast = hideToast;
-window.sanitizeNumericInput = sanitizeNumericInput;
-window.handleOtpBoxInput = handleOtpBoxInput;
-window.handleOtpBoxKeydown = handleOtpBoxKeydown;
-window.openAuthModal = openAuthModal;
-window.closeAuthModal = closeAuthModal;
-window.switchStudentAuthMode = switchStudentAuthMode;
-window.handleSendRegistrationOtp = handleSendRegistrationOtp;
-window.handleVerifyRegistrationOtp = handleVerifyRegistrationOtp;
-window.handleSendLoginOtp = handleSendLoginOtp;
-window.handleVerifyLoginOtp = handleVerifyLoginOtp;
-window.handleStudentLogout = handleStudentLogout;
-window.openStudentDashboardModal = openStudentDashboardModal;
-window.closeStudentDashboardModal = closeStudentDashboardModal;
-window.setStateFilter = setStateFilter;
-window.selectUniForGuidance = selectUniForGuidance;
-window.focusGuidanceSection = focusGuidanceSection;
-window.handleGuidanceSubmission = handleGuidanceSubmission;
-window.nextSlide = nextSlide;
-window.prevSlide = prevSlide;
+async function loadStudentApplications() {
+  const listEl = document.getElementById("student-applications-list");
+  if (!listEl || !activeStudentSession || !activeStudentSession.email) return;
+
+  listEl.innerHTML = `<p class="card-body-copy">Loading your applications...</p>`;
+
+  try {
+    if (!supabaseClient) {
+      listEl.innerHTML = `<p class="card-body-copy">No application records found yet.</p>`;
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("inquiries")
+      .select("*")
+      .ilike("email", normalizeEmail(activeStudentSession.email))
+      .order("created_at", { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      listEl.innerHTML = `
+        <div class="detail-box">
+          <strong>No applications submitted yet</strong>
+          <p class="card-body-copy">Use the Expert Guidance form to submit your preferred university and course.</p>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = data
+      .map(
+        (item) => `
+          <div class="detail-box">
+            <div class="card-head-row">
+              <strong>${item.course || item.interested_course || "Admission Inquiry"}</strong>
+              <span class="badge-pill">${item.status || "Submitted"}</span>
+            </div>
+            <p class="card-body-copy">
+              University: ${item.university || item.preferred_university || "To be assigned"} • Assistance: ${item.assistance_type || "Guidance"}
+            </p>
+          </div>
+        `
+      )
+      .join("");
+  } catch (err) {
+    listEl.innerHTML = `<p class="card-body-copy">Unable to load applications right now.</p>`;
+  }
+}
+
+async function loadStudentReferralStats() {
+  const totalEl = document.getElementById("referral-stat-total");
+  const completedEl = document.getElementById("referral-stat-completed");
+
+  if (!totalEl || !completedEl) return;
+
+  // Always default to genuine counts (0 when none) — never fake counts or earnings
+  totalEl.textContent = "0";
+  completedEl.textContent = "0";
+
+  if (!supabaseClient || !activeStudentSession || !activeStudentSession.referral_code) {
+    return;
+  }
+
+  try {
+    const code = normalizeReferralCode(activeStudentSession.referral_code);
+    const { data, error } = await supabaseClient
+      .from("student_referrals")
+      .select("id, status")
+      .eq("referrer_referral_code", code);
+
+    if (!error && Array.isArray(data)) {
+      const totalCount = data.length;
+      const completedCount = data.filter((row) => row.status === "completed" || row.status === "verified").length;
+      totalEl.textContent = String(totalCount);
+      completedEl.textContent = String(completedCount);
+    }
+  } catch (err) {
+    console.warn("Referral stats load note:", err);
+  }
+}
+
+function copyReferralCode() {
+  if (!activeStudentSession || !activeStudentSession.referral_code) return;
+  navigator.clipboard?.writeText(activeStudentSession.referral_code);
+  showToast("Copied", `Referral code ${activeStudentSession.referral_code} copied.`);
+}
+
+function copyReferralLink() {
+  const input = document.getElementById("my-referral-link-input");
+  if (!input || !input.value) return;
+  navigator.clipboard?.writeText(input.value);
+  showToast("Link Copied", "Your referral link is ready to share.");
+}
+
+function shareReferralOnWhatsApp() {
+  if (!activeStudentSession || !activeStudentSession.referral_code) return;
+  const link = `${window.location.origin}/?ref=${encodeURIComponent(activeStudentSession.referral_code)}`;
+  const text = `Join GTech Admissions using my referral code ${activeStudentSession.referral_code}: ${link}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+}
+
+/* ==========================================================================
+   Universities, Carousel & Guidance Inquiry Form
+   ========================================================================== */
+
+function setStateFilter(stateName) {
+  currentStateFilter = stateName;
+  document.querySelectorAll(".state-btn").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.getAttribute("data-state") === stateName);
+  });
+  renderUniversities();
+}
+
+function renderUniversities() {
+  const grid = document.getElementById("universities-grid");
+  if (!grid) return;
+
+  const query = String(document.getElementById("uni-search")?.value || "")
+    .trim()
+    .toLowerCase();
+
+  const filtered = UNIVERSITIES_DATA.filter((uni) => {
+    const matchesRegion =
+      currentStateFilter === "ALL" ||
+      uni.state === currentStateFilter ||
+      uni.category === currentStateFilter;
+
+    const hay = `${uni.name} ${uni.city} ${uni.state} ${uni.mode} ${uni.branches.join(" ")}`.toLowerCase();
+    const matchesQuery = !query || hay.includes(query);
+    return matchesRegion && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<p class="card-body-copy">No matching universities found for your filter.</p>`;
+    return;
+  }
+
+  grid.innerHTML = filtered
+    .map(
+      (uni) => `
+        <article class="info-card">
+          <div class="card-head-row">
+            <span class="badge-pill">${uni.mode}</span>
+            <span class="detail-label">${uni.city}</span>
+          </div>
+          <h3 class="feature-title">${uni.name}</h3>
+          <p class="feature-desc">${uni.tuitionNote}</p>
+          <div class="filter-bar">
+            ${uni.branches.map((branch) => `<span class="state-btn">${branch}</span>`).join("")}
+          </div>
+          <button type="button" onclick="selectUniversityForGuidance('${uni.name.replace(/'/g, "\\'")}')" class="btn btn-secondary btn-compact">
+            Request Guidance for This Campus
+          </button>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function selectUniversityForGuidance(uniName) {
+  const uniInput = document.getElementById("guide-uni");
+  if (uniInput) uniInput.value = uniName;
+  document.getElementById("apply")?.scrollIntoView({ behavior: "smooth" });
+}
+
+function focusGuidanceSection(assistanceType) {
+  const selectEl = document.getElementById("guide-assistance");
+  if (selectEl && assistanceType) {
+    const matchingOption = Array.from(selectEl.options).find((opt) => opt.value === assistanceType);
+    if (matchingOption) selectEl.value = assistanceType;
+  }
+  document.getElementById("apply")?.scrollIntoView({ behavior: "smooth" });
+}
+
+function nextSlide() {
+  const track = document.getElementById("about-carousel");
+  if (!track) return;
+  const totalSlides = track.children.length;
+  if (!totalSlides) return;
+  currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+  track.scrollTo({ left: currentSlideIndex * track.clientWidth, behavior: "smooth" });
+}
+
+function prevSlide() {
+  const track = document.getElementById("about-carousel");
+  if (!track) return;
+  const totalSlides = track.children.length;
+  if (!totalSlides) return;
+  currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
+  track.scrollTo({ left: currentSlideIndex * track.clientWidth, behavior: "smooth" });
+}
+
+async function handleGuidanceSubmission(event) {
+  event.preventDefault();
+  const submitBtn = document.getElementById("btn-submit-guidance");
+  if (submitBtn) submitBtn.disabled = true;
+
+  const payload = {
+    student_name: String(document.getElementById("guide-name")?.value || "").trim(),
+    phone: String(document.getElementById("guide-phone")?.value || "").trim(),
+    email: normalizeEmail(document.getElementById("guide-email")?.value || ""),
+    course: String(document.getElementById("guide-course")?.value || "").trim(),
+    university: String(document.getElementById("guide-uni")?.value || "").trim(),
+    assistance_type: String(document.getElementById("guide-assistance")?.value || "").trim(),
+    status: "Submitted"
+  };
+
+  try {
+    if (supabaseClient) {
+      const { error } = await supabaseClient.from("inquiries").insert(payload);
+      if (error) {
+        console.warn("Inquiry insert note:", error.message);
+      }
+    }
+
+    document.getElementById("guidance-inquiry-form")?.reset();
+    showToast("Request Submitted", "Our GTech guidance team will contact you shortly.");
+  } catch (err) {
+    showToast("Submission Error", "Please try again in a moment.", true);
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+/* ==========================================================================
+   Initialization
+   ========================================================================== */
+
+document.addEventListener("DOMContentLoaded", async () => {
+  renderUniversities();
+  captureReferralFromUrl();
+  await restoreStudentSession();
+});

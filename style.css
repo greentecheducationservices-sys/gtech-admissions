@@ -33,3 +33,39 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
+
+/* Student Portal Upgrade Styles */
+@keyframes gtechPopIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.gtech-pop-in {
+    animation: gtechPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reg-otp-box,
+.login-otp-box {
+    caret-color: #34d399;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.reg-otp-box:focus,
+.login-otp-box:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+}
+
+#student-finance-cards > div {
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+#student-finance-cards > div:hover {
+    transform: translateY(-2px);
+}

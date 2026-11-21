@@ -1,43 +1,56 @@
+/* Custom Scrollbar (Light Sky & Emerald Theme) */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
     background: #f0f9ff;
     border-radius: 8px;
 }
+
 ::-webkit-scrollbar-thumb {
     background: #bae6fd;
     border-radius: 8px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: #0284c7;
 }
+
+/* Hide Horizontal Scrollbars on Filter Strips */
 .scrollbar-none::-webkit-scrollbar {
     display: none;
 }
+
 .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
+
+/* About Section Carousel Track */
 #about-carousel {
     display: flex;
     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
 }
+
+/* Backdrop Blur Support */
 .backdrop-blur-sm {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
 }
+
 .backdrop-blur-md {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 
+/* Pop-In Modal & Card Animation */
 @keyframes gtechPopIn {
     0% {
         opacity: 0;
-        transform: scale(0.94) translateY(8px);
+        transform: scale(0.95) translateY(8px);
     }
     100% {
         opacity: 1;
@@ -46,9 +59,10 @@
 }
 
 .gtech-pop-in {
-    animation: gtechPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: gtechPopIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* 6-Box OTP Input Styling */
 .reg-otp-box,
 .login-otp-box {
     caret-color: #059669;
@@ -58,14 +72,24 @@
 .reg-otp-box:focus,
 .login-otp-box:focus {
     transform: translateY(-1px);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
 }
 
+/* Student Dashboard Financial Cards Hover */
 #student-finance-cards > div {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #student-finance-cards > div:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 8px 18px -6px rgba(15, 23, 42, 0.1);
+}
+
+/* Scholarship & Expert Call Modal Scrollbar */
+#guidance-inquiry-form::-webkit-scrollbar-thumb {
+    background: #c7d2fe;
+}
+
+#guidance-inquiry-form::-webkit-scrollbar-thumb:hover {
+    background: #4f46e5;
 }

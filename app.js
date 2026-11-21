@@ -1,4 +1,4 @@
-const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
+const SUPABASE_URL = '[https://yefezksjguqjabhjlwqj.supabase.co](https://yefezksjguqjabhjlwqj.supabase.co)';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -247,12 +247,12 @@ async function loadActiveCarousel() {
     const defaultSlides = [
         {
             id: 1,
-            image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
+            image_url: '[https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop)',
             title: 'GTech Carousel Slide 1'
         },
         {
             id: 2,
-            image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
+            image_url: '[https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop](https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop)',
             title: 'GTech Carousel Slide 2'
         }
     ];
@@ -311,7 +311,7 @@ function renderUniversities() {
         } else if (state.stateFilter === 'Application Only') {
             matchesState = uni.admission_type === 'Application Only';
         } else if (state.stateFilter !== 'ALL') {
-            matchesState = uni.state === state.stateFilter;
+            matchesState = uni.state === stateNameFilterMatch(uni.state, state.stateFilter);
         }
 
         const matchesQuery =
@@ -393,13 +393,17 @@ function renderUniversities() {
                 </div>
 
                 <div class="p-4 sm:p-5 pt-0">
-                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Guidance')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition">
-                        <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Expert Call
+                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition">
+                        <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Free Visit
                     </button>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function stateNameFilterMatch(uniState, selectedState) {
+    return uniState === selectedState ? uniState : null;
 }
 
 // --- SCHOLARSHIP AND EXPERT CALL APPLICATION MODAL ---
@@ -528,13 +532,13 @@ async function handleGuidanceSubmission(e) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'SUBMIT SCHOLARSHIP & EXPERT CALL FORM';
+            submitBtn.querySelector('span').textContent = 'SUBMIT SCHOLARSHIP FORM';
         }
     }
 }
 
 // --- AUTH MODAL & OTP HANDLERS ---
-function openAuthModal(mode = 'register') {
+function openAuthModal(mode = 'login') {
     const modal = document.getElementById('student-auth-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -556,12 +560,7 @@ function switchStudentAuthMode(mode) {
     document.getElementById('reg-error-msg').classList.add('hidden');
     document.getElementById('login-error-msg').classList.add('hidden');
 
-    if (mode === 'login') {
-        regView.classList.add('hidden');
-        loginView.classList.remove('hidden');
-        loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
-        regTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
-    } else {
+    if (mode === 'register') {
         loginView.classList.add('hidden');
         regView.classList.remove('hidden');
         regTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
@@ -570,6 +569,11 @@ function switchStudentAuthMode(mode) {
             const refInput = document.getElementById('reg-referral');
             if (refInput && !refInput.value) refInput.value = state.incomingReferralCode;
         }
+    } else {
+        regView.classList.add('hidden');
+        loginView.classList.remove('hidden');
+        loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
+        regTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
     }
 }
 
@@ -1078,11 +1082,11 @@ function renderStudentDashboard() {
     );
 
     const appCardsHtml = myApps.length === 0
-        ? `<p class="text-xs text-slate-500">No applications or enquiries submitted yet. Click "+ New Scholarship / Expert Application" to apply.</p>`
+        ? `<p class="text-xs text-slate-500">No applications or enquiries submitted yet. Click "+ New Scholarship Application" to apply.</p>`
         : myApps.map(inq => `
             <div class="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-200/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div class="min-w-0">
-                    <strong class="text-slate-900 block break-words">${inq.assistance_type || 'Scholarship & Expert Application'} • ${inq.branch || 'Course'}</strong>
+                    <strong class="text-slate-900 block break-words">${inq.assistance_type || 'Scholarship Based on Marks'} • ${inq.branch || 'Course'}</strong>
                     <p class="text-slate-600 text-[11px] mt-0.5">Preferred University: ${inq.uni || 'Not Specified'}</p>
                     ${inq.jee_score ? `<p class="text-indigo-700 text-[10px] font-semibold mt-0.5">${inq.jee_score}</p>` : ''}
                 </div>
@@ -1110,7 +1114,7 @@ function renderStudentDashboard() {
     const steps = [
         { title: '1. Registered', desc: 'ID Active' },
         { title: '2. Applied', desc: 'Form submitted' },
-        { title: '3. Counselling', desc: 'Expert review' },
+        { title: '3. Free Visit', desc: 'Campus visit' },
         { title: '4. University Filing', desc: 'Seat processing' },
         { title: '5. Admission Done', desc: 'Confirmed' }
     ];
@@ -1227,8 +1231,8 @@ function copyMyReferralLink() {
 function shareReferralWhatsApp() {
     const code = document.getElementById('my-referral-code-text')?.textContent || '';
     const link = document.getElementById('my-referral-link-input')?.value || '';
-    const msg = encodeURIComponent(`Join GTech Admissions (AP, Tamil Nadu, Telangana & Bangalore) for B.Tech, Degree & Medical admissions and scholarships! Use my Referral Code ${code}: ${link}`);
-    window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
+    const msg = encodeURIComponent(`Join GTech Admissions (GreenTech Education Consultancy and Services) for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Use my Referral Code ${code}: ${link}`);
+    window.open(`[https://wa.me/?text=$](https://wa.me/?text=$){msg}`, '_blank', 'noopener');
 }
 
 function shareReferralInstagram() {
@@ -1237,7 +1241,7 @@ function shareReferralInstagram() {
         navigator.clipboard.writeText(link).catch(() => {});
     }
     showToast('Ready for Instagram', 'Your referral link is copied—paste it into your Instagram DM or Bio!', 'success');
-    window.open('https://www.instagram.com/', '_blank', 'noopener');
+    window.open('[https://www.instagram.com/](https://www.instagram.com/)', '_blank', 'noopener');
 }
 
 // Global scope exposure

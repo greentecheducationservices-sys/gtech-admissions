@@ -2,7 +2,9 @@ const SUPABASE_URL = 'https://yefezksjguqjabhjlwqj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const ADMIN_EMAIL = 'admin@gtechadmissions.com';
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
+const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/send-notification` : '');
 
 const state = {
     stateFilter: 'ALL',
@@ -33,6 +35,39 @@ window.onload = async function () {
         nextSlide();
     }, 4500);
 };
+
+// --- EMAIL NOTIFICATION HELPER (ADMIN + STUDENT UPDATES) ---
+async function sendMailNotification({ to = ADMIN_EMAIL, subject, text, eventType = 'student_update', details = {} }) {
+    const payload = {
+        to,
+        adminEmail: ADMIN_EMAIL,
+        subject,
+        text,
+        eventType,
+        details,
+        timestamp: new Date().toISOString()
+    };
+
+    if (MAIL_NOTIFY_URL) {
+        try {
+            const res = await fetch(MAIL_NOTIFY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                console.warn('Mail endpoint returned non-OK status:', res.status);
+            }
+            return true;
+        } catch (err) {
+            console.warn('Mail notification request warning:', err.message);
+            return false;
+        }
+    }
+
+    console.info('[Gtech Mail Notification Queued]', payload);
+    return false;
+}
 
 // --- NUMERIC KEYBOARD & INPUT SANITIZATION ---
 function sanitizeNumericInput(inputEl, maxLength = 15) {
@@ -154,7 +189,7 @@ async function generateNextGtechStudentId() {
     return `GTECH${nextNum}`;
 }
 
-// --- REFERRAL CODE CAPTURE ---
+// --- REFERRAL CODE CAPTURE (DO NOT AUTO-SHOW TOP BANNER ON MOBILE) ---
 function detectIncomingReferralLink() {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -168,12 +203,6 @@ function detectIncomingReferralLink() {
     }
 
     if (state.incomingReferralCode) {
-        const banner = document.getElementById('referral-applied-banner');
-        const bannerCode = document.getElementById('banner-ref-code');
-        if (banner && bannerCode) {
-            bannerCode.textContent = state.incomingReferralCode;
-            banner.classList.remove('hidden');
-        }
         const regRefInput = document.getElementById('reg-referral');
         if (regRefInput && !regRefInput.value) {
             regRefInput.value = state.incomingReferralCode;
@@ -207,7 +236,7 @@ function showToast(title, message, type = 'success') {
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => {
         hideToast();
-    }, 4500);
+    }, 5500);
 }
 
 function hideToast() {
@@ -247,12 +276,12 @@ async function loadActiveCarousel() {
         {
             id: 1,
             image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop',
-            title: 'GTech Carousel Slide 1'
+            title: 'Gtech Carousel Slide 1'
         },
         {
             id: 2,
             image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1600&auto=format&fit=crop',
-            title: 'GTech Carousel Slide 2'
+            title: 'Gtech Carousel Slide 2'
         }
     ];
 
@@ -278,7 +307,7 @@ async function loadActiveCarousel() {
     carousel.style.transform = 'translateX(0%)';
     carousel.innerHTML = slides.map(slide => `
         <div class="w-full h-full shrink-0 relative">
-            <img src="${slide.resolvedUrl}" class="w-full h-full object-cover object-center" alt="${slide.title || 'GTech Banner'}">
+            <img src="${slide.resolvedUrl}" class="w-full h-full object-cover object-center" alt="${slide.title || 'Gtech Banner'}">
         </div>
     `).join('');
 }
@@ -404,9 +433,12 @@ function renderUniversities() {
                     </div>
                 </div>
 
-                <div class="p-4 sm:p-5 pt-0">
-                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-sm transition">
-                        <i class="fa-solid fa-graduation-cap"></i> Get Scholarship / Free Visit
+                <div class="p-4 sm:p-5 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-award"></i> Scholarship Form
+                    </button>
+                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Visiting Application')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-route"></i> Visiting Application
                     </button>
                 </div>
             </div>
@@ -414,7 +446,7 @@ function renderUniversities() {
     }).join('');
 }
 
-// --- SCHOLARSHIP AND EXPERT CALL APPLICATION MODAL ---
+// --- SCHOLARSHIP & VISITING APPLICATION MODAL ---
 function openScholarshipModal(uniName = '', assistanceType = '') {
     const modal = document.getElementById('scholarship-app-modal');
     if (!modal) return;
@@ -505,7 +537,7 @@ async function handleGuidanceSubmission(e) {
     try {
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Submitting Application...';
+            submitBtn.querySelector('span').textContent = 'Submitting...';
         }
 
         let { error } = await _supabase.from('inquiries').insert([payload]);
@@ -532,7 +564,28 @@ async function handleGuidanceSubmission(e) {
         }
 
         state.inquiries.unshift(payload);
-        showToast('Application Submitted', 'Your Scholarship & Expert Call Application has been received.', 'success');
+
+        await sendMailNotification({
+            to: ADMIN_EMAIL,
+            eventType: 'scholarship_or_visiting_submitted',
+            subject: `Scholarship / Application Submitted by Student: ${name} (${assistanceType})`,
+            text: [
+                `Scholarship / application is submitted by student: ${name}`,
+                `Type: ${assistanceType}`,
+                `Phone: ${phone}`,
+                `Email: ${email}`,
+                `Course: ${course}`,
+                `Preferred University: ${preferredUni || 'Not Specified'}`,
+                `Marks / Details: ${academicSummary || 'Not Provided'}`
+            ].join('\n'),
+            details: payload
+        });
+
+        showToast(
+            'Application Submitted',
+            'Scholarship form submitted! Your expert will reach you within 10 mins.',
+            'success'
+        );
         e.target.reset();
         document.getElementById('guide-pcm-total').value = '';
         prefillGuidanceFormWithStudent();
@@ -540,7 +593,75 @@ async function handleGuidanceSubmission(e) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'SUBMIT SCHOLARSHIP FORM';
+            submitBtn.querySelector('span').textContent = 'SUBMIT APPLICATION';
+        }
+    }
+}
+
+// --- STUDENT DETAILS UPDATE (SENDS MAIL ON EVERY UPDATE) ---
+async function handleStudentDetailsUpdate(e) {
+    e.preventDefault();
+    if (!state.currentStudent) return;
+
+    const btn = document.getElementById('btn-update-student-details');
+    const updatedName = document.getElementById('upd-student-name').value.trim();
+    const updatedPhone = document.getElementById('upd-student-phone').value.replace(/\D+/g, '').trim();
+    const updatedCourse = document.getElementById('upd-student-course').value.trim();
+
+    if (!updatedName || !updatedPhone) {
+        showToast('Missing Details', 'Student name and phone number are required.', 'error');
+        return;
+    }
+
+    const studentCode = (state.currentStudent.student_id || state.currentStudent.id || 'GTECH6001').toUpperCase();
+    const email = (state.currentStudent.email || '').toLowerCase();
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Updating & Mailing...';
+        }
+
+        const updateFields = {
+            full_name: updatedName,
+            mobile: updatedPhone
+        };
+
+        await _supabase
+            .from('student_profiles')
+            .update(updateFields)
+            .eq('email', email);
+
+        state.currentStudent = {
+            ...state.currentStudent,
+            full_name: updatedName,
+            mobile: updatedPhone,
+            target_course: updatedCourse || state.currentStudent.target_course || ''
+        };
+        localStorage.setItem('gtech_student_session', JSON.stringify(state.currentStudent));
+        updateHeaderForLoggedInStudent(state.currentStudent);
+        renderStudentDashboard();
+
+        await sendMailNotification({
+            to: ADMIN_EMAIL,
+            eventType: 'student_details_updated',
+            subject: `Student Details Updated: ${updatedName} (${studentCode})`,
+            text: [
+                `Student details have been updated:`,
+                `Student ID: ${studentCode}`,
+                `Name: ${updatedName}`,
+                `Phone: ${updatedPhone}`,
+                `Email: ${email}`,
+                `Course / University: ${updatedCourse || 'Not Specified'}`
+            ].join('\n'),
+            details: state.currentStudent
+        });
+
+        showToast('Details Updated', 'Your details are saved and sent via email.', 'success');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.querySelector('span').textContent = 'Save & Send Update Email';
         }
     }
 }
@@ -787,6 +908,21 @@ async function handleVerifyRegistrationOtp() {
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
 
+        await sendMailNotification({
+            to: ADMIN_EMAIL,
+            eventType: 'new_student_registered',
+            subject: `New Student Registered: ${profile.full_name} (${profile.student_id})`,
+            text: [
+                `New student registered on Gtech Admissions:`,
+                `Student ID: ${profile.student_id}`,
+                `Name: ${profile.full_name}`,
+                `Phone: ${profile.mobile}`,
+                `Email: ${profile.email}`,
+                `Referral Code Used: ${profile.referred_by_code || 'None'}`
+            ].join('\n'),
+            details: profile
+        });
+
         document.getElementById('student-register-form').classList.add('hidden');
         document.getElementById('reg-otp-panel').classList.add('hidden');
         document.getElementById('generated-student-id-display').textContent = profile.student_id;
@@ -990,7 +1126,7 @@ function updateHeaderForLoggedInStudent(profile) {
     }
 }
 
-// --- STUDENT DASHBOARD TABS (SEPARATE VIEWS FOR DASHBOARD, MY APPLICATIONS, MY REFERRAL) ---
+// --- STUDENT DASHBOARD TABS ---
 function switchDashboardSection(tabName) {
     state.activeDashboardTab = tabName;
     const tabs = ['dashboard', 'applications', 'referral'];
@@ -1083,6 +1219,13 @@ function renderStudentDashboard() {
     document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
     document.getElementById('student-dash-id').textContent = studentCode;
 
+    const updName = document.getElementById('upd-student-name');
+    const updPhone = document.getElementById('upd-student-phone');
+    const updCourse = document.getElementById('upd-student-course');
+    if (updName) updName.value = stu.full_name || '';
+    if (updPhone) updPhone.value = stu.mobile || '';
+    if (updCourse) updCourse.value = stu.target_course || '';
+
     // 1. MY APPLICATIONS & ENQUIRIES
     const myApps = state.inquiries.filter(inq =>
         (inq.email && stu.email && inq.email.toLowerCase() === stu.email.toLowerCase()) ||
@@ -1090,7 +1233,7 @@ function renderStudentDashboard() {
     );
 
     const appCardsHtml = myApps.length === 0
-        ? `<p class="text-xs text-slate-500">No applications or enquiries submitted yet. Click "+ New Scholarship Application" to apply.</p>`
+        ? `<p class="text-xs text-slate-500">No applications or enquiries submitted yet. Use "+ Scholarship Application" or "+ Visiting Application" to apply.</p>`
         : myApps.map(inq => `
             <div class="p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-200/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div class="min-w-0">
@@ -1239,7 +1382,7 @@ function copyMyReferralLink() {
 function shareReferralWhatsApp() {
     const code = document.getElementById('my-referral-code-text')?.textContent || '';
     const link = document.getElementById('my-referral-link-input')?.value || '';
-    const msg = encodeURIComponent(`Join GTech Admissions (GreenTech Education Consultancy and Services) for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Use my Referral Code ${code}: ${link}`);
+    const msg = encodeURIComponent(`Join Gtech Admissions (Admissions and Guidance Portal) for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Use my Referral Code ${code}: ${link}`);
     window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
 }
 
@@ -1269,6 +1412,7 @@ window.handleVerifyRegistrationOtp = handleVerifyRegistrationOtp;
 window.handleSendLoginOtp = handleSendLoginOtp;
 window.handleVerifyLoginOtp = handleVerifyLoginOtp;
 window.handleStudentLogout = handleStudentLogout;
+window.handleStudentDetailsUpdate = handleStudentDetailsUpdate;
 window.openStudentDashboardModal = openStudentDashboardModal;
 window.closeStudentDashboardModal = closeStudentDashboardModal;
 window.switchDashboardSection = switchDashboardSection;

@@ -30,17 +30,18 @@ window.onload = async function () {
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
     await loadActiveCarousel();
+    subscribeToStudentMailUpdates();
 
     setInterval(() => {
         nextSlide();
     }, 4500);
 };
 
-// --- EMAIL NOTIFICATION HELPER (ADMIN + STUDENT UPDATES) ---
-async function sendMailNotification({ to = ADMIN_EMAIL, subject, text, eventType = 'student_update', details = {} }) {
+// --- EMAIL NOTIFICATION HELPER (SENDS TO STUDENT MAIL & ADMIN MAIL ON UPDATES) ---
+async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
     const payload = {
-        to,
-        adminEmail: ADMIN_EMAIL,
+        to: to || ADMIN_EMAIL,
+        adminEmail: ccAdmin ? ADMIN_EMAIL : null,
         subject,
         text,
         eventType,
@@ -65,11 +66,101 @@ async function sendMailNotification({ to = ADMIN_EMAIL, subject, text, eventType
         }
     }
 
-    console.info('[Gtech Mail Notification Queued]', payload);
+    console.info('[Gtech Student Mail Notification]', payload);
     return false;
 }
 
-// --- NUMERIC KEYBOARD & INPUT SANITIZATION ---
+// --- REALTIME WATCHER: SENDS STUDENT EMAIL ON APPLICATION APPROVAL / STATUS OR REFERRAL / FEE UPDATE ---
+function subscribeToStudentMailUpdates() {
+    _supabase
+        .channel('gtech-student-updates')
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'inquiries' },
+            async (payload) => {
+                const updated = payload.new || {};
+                const old = payload.old || {};
+                if (!updated.email) return;
+
+                if (updated.status && updated.status !== old.status) {
+                    const isApproved = String(updated.status).toLowerCase().includes('approv');
+                    await sendMailNotification({
+                        to: updated.email,
+                        ccAdmin: false,
+                        eventType: isApproved ? 'application_approved' : 'application_status_updated',
+                        subject: isApproved
+                            ? `Gtech Admissions: Application Approved (${updated.assistance_type || 'Application'})`
+                            : `Gtech Admissions Update: Status Changed to ${updated.status}`,
+                        text: [
+                            `Hello ${updated.name || 'Student'},`,
+                            ``,
+                            isApproved
+                                ? `Good news! Your ${updated.assistance_type || 'application'} (${updated.branch || ''}) has been APPROVED by the Gtech Admissions team.`
+                                : `Your ${updated.assistance_type || 'application'} (${updated.branch || ''}) status has been updated to: ${updated.status}.`,
+                            `Preferred University: ${updated.uni || 'Not Specified'}`,
+                            ``,
+                            `Sign in to your Gtech Student Portal using your registered email to view your Gtech ID and live status.`,
+                            `— Gtech Admissions (Admissions and Guidance Portal)`
+                        ].join('\n'),
+                        details: updated
+                    });
+
+                    if (state.currentStudent && state.currentStudent.email?.toLowerCase() === updated.email.toLowerCase()) {
+                        await fetchInquiriesFromSupabase();
+                        renderStudentDashboard();
+                    }
+                }
+            }
+        )
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'student_finances' },
+            async (payload) => {
+                const fin = payload.new || {};
+                const old = payload.old || {};
+                if (!fin.email) return;
+
+                const referralChanged = Number(fin.referral_earnings || 0) !== Number(old.referral_earnings || 0);
+                const scholarshipChanged = Number(fin.scholarship_amount || 0) !== Number(old.scholarship_amount || 0);
+                const paymentChanged = Number(fin.paid_amount || 0) !== Number(old.paid_amount || 0);
+                const pendingChanged = Number(fin.pending_amount || 0) !== Number(old.pending_amount || 0);
+
+                if (referralChanged || scholarshipChanged || paymentChanged || pendingChanged || payload.eventType === 'INSERT') {
+                    const subject = referralChanged
+                        ? `Gtech Admissions: Referral Amount Credited (₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')})`
+                        : `Gtech Admissions: Scholarship, Fee & Payment Update`;
+
+                    await sendMailNotification({
+                        to: fin.email,
+                        ccAdmin: false,
+                        eventType: referralChanged ? 'referral_amount_updated' : 'finance_or_payment_updated',
+                        subject,
+                        text: [
+                            `Hello Student,`,
+                            ``,
+                            `There is an update on your Gtech Admissions account statement:`,
+                            `• Referral Amount Earned: ₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')}`,
+                            `• Scholarship Amount: ₹${Number(fin.scholarship_amount || 0).toLocaleString('en-IN')}`,
+                            `• Paid Amount: ₹${Number(fin.paid_amount || 0).toLocaleString('en-IN')}`,
+                            `• Pending Amount: ₹${Number(fin.pending_amount || 0).toLocaleString('en-IN')}`,
+                            ``,
+                            `Sign in to your Gtech Student Portal to view full details.`,
+                            `— Gtech Admissions (Admissions and Guidance Portal)`
+                        ].join('\n'),
+                        details: fin
+                    });
+
+                    if (state.currentStudent && state.currentStudent.email?.toLowerCase() === fin.email.toLowerCase()) {
+                        state.financeRecord = fin;
+                        renderStudentDashboard();
+                    }
+                }
+            }
+        )
+        .subscribe();
+}
+
+// --- NUMERIC KEYBOARD & INTERMEDIATE AUTO-TOTAL CALCULATION ---
 function sanitizeNumericInput(inputEl, maxLength = 15) {
     if (!inputEl) return;
     const cleaned = String(inputEl.value || '').replace(/\D+/g, '').slice(0, maxLength);
@@ -78,15 +169,19 @@ function sanitizeNumericInput(inputEl, maxLength = 15) {
     }
 }
 
-function calculatePcmMarks() {
-    const phy = Number(document.getElementById('guide-physics')?.value || 0);
-    const math = Number(document.getElementById('guide-maths')?.value || 0);
-    const chemLab = Number(document.getElementById('guide-chemistry-lab')?.value || 0);
-    const total = phy + math + chemLab;
-    const pcmEl = document.getElementById('guide-pcm-total');
-    if (pcmEl) {
-        pcmEl.value = total > 0 ? `${total} / 600` : '';
+function calculateIntermediateTotal() {
+    const firstYearRaw = document.getElementById('guide-inter-1st')?.value || '';
+    const secondYearRaw = document.getElementById('guide-inter-2nd')?.value || '';
+    const totalEl = document.getElementById('guide-inter-total');
+    if (!totalEl) return;
+
+    if (!firstYearRaw && !secondYearRaw) {
+        totalEl.value = '';
+        return;
     }
+
+    const total = Number(firstYearRaw || 0) + Number(secondYearRaw || 0);
+    totalEl.value = String(total);
 }
 
 function getOtpCodeFromBoxes(className) {
@@ -154,8 +249,8 @@ function startOtpCountdown(type, seconds = 60) {
     }
 }
 
-// --- SEQUENTIAL STUDENT ID GENERATOR (STARTS FROM GTECH6001) ---
-async function generateNextGtechStudentId() {
+// --- SEQUENTIAL GTECH ID GENERATOR (STARTS FROM GTECH6001) ---
+async function generateNextGtechId() {
     let maxNumber = 6000;
     try {
         const { data } = await _supabase
@@ -189,7 +284,7 @@ async function generateNextGtechStudentId() {
     return `GTECH${nextNum}`;
 }
 
-// --- REFERRAL CODE CAPTURE (DO NOT AUTO-SHOW TOP BANNER ON MOBILE) ---
+// --- REFERRAL CODE CAPTURE (HIDDEN BY DEFAULT SO MOBILE STAYS CLEAN ABOVE HEADER) ---
 function detectIncomingReferralLink() {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -494,11 +589,10 @@ async function handleGuidanceSubmission(e) {
     const preferredUni = document.getElementById('guide-uni').value.trim();
     const assistanceType = document.getElementById('guide-assistance').value;
 
-    const interMarks = document.getElementById('guide-inter-marks').value.trim();
-    const physics = document.getElementById('guide-physics').value.trim();
-    const maths = document.getElementById('guide-maths').value.trim();
-    const chemLab = document.getElementById('guide-chemistry-lab').value.trim();
-    const pcmTotal = document.getElementById('guide-pcm-total').value.trim();
+    const inter1st = document.getElementById('guide-inter-1st').value.trim();
+    const inter2nd = document.getElementById('guide-inter-2nd').value.trim();
+    const interTotal = document.getElementById('guide-inter-total').value.trim();
+    const pcm600 = document.getElementById('guide-pcm-600').value.trim();
     const jeeMarks = document.getElementById('guide-jee').value.trim();
     const eamcetRank = document.getElementById('guide-eamcet').value.trim();
 
@@ -507,12 +601,13 @@ async function handleGuidanceSubmission(e) {
         return;
     }
 
-    const academicSummary = [
-        interMarks ? `Inter: ${interMarks}/1000` : '',
-        pcmTotal ? `PCM: ${pcmTotal}` : '',
-        (physics || maths || chemLab) ? `(P:${physics || 0}, M:${maths || 0}, C+Lab:${chemLab || 0})` : '',
-        jeeMarks ? `JEE: ${jeeMarks}` : '',
-        eamcetRank ? `EAMCET: ${eamcetRank}` : ''
+    const marksSummary = [
+        inter1st ? `Inter 1st Year: ${inter1st}` : '',
+        inter2nd ? `Inter 2nd Year: ${inter2nd}` : '',
+        interTotal ? `Total in Intermediate: ${interTotal}` : '',
+        pcm600 ? `PCM Marks (600 with practicals): ${pcm600}` : '',
+        jeeMarks ? `JEE Marks: ${jeeMarks}` : '',
+        eamcetRank ? `EAMCET Rank: ${eamcetRank}` : ''
     ].filter(Boolean).join(' | ');
 
     const payload = {
@@ -523,12 +618,11 @@ async function handleGuidanceSubmission(e) {
         branch: course,
         uni: preferredUni || 'Not Specified',
         assistance_type: assistanceType,
-        inter_marks: interMarks || null,
-        pcm_marks: pcmTotal || null,
-        physics_marks: physics || null,
-        maths_marks: maths || null,
-        chemistry_lab_marks: chemLab || null,
-        jee_score: academicSummary || jeeMarks || null,
+        inter_1st_marks: inter1st || null,
+        inter_2nd_marks: inter2nd || null,
+        inter_marks: interTotal || null,
+        pcm_marks: pcm600 || null,
+        jee_score: marksSummary || jeeMarks || null,
         eamcet_rank: eamcetRank || null,
         referral_code: state.currentStudent?.referred_by_code || state.incomingReferralCode || null,
         status: 'Pending Callback'
@@ -550,7 +644,7 @@ async function handleGuidanceSubmission(e) {
                 email: payload.email,
                 branch: payload.branch,
                 uni: payload.uni,
-                jee_score: `${assistanceType}${academicSummary ? ' • ' + academicSummary : ''}`,
+                jee_score: `${assistanceType}${marksSummary ? ' • ' + marksSummary : ''}`,
                 referral_code: payload.referral_code,
                 status: 'Pending Callback'
             };
@@ -565,103 +659,45 @@ async function handleGuidanceSubmission(e) {
 
         state.inquiries.unshift(payload);
 
+        // Send confirmation email to Student & Admin
         await sendMailNotification({
-            to: ADMIN_EMAIL,
-            eventType: 'scholarship_or_visiting_submitted',
-            subject: `Scholarship / Application Submitted by Student: ${name} (${assistanceType})`,
+            to: email,
+            ccAdmin: true,
+            eventType: 'application_submitted',
+            subject: `Gtech Admissions: ${assistanceType} Submitted (${name})`,
             text: [
-                `Scholarship / application is submitted by student: ${name}`,
-                `Type: ${assistanceType}`,
-                `Phone: ${phone}`,
-                `Email: ${email}`,
-                `Course: ${course}`,
-                `Preferred University: ${preferredUni || 'Not Specified'}`,
-                `Marks / Details: ${academicSummary || 'Not Provided'}`
+                `Hello ${name},`,
+                ``,
+                `Your ${assistanceType} has been submitted successfully on Gtech Admissions.`,
+                `Our expert will reach you within 10 mins.`,
+                ``,
+                `Application Details:`,
+                `• Name: ${name}`,
+                `• Phone: ${phone}`,
+                `• Email: ${email}`,
+                `• Course: ${course}`,
+                `• Preferred University: ${preferredUni || 'Not Specified'}`,
+                `• Marks Summary: ${marksSummary || 'Not Provided'}`,
+                `• Status: Pending Callback`,
+                ``,
+                `— Gtech Admissions (Admissions and Guidance Portal)`
             ].join('\n'),
             details: payload
         });
 
         showToast(
             'Application Submitted',
-            'Scholarship form submitted! Your expert will reach you within 10 mins.',
+            'Application submitted! Email update sent and our expert will reach you within 10 mins.',
             'success'
         );
         e.target.reset();
-        document.getElementById('guide-pcm-total').value = '';
+        document.getElementById('guide-inter-total').value = '';
         prefillGuidanceFormWithStudent();
         closeScholarshipModal();
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.querySelector('span').textContent = 'SUBMIT APPLICATION';
-        }
-    }
-}
-
-// --- STUDENT DETAILS UPDATE (SENDS MAIL ON EVERY UPDATE) ---
-async function handleStudentDetailsUpdate(e) {
-    e.preventDefault();
-    if (!state.currentStudent) return;
-
-    const btn = document.getElementById('btn-update-student-details');
-    const updatedName = document.getElementById('upd-student-name').value.trim();
-    const updatedPhone = document.getElementById('upd-student-phone').value.replace(/\D+/g, '').trim();
-    const updatedCourse = document.getElementById('upd-student-course').value.trim();
-
-    if (!updatedName || !updatedPhone) {
-        showToast('Missing Details', 'Student name and phone number are required.', 'error');
-        return;
-    }
-
-    const studentCode = (state.currentStudent.student_id || state.currentStudent.id || 'GTECH6001').toUpperCase();
-    const email = (state.currentStudent.email || '').toLowerCase();
-
-    try {
-        if (btn) {
-            btn.disabled = true;
-            btn.querySelector('span').textContent = 'Updating & Mailing...';
-        }
-
-        const updateFields = {
-            full_name: updatedName,
-            mobile: updatedPhone
-        };
-
-        await _supabase
-            .from('student_profiles')
-            .update(updateFields)
-            .eq('email', email);
-
-        state.currentStudent = {
-            ...state.currentStudent,
-            full_name: updatedName,
-            mobile: updatedPhone,
-            target_course: updatedCourse || state.currentStudent.target_course || ''
-        };
-        localStorage.setItem('gtech_student_session', JSON.stringify(state.currentStudent));
-        updateHeaderForLoggedInStudent(state.currentStudent);
-        renderStudentDashboard();
-
-        await sendMailNotification({
-            to: ADMIN_EMAIL,
-            eventType: 'student_details_updated',
-            subject: `Student Details Updated: ${updatedName} (${studentCode})`,
-            text: [
-                `Student details have been updated:`,
-                `Student ID: ${studentCode}`,
-                `Name: ${updatedName}`,
-                `Phone: ${updatedPhone}`,
-                `Email: ${email}`,
-                `Course / University: ${updatedCourse || 'Not Specified'}`
-            ].join('\n'),
-            details: state.currentStudent
-        });
-
-        showToast('Details Updated', 'Your details are saved and sent via email.', 'success');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.querySelector('span').textContent = 'Save & Send Update Email';
         }
     }
 }
@@ -855,14 +891,14 @@ async function handleVerifyRegistrationOtp() {
 
         await verifyEmailOtpCode(regData.email, code, 'register');
 
-        const studentId = await generateNextGtechStudentId();
+        const gtechId = await generateNextGtechId();
         const newStudent = {
-            id: studentId,
-            student_id: studentId,
+            id: gtechId,
+            student_id: gtechId,
             full_name: regData.full_name,
             mobile: regData.mobile,
             email: regData.email,
-            referral_code: studentId,
+            referral_code: gtechId,
             referred_by_code: regData.referred_by_code || null
         };
 
@@ -874,7 +910,7 @@ async function handleVerifyRegistrationOtp() {
 
         if (error) {
             const minimalStudent = {
-                id: studentId,
+                id: gtechId,
                 full_name: regData.full_name,
                 mobile: regData.mobile,
                 email: regData.email,
@@ -898,7 +934,7 @@ async function handleVerifyRegistrationOtp() {
         }
 
         const profile = inserted || newStudent;
-        profile.student_id = profile.student_id || profile.id || studentId;
+        profile.student_id = profile.student_id || profile.id || gtechId;
 
         state.currentStudent = profile;
         state.pendingRegistration = null;
@@ -909,16 +945,19 @@ async function handleVerifyRegistrationOtp() {
         prefillGuidanceFormWithStudent();
 
         await sendMailNotification({
-            to: ADMIN_EMAIL,
+            to: profile.email,
+            ccAdmin: true,
             eventType: 'new_student_registered',
-            subject: `New Student Registered: ${profile.full_name} (${profile.student_id})`,
+            subject: `Welcome to Gtech Admissions! Your Gtech ID: ${profile.student_id}`,
             text: [
-                `New student registered on Gtech Admissions:`,
-                `Student ID: ${profile.student_id}`,
-                `Name: ${profile.full_name}`,
-                `Phone: ${profile.mobile}`,
-                `Email: ${profile.email}`,
-                `Referral Code Used: ${profile.referred_by_code || 'None'}`
+                `Hello ${profile.full_name},`,
+                ``,
+                `Welcome to Gtech Admissions (Admissions and Guidance Portal)!`,
+                `Your Gtech ID is: ${profile.student_id}`,
+                `Your Referral Code is: ${profile.student_id}`,
+                ``,
+                `Sign in to your Gtech Student Portal anytime using ${profile.email} to track applications, approvals, and referral earnings.`,
+                `— Gtech Admissions`
             ].join('\n'),
             details: profile
         });
@@ -928,7 +967,7 @@ async function handleVerifyRegistrationOtp() {
         document.getElementById('generated-student-id-display').textContent = profile.student_id;
         document.getElementById('reg-success-panel').classList.remove('hidden');
 
-        showToast('Registration Successful', `Student ID ${profile.student_id} generated!`, 'success');
+        showToast('Registration Successful', `Gtech ID ${profile.student_id} generated!`, 'success');
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
@@ -1029,7 +1068,7 @@ async function handleVerifyLoginOtp() {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
         verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verify & Open Dashboard';
+        verifyBtn.textContent = 'Verify & Open Portal';
     }
 }
 
@@ -1126,7 +1165,7 @@ function updateHeaderForLoggedInStudent(profile) {
     }
 }
 
-// --- STUDENT DASHBOARD TABS ---
+// --- STUDENT PORTAL TABS ---
 function switchDashboardSection(tabName) {
     state.activeDashboardTab = tabName;
     const tabs = ['dashboard', 'applications', 'referral'];
@@ -1211,20 +1250,13 @@ function renderStudentDashboard() {
     const stu = state.currentStudent;
     if (!stu) return;
 
-    const studentCode = (stu.student_id || stu.id || 'GTECH6001').toUpperCase();
-    const myRefCode = (stu.referral_code || studentCode).toUpperCase();
+    const gtechCode = (stu.student_id || stu.id || 'GTECH6001').toUpperCase();
+    const myRefCode = (stu.referral_code || gtechCode).toUpperCase();
 
     document.getElementById('dash-topbar-name').textContent = stu.full_name || 'Student Portal';
-    document.getElementById('dash-topbar-id').textContent = `Student ID: ${studentCode}`;
+    document.getElementById('dash-topbar-id').textContent = `Gtech ID: ${gtechCode}`;
     document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
-    document.getElementById('student-dash-id').textContent = studentCode;
-
-    const updName = document.getElementById('upd-student-name');
-    const updPhone = document.getElementById('upd-student-phone');
-    const updCourse = document.getElementById('upd-student-course');
-    if (updName) updName.value = stu.full_name || '';
-    if (updPhone) updPhone.value = stu.mobile || '';
-    if (updCourse) updCourse.value = stu.target_course || '';
+    document.getElementById('student-dash-id').textContent = gtechCode;
 
     // 1. MY APPLICATIONS & ENQUIRIES
     const myApps = state.inquiries.filter(inq =>
@@ -1257,17 +1289,17 @@ function renderStudentDashboard() {
         const lower = latestStatusLabel.toLowerCase();
         if (lower.includes('visiting') || lower.includes('completed')) activeStepIndex = 2;
         if (lower.includes('application')) activeStepIndex = 3;
-        if (lower.includes('admission')) activeStepIndex = 4;
+        if (lower.includes('admission') || lower.includes('approved')) activeStepIndex = 4;
     }
 
     document.getElementById('dash-current-stage-badge').textContent = latestStatusLabel;
 
     const steps = [
-        { title: '1. Registered', desc: 'ID Active' },
+        { title: '1. Registered', desc: 'Gtech ID Active' },
         { title: '2. Applied', desc: 'Form submitted' },
         { title: '3. Free Visit', desc: 'Campus visit' },
         { title: '4. University Filing', desc: 'Seat processing' },
-        { title: '5. Admission Done', desc: 'Confirmed' }
+        { title: '5. Approved / Done', desc: 'Confirmed' }
     ];
 
     document.getElementById('admission-process-flow').innerHTML = steps.map((step, idx) => {
@@ -1399,7 +1431,7 @@ function shareReferralInstagram() {
 window.showToast = showToast;
 window.hideToast = hideToast;
 window.sanitizeNumericInput = sanitizeNumericInput;
-window.calculatePcmMarks = calculatePcmMarks;
+window.calculateIntermediateTotal = calculateIntermediateTotal;
 window.handleOtpBoxInput = handleOtpBoxInput;
 window.handleOtpBoxKeydown = handleOtpBoxKeydown;
 window.openScholarshipModal = openScholarshipModal;
@@ -1412,7 +1444,6 @@ window.handleVerifyRegistrationOtp = handleVerifyRegistrationOtp;
 window.handleSendLoginOtp = handleSendLoginOtp;
 window.handleVerifyLoginOtp = handleVerifyLoginOtp;
 window.handleStudentLogout = handleStudentLogout;
-window.handleStudentDetailsUpdate = handleStudentDetailsUpdate;
 window.openStudentDashboardModal = openStudentDashboardModal;
 window.closeStudentDashboardModal = closeStudentDashboardModal;
 window.switchDashboardSection = switchDashboardSection;

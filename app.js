@@ -310,6 +310,80 @@ async function loadActiveCarousel() {
     `).join('');
 }
 
+// --- MULTI-STATE, CAMPUS & QUOTA HELPERS ---
+function getUniversityStates(uni) {
+    if (Array.isArray(uni?.states) && uni.states.length > 0) {
+        return uni.states.map(s => String(s || '').trim()).filter(Boolean);
+    }
+    if (typeof uni?.states === 'string' && uni.states.trim()) {
+        return uni.states.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return uni?.state ? [String(uni.state).trim()] : [];
+}
+
+function getUniversityCampuses(uni) {
+    if (Array.isArray(uni?.campuses) && uni.campuses.length > 0) {
+        return uni.campuses.map(c => String(c || '').trim()).filter(Boolean);
+    }
+    if (typeof uni?.campuses === 'string' && uni.campuses.trim()) {
+        return uni.campuses.split(',').map(c => c.trim()).filter(Boolean);
+    }
+    return [];
+}
+
+function parseBranchesObject(rawBranches) {
+    if (!rawBranches) return {};
+    if (typeof rawBranches === 'string') {
+        try {
+            const parsed = JSON.parse(rawBranches);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (_) {
+            return {};
+        }
+    }
+    return typeof rawBranches === 'object' ? rawBranches : {};
+}
+
+function matchesStateFilter(uni, selectedFilter) {
+    const mode = String(uni?.admission_type || 'Direct Admission Only');
+    if (!selectedFilter || selectedFilter === 'ALL') return true;
+    if (selectedFilter === 'Entrance Exams') {
+        return mode.toLowerCase().includes('entrance exam');
+    }
+
+    const states = getUniversityStates(uni).map(s => s.toLowerCase());
+    const target = String(selectedFilter).toLowerCase();
+
+    if (states.includes(target)) return true;
+    if (target.includes('chennai') || target.includes('tamil nadu')) {
+        return states.some(s => s.includes('chennai') || s.includes('tamil nadu'));
+    }
+    if (target.includes('karnataka') || target.includes('bangalore')) {
+        return states.some(s => s.includes('karnataka') || s.includes('bangalore'));
+    }
+    return false;
+}
+
+function populateCampusSelectForUniversity(uniName) {
+    const wrap = document.getElementById('guide-campus-wrap');
+    const select = document.getElementById('guide-campus');
+    if (!wrap || !select) return;
+
+    const cleanName = String(uniName || '').trim().toLowerCase();
+    const matchedUni = state.universities.find(u => String(u.name || '').trim().toLowerCase() === cleanName);
+    const campuses = matchedUni ? getUniversityCampuses(matchedUni) : [];
+
+    if (campuses.length > 0) {
+        select.innerHTML = campuses
+            .map(c => `<option value="${String(c).replace(/"/g, '&quot;')}">${c}</option>`)
+            .join('');
+        wrap.classList.remove('hidden');
+    } else {
+        select.innerHTML = '';
+        wrap.classList.add('hidden');
+    }
+}
+
 // --- UNIVERSITIES & CATALOG ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
@@ -350,20 +424,20 @@ function renderUniversities() {
     const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
 
     const filtered = state.universities.filter(uni => {
-        const mode = String(uni.admission_type || 'Direct Admission Only');
-        let matchesState = true;
-
-        if (state.stateFilter === 'Entrance Exams') {
-            matchesState = mode.toLowerCase().includes('entrance exam');
-        } else if (state.stateFilter !== 'ALL') {
-            matchesState = String(uni.state || '').toLowerCase() === state.stateFilter.toLowerCase();
-        }
+        const matchesState = matchesStateFilter(uni, state.stateFilter);
+        const statesText = getUniversityStates(uni).join(' ').toLowerCase();
+        const campusesText = getUniversityCampuses(uni).join(' ').toLowerCase();
+        const branchesObj = parseBranchesObject(uni.branches);
+        const branchesText = Object.keys(branchesObj).join(' ').toLowerCase();
 
         const matchesQuery =
-            uni.name.toLowerCase().includes(query) ||
+            !query ||
+            String(uni.name || '').toLowerCase().includes(query) ||
             (uni.location && uni.location.toLowerCase().includes(query)) ||
             (uni.address && uni.address.toLowerCase().includes(query)) ||
-            uni.state.toLowerCase().includes(query);
+            statesText.includes(query) ||
+            campusesText.includes(query) ||
+            branchesText.includes(query);
         return matchesState && matchesQuery;
     });
 
@@ -379,31 +453,37 @@ function renderUniversities() {
     }
 
     grid.innerHTML = filtered.map(uni => {
-        const isAP = String(uni.state || '').toLowerCase() === 'andhra pradesh';
+        const statesList = getUniversityStates(uni);
+        const statesDisplay = statesList.join(' • ') || uni.state || 'India';
+        const campusesList = getUniversityCampuses(uni);
+        const isAP = statesList.some(s => s.toLowerCase() === 'andhra pradesh');
         const mode = String(uni.admission_type || 'Direct Admission Only');
         const isEntranceOnly = mode === 'Entrance Exam Only';
         const isEntranceAndDirect = mode === 'Entrance Exam & Direct Admission';
 
-        // Admin-controlled flags on `universities` table:
-        // eamcet_seats: 'available' | 'not_available'
-        // management_seats: 'available' | 'not_available'
         const eamcetAvailable = isAP && String(uni.eamcet_seats || 'not_available').toLowerCase() === 'available';
         const mgmtAvailable = !isAP || String(uni.management_seats || 'available').toLowerCase() === 'available';
 
-        let branchRows = '';
-        const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
-        for (const [branch, fee] of Object.entries(branches)) {
-            branchRows += `
+        const branches = parseBranchesObject(uni.branches);
+        const branchEntries = Object.entries(branches);
+        const branchRows = branchEntries.length > 0
+            ? branchEntries.map(([branch, fee]) => `
                 <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px]">
                     <span class="text-slate-700 font-bold">${branch}</span>
-                    <span class="text-emerald-700 font-extrabold">₹${Number(fee).toLocaleString('en-IN')}/yr</span>
+                    <span class="text-emerald-700 font-extrabold">₹${Number(fee || 0).toLocaleString('en-IN')}/yr</span>
                 </div>
-            `;
-        }
+            `).join('')
+            : `<p class="text-[11px] text-slate-500">Branch fee details will be shared during counselling/application.</p>`;
 
-        const safeUniName = uni.name.replace(/'/g, "\\'");
+        const campusPills = campusesList.length > 0
+            ? `<div class="mt-2.5 flex flex-wrap gap-1.5">
+                ${campusesList.map(c => `<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-900 border border-sky-200"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i>${c}</span>`).join('')}
+               </div>`
+            : '';
 
-        // 1. ENTRANCE EXAM ONLY CARD (No Scholarship form, No Visiting form -> Only Get Expert Application Help)
+        const safeUniName = String(uni.name || '').replace(/'/g, "\\'");
+
+        // 1. ENTRANCE EXAM ONLY CARD
         if (isEntranceOnly) {
             return `
                 <div class="bg-white rounded-3xl border border-indigo-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-300 transition duration-300 flex flex-col justify-between">
@@ -411,7 +491,7 @@ function renderUniversities() {
                         <div class="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50">
                             <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
-                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-indigo-800 border border-indigo-100 shadow-xs">${uni.state}</span>
+                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-indigo-800 border border-indigo-100 shadow-xs">${statesDisplay}</span>
                             <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
                                 <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-600 text-white">Entrance Exam Only</span>
@@ -422,29 +502,32 @@ function renderUniversities() {
                             <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
                             <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
                                 <i class="fa-solid fa-location-dot text-indigo-600 mt-0.5 shrink-0"></i>
-                                <span>${uni.address}</span>
+                                <span>${uni.address || ''}</span>
                             </p>
+                            ${campusPills}
 
                             <div class="mt-3 p-3 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-950">
                                 <strong class="block font-black">Entrance Exam Application Support Only</strong>
                                 <span class="text-[11px] text-indigo-800">Admission is strictly via entrance exam. We assist with entrance exam applications only—not direct admissions.</span>
                             </div>
 
-                            <div class="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
-                                <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Branch Tuition Fees (Per Year):</p>
-                                <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
-                                    ${branchRows}
+                            ${branchEntries.length > 0 ? `
+                                <div class="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
+                                    <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Reference Branch Tuition Fees (Per Year):</p>
+                                    <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
+                                        ${branchRows}
+                                    </div>
                                 </div>
-                            </div>
+                            ` : ''}
 
                             <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
                                 <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
                                     <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
-                                    <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
+                                    <strong class="text-amber-900 text-xs">${Number(uni.hostel_fee || 0) > 0 ? `${formatINR(uni.hostel_fee)}/yr` : 'As per allotment'}</strong>
                                 </div>
                                 <div class="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100">
                                     <span class="text-[10px] text-indigo-800 block font-semibold">Application Fee</span>
-                                    <strong class="text-indigo-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
+                                    <strong class="text-indigo-900 text-xs">${formatINR(uni.application_fee || 0)}</strong>
                                 </div>
                             </div>
                         </div>
@@ -467,7 +550,7 @@ function renderUniversities() {
                         <div class="relative aspect-[16/9] w-full overflow-hidden bg-sky-50">
                             <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
-                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">Andhra Pradesh</span>
+                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${statesDisplay}</span>
                             <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
                                 <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg ${eamcetAvailable ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-white'}">
@@ -480,8 +563,9 @@ function renderUniversities() {
                             <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
                             <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
                                 <i class="fa-solid fa-location-dot text-sky-600 mt-0.5 shrink-0"></i>
-                                <span>${uni.address}</span>
+                                <span>${uni.address || ''}</span>
                             </p>
+                            ${campusPills}
 
                             ${eamcetAvailable ? `
                                 <div class="mt-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1.5">
@@ -570,7 +654,7 @@ function renderUniversities() {
                     <div class="relative aspect-[16/9] w-full overflow-hidden bg-sky-50">
                         <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
-                        <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${uni.state}</span>
+                        <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${statesDisplay}</span>
                         <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
                             <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${mode}</span>
@@ -581,8 +665,9 @@ function renderUniversities() {
                         <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
                         <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
                             <i class="fa-solid fa-location-dot text-sky-600 mt-0.5 shrink-0"></i>
-                            <span>${uni.address}</span>
+                            <span>${uni.address || ''}</span>
                         </p>
+                        ${campusPills}
 
                         <div class="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
                             <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Branch Tuition Fees (Per Year):</p>
@@ -658,6 +743,8 @@ function openScholarshipModal(uniName = '', assistanceType = '') {
         assistSelect.value = assistanceType;
     }
 
+    populateCampusSelectForUniversity(uniName);
+
     if (banner) {
         if (assistanceType === 'Get Expert Application Help') {
             banner.textContent = 'Entrance Exam Application Support Only: We assist with entrance exam applications only—not direct admissions.';
@@ -700,7 +787,14 @@ async function handleGuidanceSubmission(e) {
     const phone = document.getElementById('guide-phone').value.replace(/\D+/g, '').trim();
     const email = document.getElementById('guide-email').value.trim().toLowerCase();
     const course = document.getElementById('guide-course').value;
-    const preferredUni = document.getElementById('guide-uni').value.trim();
+    const rawUni = document.getElementById('guide-uni').value.trim();
+    const campusWrap = document.getElementById('guide-campus-wrap');
+    const selectedCampus = (campusWrap && !campusWrap.classList.contains('hidden'))
+        ? (document.getElementById('guide-campus')?.value || '').trim()
+        : '';
+    const preferredUni = selectedCampus
+        ? `${rawUni || 'University'} (${selectedCampus} Campus)`
+        : rawUni;
     const assistanceType = document.getElementById('guide-assistance').value;
 
     const inter1st = document.getElementById('guide-inter-1st').value.trim();
@@ -805,6 +899,7 @@ async function handleGuidanceSubmission(e) {
         );
         e.target.reset();
         document.getElementById('guide-inter-total').value = '';
+        document.getElementById('guide-campus-wrap')?.classList.add('hidden');
         prefillGuidanceFormWithStudent();
         closeScholarshipModal();
     } finally {
@@ -1390,9 +1485,11 @@ function openUniversityStatusModal(uniName) {
     const bodyEl = document.getElementById('uni-status-modal-body');
     if (!modal || !titleEl || !bodyEl) return;
 
+    const cleanTargetName = String(uniName || '').replace(/\s*\(.*Campus\)\s*$/i, '').trim().toLowerCase();
     const matchedUni = state.universities.find(
-        u => u.name && u.name.trim().toLowerCase() === String(uniName || '').trim().toLowerCase()
+        u => u.name && u.name.trim().toLowerCase() === cleanTargetName
     );
+    const isEntranceOnly = matchedUni && String(matchedUni.admission_type || '').toLowerCase() === 'entrance exam only';
 
     const fin = state.financeRecord || {};
     const stuApps = state.currentStudent ? getUniversityWiseApplications(state.currentStudent) : [];
@@ -1412,23 +1509,26 @@ function openUniversityStatusModal(uniName) {
     titleEl.textContent = uniName;
 
     let branchFeeHtml = '';
-    if (matchedUni && matchedUni.branches) {
-        const branches = typeof matchedUni.branches === 'string'
-            ? JSON.parse(matchedUni.branches)
-            : matchedUni.branches;
-        branchFeeHtml = Object.entries(branches).map(([branch, fee]) => `
-            <div class="flex items-center justify-between py-1.5 border-b border-sky-100 last:border-none">
-                <span class="font-bold text-slate-700">${branch}</span>
-                <span class="font-extrabold text-indigo-700">${formatINR(fee)}/yr</span>
-            </div>
-        `).join('');
-    } else if (fin.total_university_fee) {
+    if (!isEntranceOnly && matchedUni && matchedUni.branches) {
+        const branches = parseBranchesObject(matchedUni.branches);
+        const entries = Object.entries(branches);
+        branchFeeHtml = entries.length > 0
+            ? entries.map(([branch, fee]) => `
+                <div class="flex items-center justify-between py-1.5 border-b border-sky-100 last:border-none">
+                    <span class="font-bold text-slate-700">${branch}</span>
+                    <span class="font-extrabold text-indigo-700">${formatINR(fee)}/yr</span>
+                </div>
+            `).join('')
+            : `<p class="text-slate-500">Fee structure will be updated by admin shortly.</p>`;
+    } else if (!isEntranceOnly && fin.total_university_fee) {
         branchFeeHtml = `
             <div class="flex items-center justify-between py-1.5">
                 <span class="font-bold text-slate-700">University Tuition Fee</span>
                 <span class="font-extrabold text-indigo-700">${formatINR(fin.total_university_fee)}</span>
             </div>
         `;
+    } else if (isEntranceOnly) {
+        branchFeeHtml = `<p class="text-indigo-800">Entrance Exam Only mode: Tuition &amp; hostel fees apply per entrance exam counselling/allotment.</p>`;
     } else {
         branchFeeHtml = `<p class="text-slate-500">Fee structure will be updated by admin shortly.</p>`;
     }

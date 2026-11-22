@@ -208,13 +208,21 @@
         <div class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
             <button onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0">All Regions</button>
             <button onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-file-lines mr-1"></i> Entrance Exams</button>
-            <button onclick="setStateFilter('Application Only')" data-state="Application Only" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-sky-200 text-sky-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-pen-to-square mr-1"></i> Application Only</button>
             <button onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
             <button onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Telangana</button>
             <button onclick="setStateFilter('Chennai')" data-state="Chennai" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Tamil Nadu / Chennai</button>
             <button onclick="setStateFilter('Karnataka')" data-state="Karnataka" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Bangalore / Karnataka</button>
             <button onclick="setStateFilter('UP')" data-state="UP" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">UP</button>
             <button onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Maharashtra</button>
+        </div>
+
+        <!-- Andhra Pradesh Quota Legend / Info Strip (Shown when Andhra Pradesh is selected) -->
+        <div id="ap-quota-filter-bar" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
+            <div class="flex items-center gap-2 font-bold">
+                <i class="fa-solid fa-landmark text-emerald-700"></i>
+                <span>Andhra Pradesh Quota View: EAMCET tuition reimbursement by Govt of AP (Hostel Fee applies) &amp; Management Quota options are controlled by Admin.</span>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP EAMCET &amp; Management</span>
         </div>
     </section>
 
@@ -280,6 +288,8 @@
             </div>
 
             <form id="guidance-inquiry-form" onsubmit="handleGuidanceSubmission(event)" class="p-5 sm:p-7 space-y-4 max-h-[82vh] overflow-y-auto">
+                <div id="guide-mode-banner" class="hidden p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-900"></div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                         <label for="guide-name" class="block text-[11px] font-bold text-slate-700 mb-1">
@@ -332,6 +342,9 @@
                         <select id="guide-assistance" required class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-indigo-500">
                             <option value="Scholarship Based on Marks">Scholarship Based on Marks</option>
                             <option value="Visiting Application">Visiting Application</option>
+                            <option value="EAMCET Counselling Help">EAMCET Counselling Help</option>
+                            <option value="Apply Management Quota">Apply Management Quota</option>
+                            <option value="Get Expert Application Help">Get Expert Application Help</option>
                             <option value="Education Loan Guidance">Education Loan Guidance</option>
                             <option value="Admission Guidance">Admission Guidance</option>
                         </select>
@@ -339,7 +352,7 @@
                 </div>
 
                 <!-- Academic Marks Section -->
-                <div class="p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 shadow-xs">
+                <div id="guide-marks-section" class="p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 shadow-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-black uppercase tracking-wider text-indigo-800">
                             <i class="fa-solid fa-calculator mr-1"></i> Intermediate &amp; Entrance Marks
@@ -414,7 +427,6 @@
             <div class="relative z-10 p-5 sm:p-8 bg-gradient-to-b from-sky-50/90 via-white/95 to-emerald-50/80">
                 <button type="button" onclick="closeAuthModal()" aria-label="Close modal" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-xs font-bold transition">✕</button>
 
-                <!-- Pending Application Context Notice (shown when redirected from Scholarship / Visiting button) -->
                 <div id="auth-redirect-notice" class="hidden mb-4 px-3.5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-800 flex items-center gap-2">
                     <i class="fa-solid fa-lock text-indigo-600 shrink-0"></i>
                     <span id="auth-redirect-notice-text">Please sign in or register first to open your application form.</span>
@@ -573,9 +585,7 @@
     <!-- AUTHENTICATED STUDENT PORTAL MODAL (PREMIUM SEGMENTED SINGLE-ROW HEADER) -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-x-hidden">
         <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 border border-indigo-200/80 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Premium Single-Line Header -->
             <div class="px-2.5 py-2.5 sm:px-5 sm:py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-b border-indigo-800/60 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
-                <!-- Brand Identity Pill (Desktop) -->
                 <div class="hidden md:flex items-center gap-2.5 min-w-0 shrink-0">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-sky-400 text-white flex items-center justify-center font-black text-xs shadow-md shrink-0">
                         <i class="fa-solid fa-graduation-cap"></i>
@@ -586,7 +596,6 @@
                     </div>
                 </div>
 
-                <!-- Segmented Navigation Bar: Student Portal | My Referral | Sign Out | Cancel -->
                 <div class="flex items-center justify-between sm:justify-end w-full md:w-auto gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-md p-1 rounded-xl border border-white/15 shrink-0">
                     <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-white text-indigo-950 text-[10px] sm:text-xs font-black whitespace-nowrap shrink-0 shadow-sm transition flex items-center justify-center gap-1">
                         <i class="fa-solid fa-user-graduate text-[10px] text-indigo-600"></i>
@@ -608,9 +617,7 @@
             </div>
 
             <div class="p-3.5 sm:p-6 overflow-y-auto overflow-x-hidden flex-1 space-y-5 sm:space-y-6">
-                <!-- VIEW 1: STUDENT PORTAL -->
                 <div id="dash-section-dashboard" class="space-y-5">
-                    <!-- Welcome Banner -->
                     <div class="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/90 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="space-y-1">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
@@ -632,7 +639,6 @@
                         </div>
                     </div>
 
-                    <!-- 1. APPLIED SCHOLARSHIP UNIVERSITIES (UNIVERSITY-WISE + STATUS BUTTON) -->
                     <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xs">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
@@ -649,7 +655,6 @@
                         <div id="applied-scholarship-universities-list" class="space-y-3"></div>
                     </div>
 
-                    <!-- 2. ADMISSION STATUS OF APPLIED UNIVERSITIES -->
                     <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-3 shadow-xs">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
@@ -665,7 +670,6 @@
                     </div>
                 </div>
 
-                <!-- VIEW 2: MY REFERRAL (ONLY MY REFERRAL VISIBLE AMOUNTS) -->
                 <div id="dash-section-referral" class="hidden space-y-4">
                     <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-5 shadow-xs">
                         <div>

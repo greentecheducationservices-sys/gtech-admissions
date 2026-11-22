@@ -195,6 +195,12 @@ function detectIncomingReferralLink() {
     }
 
     if (state.incomingReferralCode) {
+        const banner = document.getElementById('referral-applied-banner');
+        const bannerCode = document.getElementById('banner-ref-code');
+        if (banner && bannerCode) {
+            bannerCode.textContent = state.incomingReferralCode;
+            banner.classList.remove('hidden');
+        }
         const regRefInput = document.getElementById('reg-referral');
         if (regRefInput && !regRefInput.value) {
             regRefInput.value = state.incomingReferralCode;
@@ -329,6 +335,12 @@ function setStateFilter(stateName) {
             btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0';
         }
     });
+
+    const apBar = document.getElementById('ap-quota-filter-bar');
+    if (apBar) {
+        apBar.classList.toggle('hidden', stateName !== 'Andhra Pradesh');
+    }
+
     renderUniversities();
 }
 
@@ -338,13 +350,13 @@ function renderUniversities() {
     const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
 
     const filtered = state.universities.filter(uni => {
+        const mode = String(uni.admission_type || 'Direct Admission Only');
         let matchesState = true;
+
         if (state.stateFilter === 'Entrance Exams') {
-            matchesState = uni.admission_type === 'Entrance Exam Required';
-        } else if (state.stateFilter === 'Application Only') {
-            matchesState = uni.admission_type === 'Application Only';
+            matchesState = mode.toLowerCase().includes('entrance exam');
         } else if (state.stateFilter !== 'ALL') {
-            matchesState = uni.state === state.stateFilter;
+            matchesState = String(uni.state || '').toLowerCase() === state.stateFilter.toLowerCase();
         }
 
         const matchesQuery =
@@ -367,6 +379,17 @@ function renderUniversities() {
     }
 
     grid.innerHTML = filtered.map(uni => {
+        const isAP = String(uni.state || '').toLowerCase() === 'andhra pradesh';
+        const mode = String(uni.admission_type || 'Direct Admission Only');
+        const isEntranceOnly = mode === 'Entrance Exam Only';
+        const isEntranceAndDirect = mode === 'Entrance Exam & Direct Admission';
+
+        // Admin-controlled flags on `universities` table:
+        // eamcet_seats: 'available' | 'not_available'
+        // management_seats: 'available' | 'not_available'
+        const eamcetAvailable = isAP && String(uni.eamcet_seats || 'not_available').toLowerCase() === 'available';
+        const mgmtAvailable = !isAP || String(uni.management_seats || 'available').toLowerCase() === 'available';
+
         let branchRows = '';
         const branches = typeof uni.branches === 'string' ? JSON.parse(uni.branches) : (uni.branches || {});
         for (const [branch, fee] of Object.entries(branches)) {
@@ -378,12 +401,168 @@ function renderUniversities() {
             `;
         }
 
-        const badgeType = uni.admission_type || 'Direct Admission Open';
-        let badgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-        if (badgeType === 'Entrance Exam Required') badgeClass = 'bg-amber-50 text-amber-800 border-amber-200';
-        if (badgeType === 'Application Only') badgeClass = 'bg-sky-50 text-sky-800 border-sky-200';
-
         const safeUniName = uni.name.replace(/'/g, "\\'");
+
+        // 1. ENTRANCE EXAM ONLY CARD (No Scholarship form, No Visiting form -> Only Get Expert Application Help)
+        if (isEntranceOnly) {
+            return `
+                <div class="bg-white rounded-3xl border border-indigo-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-300 transition duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50">
+                            <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
+                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-indigo-800 border border-indigo-100 shadow-xs">${uni.state}</span>
+                            <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
+                                <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-600 text-white">Entrance Exam Only</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-5">
+                            <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
+                            <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
+                                <i class="fa-solid fa-location-dot text-indigo-600 mt-0.5 shrink-0"></i>
+                                <span>${uni.address}</span>
+                            </p>
+
+                            <div class="mt-3 p-3 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-950">
+                                <strong class="block font-black">Entrance Exam Application Support Only</strong>
+                                <span class="text-[11px] text-indigo-800">Admission is strictly via entrance exam. We assist with entrance exam applications only—not direct admissions.</span>
+                            </div>
+
+                            <div class="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
+                                <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Branch Tuition Fees (Per Year):</p>
+                                <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
+                                    ${branchRows}
+                                </div>
+                            </div>
+
+                            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
+                                    <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
+                                    <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100">
+                                    <span class="text-[10px] text-indigo-800 block font-semibold">Application Fee</span>
+                                    <strong class="text-indigo-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 pt-0">
+                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-headset"></i> Get Expert Application Help
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2. ANDHRA PRADESH CARD (EAMCET Quota & Management Quota controlled by Admin)
+        if (isAP) {
+            return `
+                <div class="bg-white rounded-3xl border border-sky-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-sky-300 transition duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="relative aspect-[16/9] w-full overflow-hidden bg-sky-50">
+                            <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
+                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">Andhra Pradesh</span>
+                            <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
+                                <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg ${eamcetAvailable ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-white'}">
+                                    ${eamcetAvailable ? 'EAMCET Seats Available' : 'EAMCET Seats Not Available'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-5">
+                            <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
+                            <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
+                                <i class="fa-solid fa-location-dot text-sky-600 mt-0.5 shrink-0"></i>
+                                <span>${uni.address}</span>
+                            </p>
+
+                            ${eamcetAvailable ? `
+                                <div class="mt-3 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[11px] font-black uppercase tracking-wider text-emerald-900">
+                                            <i class="fa-solid fa-landmark mr-1"></i> AP EAMCET Quota
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-extrabold">Available</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs py-1 border-b border-emerald-200/80">
+                                        <span class="text-emerald-900 font-semibold">Tuition Fee</span>
+                                        <strong class="text-emerald-800">Reimbursement by Govt of AP</strong>
+                                    </div>
+                                    <div class="flex justify-between items-center text-xs pt-0.5">
+                                        <span class="text-emerald-900 font-semibold">Hostel Fee Only</span>
+                                        <strong class="text-slate-900">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${mgmtAvailable ? `
+                                <div class="mt-3 p-3 rounded-2xl bg-sky-50/70 border border-sky-200 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[11px] font-black uppercase tracking-wider text-sky-900">Management Quota Tuition</span>
+                                        <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 text-[10px] font-bold">Direct Seat</span>
+                                    </div>
+                                    <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
+                                        ${branchRows}
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 pt-1.5 text-xs">
+                                        <div class="p-2 rounded-xl bg-amber-50 border border-amber-100">
+                                            <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
+                                            <strong class="text-amber-900">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
+                                        </div>
+                                        <div class="p-2 rounded-xl bg-white border border-sky-100">
+                                            <span class="text-[10px] text-sky-800 block font-semibold">Application Fee</span>
+                                            <strong class="text-sky-900">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 pt-0 space-y-2">
+                        ${eamcetAvailable && mgmtAvailable ? `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button type="button" onclick="openScholarshipModal('${safeUniName}', 'EAMCET Counselling Help')" class="w-full py-2.5 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-solid fa-compass"></i> EAMCET Counselling Help
+                                </button>
+                                <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Apply Management Quota')" class="w-full py-2.5 px-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-solid fa-file-signature"></i> Apply Management Quota
+                                </button>
+                            </div>
+                        ` : eamcetAvailable ? `
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'EAMCET Counselling Help')" class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-compass"></i> EAMCET Counselling Help
+                            </button>
+                        ` : mgmtAvailable ? `
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Apply Management Quota')" class="w-full py-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-file-signature"></i> Apply Management Quota
+                            </button>
+                        ` : ''}
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-award"></i> Scholarship Form
+                            </button>
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Visiting Application')" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-route"></i> Visiting Application
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3. STANDARD / ENTRANCE EXAM & DIRECT ADMISSION CARD
+        const badgeClass = isEntranceAndDirect
+            ? 'bg-amber-50 text-amber-800 border-amber-200'
+            : 'bg-emerald-50 text-emerald-800 border-emerald-200';
 
         return `
             <div class="bg-white rounded-3xl border border-sky-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-sky-300 transition duration-300 flex flex-col justify-between">
@@ -394,7 +573,7 @@ function renderUniversities() {
                         <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${uni.state}</span>
                         <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
                             <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${badgeType}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${mode}</span>
                         </div>
                     </div>
 
@@ -415,23 +594,36 @@ function renderUniversities() {
                         <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
                             <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
                                 <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
-                                <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee).toLocaleString('en-IN')}/yr</strong>
+                                <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
                             </div>
                             <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-100">
                                 <span class="text-[10px] text-sky-800 block font-semibold">Application Fee</span>
-                                <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee).toLocaleString('en-IN')}</strong>
+                                <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-4 sm:p-5 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                        <i class="fa-solid fa-award"></i> Scholarship Form
-                    </button>
-                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Visiting Application')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                        <i class="fa-solid fa-route"></i> Visiting Application
-                    </button>
+                <div class="p-4 sm:p-5 pt-0 space-y-2">
+                    ${isEntranceAndDirect ? `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-2.5 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-headset"></i> Get Expert Application Help
+                            </button>
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-award"></i> Scholarship Form
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-award"></i> Scholarship Form
+                            </button>
+                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Visiting Application')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                <i class="fa-solid fa-route"></i> Visiting Application
+                            </button>
+                        </div>
+                    `}
                 </div>
             </div>
         `;
@@ -440,7 +632,6 @@ function renderUniversities() {
 
 // --- SCHOLARSHIP & VISITING APPLICATION MODAL (REQUIRES STUDENT LOGIN FIRST) ---
 function openScholarshipModal(uniName = '', assistanceType = '') {
-    // If candidate is not logged in, navigate to the login modal and save target action
     if (!state.currentStudent) {
         state.pendingPostLoginAction = {
             type: 'scholarship_form',
@@ -458,12 +649,25 @@ function openScholarshipModal(uniName = '', assistanceType = '') {
 
     const uniInput = document.getElementById('guide-uni');
     const assistSelect = document.getElementById('guide-assistance');
+    const banner = document.getElementById('guide-mode-banner');
 
     if (uniInput) {
         uniInput.value = uniName || '';
     }
     if (assistSelect && assistanceType) {
         assistSelect.value = assistanceType;
+    }
+
+    if (banner) {
+        if (assistanceType === 'Get Expert Application Help') {
+            banner.textContent = 'Entrance Exam Application Support Only: We assist with entrance exam applications only—not direct admissions.';
+            banner.classList.remove('hidden');
+        } else if (assistanceType === 'EAMCET Counselling Help') {
+            banner.textContent = 'AP EAMCET Quota: Tuition fee is reimbursement by Govt of AP. Only Hostel Fee applies.';
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
     }
 
     prefillGuidanceFormWithStudent();
@@ -1297,7 +1501,6 @@ function renderStudentDashboard() {
     document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
     document.getElementById('student-dash-id').textContent = gtechCode;
 
-    // 1. APPLIED SCHOLARSHIP UNIVERSITIES (UNIVERSITY-WISE + STATUS OPTION)
     const uniGroups = getUniversityWiseApplications(stu);
     const uniListEl = document.getElementById('applied-scholarship-universities-list');
 
@@ -1325,7 +1528,6 @@ function renderStudentDashboard() {
         }).join('');
     }
 
-    // 2. ADMISSION STATUS OF APPLIED UNIVERSITIES
     const admStatusEl = document.getElementById('applied-universities-admission-status');
     const stageBadge = document.getElementById('dash-current-stage-badge');
 
@@ -1351,7 +1553,6 @@ function renderStudentDashboard() {
         }).join('');
     }
 
-    // MY REFERRAL TAB DATA (ONLY MY REFERRAL VISIBLE AMOUNTS)
     const fin = state.financeRecord || {};
     const visibleReferralAmount = Number(fin.referral_earnings || 0);
     const shareLink = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(myRefCode)}`;

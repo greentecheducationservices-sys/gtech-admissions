@@ -50,7 +50,11 @@
 @keyframes gtechPopIn {
     0% {
         opacity: 0;
-        transform: scale(0.95) translateY(8px);
+        transform: scale(0.94) translateY(10px);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.01) translateY(-1px);
     }
     100% {
         opacity: 1;
@@ -59,7 +63,22 @@
 }
 
 .gtech-pop-in {
-    animation: gtechPopIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: gtechPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+/* Center-Screen Early Offer Pop-Up Glow */
+#early-offer-center-modal > div {
+    box-shadow: 0 25px 60px -15px rgba(79, 70, 229, 0.28), 0 10px 25px -10px rgba(16, 185, 129, 0.18);
+}
+
+#dash-early-offer-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#dash-early-offer-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -8px rgba(79, 70, 229, 0.22);
 }
 
 /* 6-Box OTP Input Styling */
@@ -75,21 +94,40 @@
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
 }
 
-/* Student Dashboard Financial Cards Hover */
-#student-finance-cards > div {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Student Dashboard Financial & Status Cards Hover */
+#student-finance-cards > div,
+#applied-scholarship-universities-list > div,
+#applied-universities-admission-status > div {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-#student-finance-cards > div:hover {
+#student-finance-cards > div:hover,
+#applied-scholarship-universities-list > div:hover,
+#applied-universities-admission-status > div:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 18px -6px rgba(15, 23, 42, 0.1);
 }
 
 /* Scholarship & Expert Call Modal Scrollbar */
-#guidance-inquiry-form::-webkit-scrollbar-thumb {
+#guidance-inquiry-form::-webkit-scrollbar-thumb,
+#uni-status-modal-body::-webkit-scrollbar-thumb {
     background: #c7d2fe;
 }
 
-#guidance-inquiry-form::-webkit-scrollbar-thumb:hover {
+#guidance-inquiry-form::-webkit-scrollbar-thumb:hover,
+#uni-status-modal-body::-webkit-scrollbar-thumb:hover {
     background: #4f46e5;
+}
+
+/* Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+    .gtech-pop-in,
+    #about-carousel,
+    .reg-otp-box,
+    .login-otp-box,
+    #student-finance-cards > div,
+    #dash-early-offer-card {
+        animation: none !important;
+        transition: none !important;
+    }
 }

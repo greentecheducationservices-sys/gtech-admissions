@@ -84,7 +84,7 @@
                 Admissions and Guidance Portal
             </p>
             <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
-                Get scholarship based on marks, submit your visiting application for a free campus visit first, and compare transparent branch tuition fees and hostel charges.
+                Enter your marks or percentage on any university card to see your instant scholarship &amp; fee concession, request an expert call for extra concession, or book a free campus visit.
             </p>
             <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                 <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
@@ -130,7 +130,7 @@
                             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Marks Based</span>
                         </div>
                         <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Scholarship Based on Marks</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Get scholarship guidance based on your Intermediate, PCM, JEE, or EAMCET performance.</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">Enter your percentage or score to see instant scholarship eligibility &amp; fee concession.</p>
                     </div>
                     <div class="pt-4 mt-4 border-t border-sky-100 flex items-center justify-between text-[11px] font-bold text-sky-700">
                         <span>Apply for Scholarship</span>
@@ -198,7 +198,7 @@
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
-                <p class="text-xs text-slate-600 mt-0.5">100+ Universities • State Universities • Deemed Universities • Autonomous Colleges • Engineering Colleges.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Select a branch &amp; enter your percentage/rank on any card to auto-calculate scholarship and request extra fee concession from an expert.</p>
             </div>
             <div class="w-full md:w-72">
                 <input type="text" id="uni-search" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
@@ -221,13 +221,13 @@
         <div id="ap-quota-filter-bar" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
             <div class="flex items-center gap-2 font-bold">
                 <i class="fa-solid fa-landmark text-emerald-700"></i>
-                <span>Andhra Pradesh Quota View: EAMCET tuition reimbursement by Govt of AP (Hostel Fee applies) &amp; Management Quota options are controlled by Admin.</span>
+                <span>Andhra Pradesh Quota View: Quota availability and EAMCET requirement are controlled by Admin per university.</span>
             </div>
-            <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP EAMCET &amp; Management</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
         </div>
     </section>
 
-    <!-- Universities Grid Container -->
+    <!-- Universities Grid Container (Cards render live score inputs, auto-scholarship, and Call to Expert) -->
     <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
         <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
@@ -270,6 +270,47 @@
             </div>
         </div>
     </footer>
+
+    <!-- QUARTER-PAGE (1/4th) CONGRATULATIONS & EARLY REGISTRATION OFFER POP-UP (BEFORE MARCH 16, 2027) -->
+    <div id="early-offer-popup" class="fixed bottom-4 right-4 z-[70] hidden w-[92vw] sm:w-96 max-w-md max-h-[36vh] overflow-y-auto rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 text-white border-2 border-amber-300/80 shadow-2xl p-3.5 sm:p-4 gtech-pop-in">
+        <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-sm shrink-0">
+                    <i class="fa-solid fa-sparkles"></i>
+                </span>
+                <div>
+                    <span class="text-[9px] font-black uppercase tracking-wider text-amber-300 block">Before March 16, 2027 Offer</span>
+                    <h4 class="text-xs sm:text-sm font-black leading-tight text-white">Congrats! Welcome to the Gtech Family</h4>
+                </div>
+            </div>
+            <button type="button" onclick="closeEarlyOfferPopup()" aria-label="Close offer pop-up" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center shrink-0 transition">
+                ✕
+            </button>
+        </div>
+
+        <div class="mt-2.5 space-y-1.5 text-[11px] leading-snug text-slate-100">
+            <p class="font-bold text-emerald-300">
+                Register before March 16, 2027 &amp; unlock ₹2,000 OFF:
+            </p>
+            <div class="grid grid-cols-2 gap-1.5 bg-white/10 rounded-xl p-2 border border-white/10 text-[10px]">
+                <div><strong class="text-amber-300">₹1,000/- OFF</strong> Admission Fee</div>
+                <div><strong class="text-emerald-300">₹1,000/- OFF</strong> College Fee</div>
+            </div>
+            <p class="text-[10px] text-sky-200">
+                <i class="fa-solid fa-gift text-amber-300 mr-1"></i>
+                Refer friends &amp; get <strong>up to ₹30,000/-</strong> referral amount—added to tuition fee once your friend's admission is done!
+            </p>
+        </div>
+
+        <div class="mt-2.5 flex items-center justify-between gap-2">
+            <button type="button" onclick="closeEarlyOfferPopup(); openAuthModal('register');" class="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 hover:opacity-95 text-slate-950 font-black text-[11px] transition">
+                Claim ₹2,000 Offer Now
+            </button>
+            <button type="button" onclick="closeEarlyOfferPopup(); openStudentDashboardModal('referral');" class="py-1.5 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] transition">
+                Referral Rules
+            </button>
+        </div>
+    </div>
 
     <!-- SCHOLARSHIP AND VISITING APPLICATION FORM POP-UP MODAL -->
     <div id="scholarship-app-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -402,7 +443,7 @@
 
                         <div>
                             <label for="guide-jee" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                JEE Marks (Optional)
+                                JEE Marks / Percentile (Optional)
                             </label>
                             <input type="text" id="guide-jee" placeholder="Optional" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
                         </div>
@@ -450,10 +491,10 @@
                 <div id="register-view" class="hidden space-y-4">
                     <div class="space-y-1">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
-                            <i class="fa-solid fa-user-plus"></i> Student Onboarding
+                            <i class="fa-solid fa-user-plus"></i> Student Onboarding • Before March 16, 2027: ₹2,000 OFF
                         </span>
                         <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">JOIN THE GTECH FAMILY</h3>
-                        <p class="text-xs text-slate-600">Start Your Journey Towards a Successful Future.</p>
+                        <p class="text-xs text-slate-600">₹1,000 off Admission Fee + ₹1,000 off College Fee when you register before March 16, 2027.</p>
                     </div>
 
                     <form id="student-register-form" onsubmit="handleSendRegistrationOtp(event)" class="space-y-3.5">
@@ -524,7 +565,7 @@
                         </div>
                         <div>
                             <h4 class="text-base font-black text-slate-900">Welcome to the Gtech Family!</h4>
-                            <p class="text-xs text-emerald-800 mt-0.5">Your registration is verified and active.</p>
+                            <p id="reg-early-offer-msg" class="text-xs text-emerald-800 font-bold mt-0.5">Your registration is verified and active.</p>
                         </div>
                         <div class="p-3 rounded-xl bg-white border border-emerald-200">
                             <span class="block text-[10px] uppercase tracking-wider text-slate-500 font-bold">Gtech ID</span>
@@ -681,6 +722,11 @@
 
                 <div id="dash-section-referral" class="hidden space-y-4">
                     <div class="bg-white border border-sky-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-5 shadow-xs">
+                        <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950">
+                            <strong class="font-black"><i class="fa-solid fa-gift text-amber-600 mr-1"></i> Referral Benefit (Up to ₹30,000/-):</strong>
+                            Share your referral code with friends—your referral amount is added to your tuition fee once your friend's admission is done.
+                        </div>
+
                         <div>
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
                                 <i class="fa-solid fa-share-nodes"></i> Student Referral Hub
@@ -727,7 +773,7 @@
                                 <div class="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 flex flex-col justify-center">
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-800">My Referral Visible Amount</span>
                                     <strong id="ref-tab-amount" class="text-2xl font-black text-indigo-900 mt-1">₹0</strong>
-                                    <span class="text-[11px] text-indigo-700 mt-1">Visible referral amount credited to your Gtech ID</span>
+                                    <span class="text-[11px] text-indigo-700 mt-1">Added to tuition after friend's admission is done (Up to ₹30,000/-)</span>
                                 </div>
 
                                 <div class="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex flex-col justify-center">
@@ -777,6 +823,20 @@
         <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-700 text-xs ml-2">✕</button>
     </div>
 
+    <script>
+        function closeEarlyOfferPopup() {
+            document.getElementById('early-offer-popup')?.classList.add('hidden');
+        }
+        function showEarlyOfferPopupIfEligible() {
+            const cutoff = new Date('2027-03-16T23:59:59+05:30');
+            if (new Date() <= cutoff && !sessionStorage.getItem('gtech_early_offer_dismissed')) {
+                document.getElementById('early-offer-popup')?.classList.remove('hidden');
+            }
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(showEarlyOfferPopupIfEligible, 900);
+        });
+    </script>
     <script src="./app.js"></script>
 </body>
 </html>

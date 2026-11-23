@@ -241,6 +241,7 @@ function showToast(title, message, type = 'success') {
         icon.textContent = '✓';
     }
 
+    toast.classList.remove('hidden');
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => {
         hideToast();
@@ -250,6 +251,27 @@ function showToast(title, message, type = 'success') {
 function hideToast() {
     const toast = document.getElementById('gtech-toast');
     if (toast) toast.classList.add('hidden');
+}
+
+// --- CENTER-SCREEN ₹2,000 OFFER MODAL ---
+function openEarlyOfferModal(gtechId) {
+    const modal = document.getElementById('early-offer-center-modal');
+    const idEl = document.getElementById('offer-popup-gtech-id');
+    if (!modal) return;
+    if (idEl && gtechId) {
+        idEl.textContent = gtechId;
+    }
+    closeAuthModal();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeEarlyOfferModal() {
+    const modal = document.getElementById('early-offer-center-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    continueAfterAuth();
 }
 
 // --- CAROUSEL ---
@@ -411,7 +433,7 @@ function populateCampusSelectForUniversity(uniName) {
     }
 }
 
-// --- SCHOLARSHIP & FEE CONCESSION EVALUATOR (SINGLE, DUAL AND, BEST-OF, STACKABLE) ---
+// --- SCHOLARSHIP & FEE CONCESSION EVALUATOR ---
 function evaluateUniversityScholarship(uni, studentScores = {}) {
     const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
     const baseTuition = Number(studentScores.selectedFee || 0);
@@ -427,7 +449,7 @@ function evaluateUniversityScholarship(uni, studentScores = {}) {
         };
     }
 
-    const mode = rules.multi_mode || 'best_of'; // 'best_of' | 'both_required' | 'stackable'
+    const mode = rules.multi_mode || 'best_of';
     const matched = [];
 
     rules.slabs.forEach(slab => {
@@ -760,7 +782,7 @@ function renderUniversities() {
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
                             <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-indigo-800 border border-indigo-100 shadow-xs">${statesDisplay}</span>
                             <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
-                                <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
+                                ${uni.nirf ? `<span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf}</span>` : ''}
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-600 text-white">Entrance Exam Only</span>
                             </div>
                         </div>
@@ -804,7 +826,7 @@ function renderUniversities() {
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
                             <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${statesDisplay}</span>
                             <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
-                                <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
+                                ${uni.nirf ? `<span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf}</span>` : ''}
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg ${eamcetAvailable ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-white'}">
                                     ${eamcetAvailable ? 'EAMCET Seats Available' : 'EAMCET Seats Not Available'}
                                 </span>
@@ -909,7 +931,7 @@ function renderUniversities() {
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
                         <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${statesDisplay}</span>
                         <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
-                            <span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf || 50}</span>
+                            ${uni.nirf ? `<span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf}</span>` : ''}
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${mode}</span>
                         </div>
                     </div>
@@ -1029,9 +1051,9 @@ function prefillGuidanceFormWithStudent() {
     const nameEl = document.getElementById('guide-name');
     const phoneEl = document.getElementById('guide-phone');
     const emailEl = document.getElementById('guide-email');
-    if (nameEl && !nameEl.value) nameEl.value = state.currentStudent.full_name || '';
-    if (phoneEl && !phoneEl.value) phoneEl.value = state.currentStudent.mobile || '';
-    if (emailEl && !emailEl.value) emailEl.value = state.currentStudent.email || '';
+    if (nameEl) nameEl.value = state.currentStudent.full_name || '';
+    if (phoneEl) phoneEl.value = state.currentStudent.mobile || '';
+    if (emailEl) emailEl.value = state.currentStudent.email || '';
 }
 
 async function handleGuidanceSubmission(e) {
@@ -1429,6 +1451,9 @@ async function handleVerifyRegistrationOtp() {
 
         const profile = { ...newStudent, ...(inserted || {}) };
         profile.student_id = profile.student_id || profile.id || gtechId;
+        if (typeof profile.early_offer_eligible !== 'boolean') {
+            profile.early_offer_eligible = earlyOfferQualified;
+        }
 
         state.currentStudent = profile;
         state.pendingRegistration = null;
@@ -1475,6 +1500,12 @@ async function handleVerifyRegistrationOtp() {
                 : `Gtech ID ${profile.student_id} generated!`,
             'success'
         );
+
+        if (earlyOfferQualified) {
+            setTimeout(() => {
+                openEarlyOfferModal(profile.student_id);
+            }, 450);
+        }
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
@@ -1897,6 +1928,12 @@ function renderStudentDashboard() {
     document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
     document.getElementById('student-dash-id').textContent = gtechCode;
 
+    const offerCard = document.getElementById('dash-early-offer-card');
+    if (offerCard) {
+        const showOffer = Boolean(stu.early_offer_eligible) || (Number(stu.early_offer_discount || 0) > 0);
+        offerCard.classList.toggle('hidden', !showOffer);
+    }
+
     const uniGroups = getUniversityWiseApplications(stu);
     const uniListEl = document.getElementById('applied-scholarship-universities-list');
 
@@ -2134,6 +2171,8 @@ function subscribeToStudentMailUpdates() {
 // Global scope exposure
 window.showToast = showToast;
 window.hideToast = hideToast;
+window.openEarlyOfferModal = openEarlyOfferModal;
+window.closeEarlyOfferModal = closeEarlyOfferModal;
 window.sanitizeNumericInput = sanitizeNumericInput;
 window.calculateIntermediateTotal = calculateIntermediateTotal;
 window.handleOtpBoxInput = handleOtpBoxInput;

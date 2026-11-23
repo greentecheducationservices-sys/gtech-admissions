@@ -5,6 +5,7 @@ var _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ADMIN_EMAIL = 'admin@gtechadmissions.com';
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
 const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/send-notification` : '');
+const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
 
 const state = {
     stateFilter: 'ALL',
@@ -21,8 +22,17 @@ const state = {
     incomingReferralCode: '',
     activeDashboardTab: 'dashboard',
     regCooldownTimer: null,
-    loginCooldownTimer: null
+    loginCooldownTimer: null,
+    cardScores: {} // { [uniKey]: { branch, inter, pcm, mains, eamcet } }
 };
+
+function isBeforeMarch16_2027(dateObj = new Date()) {
+    return dateObj.getTime() <= new Date(EARLY_OFFER_DEADLINE_ISO).getTime();
+}
+
+function getUniKey(uni, fallbackIdx = 0) {
+    return String(uni?.id ?? uni?.name ?? `uni_${fallbackIdx}`);
+}
 
 // --- EMAIL NOTIFICATION HELPER ---
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
@@ -310,7 +320,7 @@ async function loadActiveCarousel() {
     `).join('');
 }
 
-// --- ADMISSION MODE (REVERSED), MULTI-STATE, CAMPUS & QUOTA HELPERS ---
+// --- ADMISSION MODE, MULTI-STATE, CAMPUS & QUOTA HELPERS ---
 function isEntranceExamOnlyMode(uni) {
     const mode = String(uni?.admission_type || 'Direct Admission Only').trim().toLowerCase();
     return mode === 'entrance exam only';
@@ -347,6 +357,18 @@ function parseBranchesObject(rawBranches) {
         }
     }
     return typeof rawBranches === 'object' ? rawBranches : {};
+}
+
+function parseScholarshipRules(rawRules) {
+    if (!rawRules) return null;
+    if (typeof rawRules === 'string') {
+        try {
+            return JSON.parse(rawRules);
+        } catch (_) {
+            return null;
+        }
+    }
+    return typeof rawRules === 'object' ? rawRules : null;
 }
 
 function matchesStateFilter(uni, selectedFilter) {
@@ -387,6 +409,192 @@ function populateCampusSelectForUniversity(uniName) {
         select.innerHTML = '';
         wrap.classList.add('hidden');
     }
+}
+
+// --- SCHOLARSHIP & FEE CONCESSION EVALUATOR (SINGLE, DUAL AND, BEST-OF, STACKABLE) ---
+function evaluateUniversityScholarship(uni, studentScores = {}) {
+    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
+    const baseTuition = Number(studentScores.selectedFee || 0);
+
+    if (!rules.enabled || !Array.isArray(rules.slabs) || rules.slabs.length === 0) {
+        return {
+            matchedSlabs: [],
+            discountAmount: 0,
+            netTuition: baseTuition,
+            breakdownText: '',
+            extraConcessionText: String(rules.extra_concession_text || '').trim(),
+            expertPhone: String(rules.expert_phone || '').trim()
+        };
+    }
+
+    const mode = rules.multi_mode || 'best_of'; // 'best_of' | 'both_required' | 'stackable'
+    const matched = [];
+
+    rules.slabs.forEach(slab => {
+        const s1 = Number(studentScores[slab.criterion]);
+        if (!Number.isFinite(s1) || s1 <= 0) return;
+
+        const min1 = Number(slab.min ?? 0);
+        const max1 = Number(slab.max ?? 100);
+        if (s1 < min1 || s1 > max1) return;
+
+        if (slab.criterion2) {
+            const s2 = Number(studentScores[slab.criterion2]);
+            if (!Number.isFinite(s2) || s2 <= 0) return;
+            const min2 = Number(slab.min2 ?? 0);
+            const max2 = Number(slab.max2 ?? 100);
+            if (s2 < min2 || s2 > max2) return;
+        }
+
+        const rawVal = Number(slab.value || 0);
+        const amount = slab.type === 'flat'
+            ? rawVal
+            : Math.round((baseTuition * rawVal) / 100);
+
+        matched.push({ slab, amount });
+    });
+
+    if (matched.length === 0) {
+        return {
+            matchedSlabs: [],
+            discountAmount: 0,
+            netTuition: baseTuition,
+            breakdownText: '',
+            extraConcessionText: String(rules.extra_concession_text || '').trim(),
+            expertPhone: String(rules.expert_phone || '').trim()
+        };
+    }
+
+    if (mode === 'stackable') {
+        const bestByCriterion = {};
+        matched.forEach(item => {
+            const key = item.slab.criterion;
+            if (!bestByCriterion[key] || item.amount > bestByCriterion[key].amount) {
+                bestByCriterion[key] = item;
+            }
+        });
+        const winners = Object.values(bestByCriterion);
+        const total = Math.min(baseTuition > 0 ? baseTuition : Infinity, winners.reduce((sum, w) => sum + w.amount, 0));
+        const labels = winners.map(w => `${String(w.slab.criterion).toUpperCase()} (${w.slab.type === 'flat' ? formatINR(w.slab.value) : w.slab.value + '%'})`);
+        return {
+            matchedSlabs: winners.map(w => w.slab),
+            discountAmount: total,
+            netTuition: Math.max(0, baseTuition - total),
+            breakdownText: `Combined Merit + Entrance: ${labels.join(' + ')}`,
+            extraConcessionText: String(rules.extra_concession_text || '').trim(),
+            expertPhone: String(rules.expert_phone || '').trim()
+        };
+    }
+
+    matched.sort((a, b) => b.amount - a.amount);
+    const top = matched[0];
+    const cappedDiscount = baseTuition > 0 ? Math.min(baseTuition, top.amount) : top.amount;
+    const label = top.slab.criterion2
+        ? `${String(top.slab.criterion).toUpperCase()} + ${String(top.slab.criterion2).toUpperCase()} Qualified`
+        : `${String(top.slab.criterion).toUpperCase()} Merit Slab`;
+
+    return {
+        matchedSlabs: [top.slab],
+        discountAmount: cappedDiscount,
+        netTuition: Math.max(0, baseTuition - cappedDiscount),
+        breakdownText: label,
+        extraConcessionText: String(rules.extra_concession_text || '').trim(),
+        expertPhone: String(rules.expert_phone || '').trim()
+    };
+}
+
+function getCardScoreState(uniKey, branchesObj = {}) {
+    if (!state.cardScores[uniKey]) {
+        const firstBranch = Object.keys(branchesObj)[0] || '';
+        state.cardScores[uniKey] = {
+            branch: firstBranch,
+            inter: '',
+            pcm: '',
+            mains: '',
+            eamcet: ''
+        };
+    } else if (!state.cardScores[uniKey].branch && Object.keys(branchesObj).length > 0) {
+        state.cardScores[uniKey].branch = Object.keys(branchesObj)[0];
+    }
+    return state.cardScores[uniKey];
+}
+
+function updateCardScoreAndRefresh(uniKey, field, rawValue) {
+    const current = state.cardScores[uniKey] || {};
+    current[field] = rawValue;
+    state.cardScores[uniKey] = current;
+    refreshSingleUniversityCalcUI(uniKey);
+}
+
+function refreshSingleUniversityCalcUI(uniKey) {
+    const uni = state.universities.find((u, idx) => getUniKey(u, idx) === uniKey);
+    const calcBox = document.getElementById(`uni-calc-box-${CSS.escape(uniKey)}`);
+    if (!uni || !calcBox) return;
+
+    const branchesObj = parseBranchesObject(uni.branches);
+    const scoreState = getCardScoreState(uniKey, branchesObj);
+    const selectedFee = Number(branchesObj[scoreState.branch] ?? Object.values(branchesObj)[0] ?? 0);
+
+    const evalRes = evaluateUniversityScholarship(uni, {
+        selectedFee,
+        inter: scoreState.inter,
+        pcm: scoreState.pcm,
+        mains: scoreState.mains,
+        eamcet: scoreState.eamcet
+    });
+
+    const hasAnyScore = Boolean(scoreState.inter || scoreState.pcm || scoreState.mains || scoreState.eamcet);
+
+    if (!hasAnyScore && evalRes.discountAmount === 0) {
+        calcBox.innerHTML = `
+            <div class="flex items-center justify-between text-[11px] text-indigo-900">
+                <span>Selected Branch Fee: <strong>${formatINR(selectedFee)}/yr</strong></span>
+                <span class="font-bold text-indigo-700">Enter marks/rank to preview</span>
+            </div>
+            ${evalRes.extraConcessionText ? `<p class="text-[10px] text-emerald-800 font-bold mt-1">Extra Concession Note: ${evalRes.extraConcessionText}</p>` : ''}
+        `;
+        return;
+    }
+
+    calcBox.innerHTML = `
+        <div class="space-y-1 text-[11px]">
+            <div class="flex items-center justify-between">
+                <span class="text-slate-600 font-semibold">Branch Base Fee (${scoreState.branch || 'Selected'}):</span>
+                <span class="font-bold text-slate-900">${formatINR(selectedFee)}/yr</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-emerald-800 font-bold">${evalRes.breakdownText || 'Scholarship Estimate'}:</span>
+                <span class="font-black text-emerald-700">-${formatINR(evalRes.discountAmount)}</span>
+            </div>
+            <div class="flex items-center justify-between pt-1 border-t border-indigo-200/80 text-xs">
+                <span class="font-black text-indigo-950">Estimated Net Tuition:</span>
+                <span class="font-black text-indigo-700">${formatINR(evalRes.netTuition)}/yr</span>
+            </div>
+            ${evalRes.extraConcessionText ? `<p class="text-[10px] text-emerald-900 font-bold bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 mt-1"><i class="fa-solid fa-tag mr-1"></i>${evalRes.extraConcessionText}</p>` : ''}
+        </div>
+    `;
+}
+
+function openExpertConcessionCall(uniName, uniKey) {
+    const uni = state.universities.find((u, idx) => getUniKey(u, idx) === uniKey);
+    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
+    const scoreState = state.cardScores[uniKey] || {};
+    const summaryBits = [
+        scoreState.branch ? `Branch: ${scoreState.branch}` : '',
+        scoreState.inter ? `Inter: ${scoreState.inter}%` : '',
+        scoreState.pcm ? `PCM: ${scoreState.pcm}%` : '',
+        scoreState.mains ? `JEE Mains: ${scoreState.mains}` : '',
+        scoreState.eamcet ? `EAMCET Rank: ${scoreState.eamcet}` : ''
+    ].filter(Boolean).join(', ');
+
+    if (rules.expert_phone) {
+        showToast(
+            'Expert Desk & Concession Request',
+            `Call ${rules.expert_phone} for ${uniName} extra fee concession${summaryBits ? ` (${summaryBits})` : ''}.`,
+            'success'
+        );
+    }
+    openScholarshipModal(uniName, 'Scholarship Based on Marks');
 }
 
 // --- UNIVERSITIES & CATALOG ---
@@ -459,7 +667,8 @@ function renderUniversities() {
         return;
     }
 
-    grid.innerHTML = filtered.map(uni => {
+    grid.innerHTML = filtered.map((uni, idx) => {
+        const uniKey = getUniKey(uni, idx);
         const statesList = getUniversityStates(uni);
         const statesDisplay = statesList.join(' • ') || uni.state || 'India';
         const campusesList = getUniversityCampuses(uni);
@@ -490,8 +699,58 @@ function renderUniversities() {
             : '';
 
         const safeUniName = String(uni.name || '').replace(/'/g, "\\'");
+        const safeUniKey = String(uniKey).replace(/'/g, "\\'");
 
-        // 1. ENTRANCE EXAM ONLY CARD (Reversed: hides branch tuition fees and hostel fee)
+        const rules = parseScholarshipRules(uni.scholarship_rules);
+        const scoreState = getCardScoreState(uniKey, branches);
+        const selectedFee = Number(branches[scoreState.branch] ?? Object.values(branches)[0] ?? 0);
+        const initialEval = evaluateUniversityScholarship(uni, {
+            selectedFee,
+            inter: scoreState.inter,
+            pcm: scoreState.pcm,
+            mains: scoreState.mains,
+            eamcet: scoreState.eamcet
+        });
+
+        const calculatorWidgetHtml = !isEntranceOnly && branchEntries.length > 0 ? `
+            <div class="mt-3 p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2.5">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider text-indigo-900">
+                        <i class="fa-solid fa-calculator mr-1"></i> Instant Scholarship &amp; Concession Check
+                    </span>
+                    ${rules?.enabled ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Auto Slab Active</span>` : ''}
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-[11px]">
+                    <select onchange="updateCardScoreAndRefresh('${safeUniKey}', 'branch', this.value)" class="col-span-2 bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-800">
+                        ${branchEntries.map(([bName, bFee]) => `<option value="${String(bName).replace(/"/g, '&quot;')}" ${scoreState.branch === bName ? 'selected' : ''}>${bName} (${formatINR(bFee)})</option>`).join('')}
+                    </select>
+                    <input type="number" step="any" placeholder="Inter %" value="${scoreState.inter || ''}" oninput="updateCardScoreAndRefresh('${safeUniKey}', 'inter', this.value)" class="bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-mono">
+                    <input type="number" step="any" placeholder="PCM %" value="${scoreState.pcm || ''}" oninput="updateCardScoreAndRefresh('${safeUniKey}', 'pcm', this.value)" class="bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-mono">
+                    <input type="number" step="any" placeholder="JEE %" value="${scoreState.mains || ''}" oninput="updateCardScoreAndRefresh('${safeUniKey}', 'mains', this.value)" class="bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-mono">
+                </div>
+
+                <div id="uni-calc-box-${uniKey}" class="p-2.5 rounded-xl bg-white border border-indigo-100">
+                    ${initialEval.discountAmount > 0 ? `
+                        <div class="space-y-1 text-[11px]">
+                            <div class="flex justify-between"><span class="text-emerald-800 font-bold">${initialEval.breakdownText}:</span><span class="font-black text-emerald-700">-${formatINR(initialEval.discountAmount)}</span></div>
+                            <div class="flex justify-between text-xs"><span class="font-black text-indigo-950">Estimated Net Tuition:</span><span class="font-black text-indigo-700">${formatINR(initialEval.netTuition)}/yr</span></div>
+                        </div>
+                    ` : `
+                        <div class="flex items-center justify-between text-[11px] text-indigo-900">
+                            <span>Selected Branch Fee: <strong>${formatINR(selectedFee)}/yr</strong></span>
+                            <span class="font-bold text-indigo-700">Enter marks/JEE to preview</span>
+                        </div>
+                    `}
+                </div>
+
+                <button type="button" onclick="openExpertConcessionCall('${safeUniName}', '${safeUniKey}')" class="w-full py-2 px-3 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold text-[11px] flex items-center justify-center gap-1.5 transition">
+                    <i class="fa-solid fa-phone-volume"></i>
+                    <span>Call to Expert for Extra Fee Concession</span>
+                </button>
+            </div>
+        ` : '';
+
         if (isEntranceOnly) {
             return `
                 <div class="bg-white rounded-3xl border border-indigo-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-300 transition duration-300 flex flex-col justify-between">
@@ -536,7 +795,6 @@ function renderUniversities() {
             `;
         }
 
-        // 2. ANDHRA PRADESH CARD (Shows branch tuition & hostel fee for Direct / Entrance & Direct)
         if (isAP) {
             return `
                 <div class="bg-white rounded-3xl border border-sky-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-sky-300 transition duration-300 flex flex-col justify-between">
@@ -601,6 +859,8 @@ function renderUniversities() {
                                     </div>
                                 </div>
                             ` : ''}
+
+                            ${calculatorWidgetHtml}
                         </div>
                     </div>
 
@@ -637,7 +897,6 @@ function renderUniversities() {
             `;
         }
 
-        // 3. DIRECT ADMISSION ONLY / ENTRANCE EXAM & DIRECT ADMISSION CARD (Shows branch tuition & hostel fee)
         const badgeClass = isEntranceAndDirect
             ? 'bg-amber-50 text-amber-800 border-amber-200'
             : 'bg-emerald-50 text-emerald-800 border-emerald-200';
@@ -680,6 +939,8 @@ function renderUniversities() {
                                 <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
                             </div>
                         </div>
+
+                        ${calculatorWidgetHtml}
                     </div>
                 </div>
 
@@ -709,7 +970,7 @@ function renderUniversities() {
     }).join('');
 }
 
-// --- SCHOLARSHIP & VISITING APPLICATION MODAL (REQUIRES STUDENT LOGIN FIRST) ---
+// --- SCHOLARSHIP & VISITING APPLICATION MODAL ---
 function openScholarshipModal(uniName = '', assistanceType = '') {
     if (!state.currentStudent) {
         state.pendingPostLoginAction = {
@@ -1032,7 +1293,7 @@ async function verifyEmailOtpCode(email, code, purpose) {
     return { verified: true, user: data?.user || null };
 }
 
-// --- 1. REGISTRATION FLOW ---
+// --- 1. REGISTRATION FLOW (INCLUDES MARCH 16, 2027 ₹2,000 OFFER) ---
 async function handleSendRegistrationOtp(e) {
     if (e) e.preventDefault();
     const errId = 'reg-error-msg';
@@ -1117,6 +1378,11 @@ async function handleVerifyRegistrationOtp() {
         await verifyEmailOtpCode(regData.email, code, 'register');
 
         const gtechId = await generateNextGtechId();
+        const earlyOfferQualified = isBeforeMarch16_2027();
+        const earlyOfferText = earlyOfferQualified
+            ? '₹2,000 OFF Unlocked (₹1,000 Admission Fee + ₹1,000 College Fee before March 16, 2027)'
+            : null;
+
         const newStudent = {
             id: gtechId,
             student_id: gtechId,
@@ -1124,7 +1390,10 @@ async function handleVerifyRegistrationOtp() {
             mobile: regData.mobile,
             email: regData.email,
             referral_code: gtechId,
-            referred_by_code: regData.referred_by_code || null
+            referred_by_code: regData.referred_by_code || null,
+            early_offer_eligible: earlyOfferQualified,
+            early_offer_discount: earlyOfferQualified ? 2000 : 0,
+            early_offer_note: earlyOfferText
         };
 
         let { data: inserted, error } = await _supabase
@@ -1158,7 +1427,7 @@ async function handleVerifyRegistrationOtp() {
             throw new Error(error.message);
         }
 
-        const profile = inserted || newStudent;
+        const profile = { ...newStudent, ...(inserted || {}) };
         profile.student_id = profile.student_id || profile.id || gtechId;
 
         state.currentStudent = profile;
@@ -1173,26 +1442,39 @@ async function handleVerifyRegistrationOtp() {
             to: profile.email,
             ccAdmin: true,
             eventType: 'new_student_registered',
-            subject: `Welcome to Gtech Admissions! Your Gtech ID: ${profile.student_id}`,
+            subject: `Congrats! Welcome to Gtech Family — Gtech ID: ${profile.student_id}`,
             text: [
-                `Hello ${profile.full_name},`,
+                `Congrats ${profile.full_name}, Welcome to the Gtech Family!`,
                 ``,
-                `Welcome to Gtech Admissions (Admissions and Guidance Portal)!`,
                 `Your Gtech ID is: ${profile.student_id}`,
                 `Your Referral Code is: ${profile.student_id}`,
+                earlyOfferQualified
+                    ? `Special Offer (Registered before March 16, 2027): ₹2,000 OFF total (₹1,000/- off Admission Fee + ₹1,000/- off College Fee).`
+                    : ``,
+                `Refer friends and earn up to ₹30,000/- referral benefit—added to tuition after your friend's admission is done.`,
                 ``,
-                `Sign in to your Gtech Student Portal anytime using ${profile.email} to track applications, approvals, and referral updates.`,
-                `— Gtech Admissions`
-            ].join('\n'),
+                `— Gtech Admissions (Admissions and Guidance Portal)`
+            ].filter(Boolean).join('\n'),
             details: profile
         });
 
         document.getElementById('student-register-form').classList.add('hidden');
         document.getElementById('reg-otp-panel').classList.add('hidden');
         document.getElementById('generated-student-id-display').textContent = profile.student_id;
-        document.getElementById('reg-success-panel').classList.remove('hidden');
 
-        showToast('Registration Successful', `Gtech ID ${profile.student_id} generated!`, 'success');
+        const offerMsgEl = document.getElementById('reg-early-offer-msg');
+        if (offerMsgEl && earlyOfferQualified) {
+            offerMsgEl.textContent = 'Congrats! Before March 16, 2027 offer unlocked: ₹1,000/- off Admission Fee + ₹1,000/- off College Fee (₹2,000 OFF)!';
+        }
+
+        document.getElementById('reg-success-panel').classList.remove('hidden');
+        showToast(
+            'Congrats! Welcome to Gtech Family',
+            earlyOfferQualified
+                ? `Gtech ID ${profile.student_id} created! ₹1,000 admission + ₹1,000 college fee discount unlocked.`
+                : `Gtech ID ${profile.student_id} generated!`,
+            'success'
+        );
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
@@ -1395,7 +1677,7 @@ async function handleStudentLogout() {
     showToast('Signed Out', 'You have signed out of your student portal.', 'success');
 }
 
-// --- STUDENT PORTAL TABS (PREMIUM SEGMENTED PILL STYLING) ---
+// --- STUDENT PORTAL TABS ---
 function switchDashboardSection(tabName) {
     state.activeDashboardTab = tabName;
     const tabs = ['dashboard', 'referral'];
@@ -1450,7 +1732,6 @@ async function fetchReferredStudents(myCode) {
     return data || [];
 }
 
-// --- GROUP APPLIED UNIVERSITIES UNIVERSITY-WISE ---
 function getUniversityWiseApplications(student) {
     const myApps = state.inquiries.filter(inq =>
         (inq.email && student.email && inq.email.toLowerCase() === student.email.toLowerCase()) ||
@@ -1558,6 +1839,12 @@ function openUniversityStatusModal(uniName) {
         feeStructureHtml = `<p class="text-slate-500">Fee structure will be updated by admin shortly.</p>`;
     }
 
+    const offerBadgeHtml = state.currentStudent?.early_offer_eligible
+        ? `<div class="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-900">
+             Early Registration Offer (Before March 16, 2027): ₹1,000/- off Admission Fee + ₹1,000/- off College Fee (₹2,000 OFF).
+           </div>`
+        : '';
+
     bodyEl.innerHTML = `
         <div class="p-3.5 rounded-2xl bg-sky-50/80 border border-sky-200 space-y-1">
             <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">University Name</span>
@@ -1569,6 +1856,8 @@ function openUniversityStatusModal(uniName) {
             <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-800 block">Fee Structure</span>
             ${feeStructureHtml}
         </div>
+
+        ${offerBadgeHtml}
 
         <div class="p-4 rounded-2xl ${isScholarshipApproved ? 'bg-emerald-50 border border-emerald-300' : 'bg-amber-50 border border-amber-200'} space-y-2">
             <div class="flex items-center justify-between gap-2">
@@ -1677,7 +1966,7 @@ function renderStudentDashboard() {
 
     const refListEl = document.getElementById('my-referred-students-list');
     if (state.referredStudents.length === 0 && referralInquiries.length === 0) {
-        refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No referred students yet. Share your referral link on WhatsApp or Instagram to invite students.</p>`;
+        refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No referred students yet. Share your referral code to earn up to ₹30,000/- added to tuition after your friend's admission is done.</p>`;
     } else {
         const items = state.referredStudents.length > 0
             ? state.referredStudents.map(rs => ({
@@ -1743,7 +2032,7 @@ function copyMyReferralLink() {
 function shareReferralWhatsApp() {
     const code = document.getElementById('my-referral-code-text')?.textContent || '';
     const link = document.getElementById('my-referral-link-input')?.value || '';
-    const msg = encodeURIComponent(`Join Gtech Admissions (Admissions and Guidance Portal) for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Use my Referral Code ${code}: ${link}`);
+    const msg = encodeURIComponent(`Join Gtech Admissions for B.Tech, Degree & Medical admissions, scholarships, and free campus visits! Register before March 16, 2027 for ₹2,000 OFF and use my Referral Code ${code} (up to ₹30,000/- tuition benefit): ${link}`);
     window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
 }
 
@@ -1871,6 +2160,8 @@ window.shareReferralWhatsApp = shareReferralWhatsApp;
 window.shareReferralInstagram = shareReferralInstagram;
 window.setStateFilter = setStateFilter;
 window.handleGuidanceSubmission = handleGuidanceSubmission;
+window.updateCardScoreAndRefresh = updateCardScoreAndRefresh;
+window.openExpertConcessionCall = openExpertConcessionCall;
 window.nextSlide = nextSlide;
 window.prevSlide = prevSlide;
 

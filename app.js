@@ -889,6 +889,21 @@ function matchesStateFilter(uni, selectedFilter) {
     return false;
 }
 
+function matchesBudgetFilter(uni, fallbackIdx = 0) {
+    const maxBudget = state.budgetPerYear;
+    if (maxBudget === null || maxBudget === undefined || !Number.isFinite(Number(maxBudget)) || Number(maxBudget) <= 0) {
+        return true;
+    }
+    if (isEntranceExamOnlyMode(uni)) {
+        return state.stateFilter === 'Entrance Exams';
+    }
+    const effectiveFee = getEffectiveYearlyFeeForSort(uni, fallbackIdx);
+    if (!Number.isFinite(effectiveFee) || effectiveFee === Number.POSITIVE_INFINITY) {
+        return false;
+    }
+    return effectiveFee <= Number(maxBudget);
+}
+
 function populateCampusSelectForUniversity(uniName) {
     const wrap = document.getElementById('guide-campus-wrap');
     const select = document.getElementById('guide-campus');
@@ -1228,8 +1243,12 @@ function renderUniversities() {
 
     const filteredWithMeta = state.universities
         .map((uni, idx) => ({ uni, idx }))
-        .filter(({ uni }) => {
+        .filter(({ uni, idx }) => {
+            if (state.stateFilter === 'ALL' && isEntranceExamOnlyMode(uni)) {
+                return false;
+            }
             const matchesState = matchesStateFilter(uni, state.stateFilter);
+            const matchesBudget = matchesBudgetFilter(uni, idx);
             const statesText = getUniversityStates(uni).join(' ').toLowerCase();
             const campusesText = getUniversityCampuses(uni).join(' ').toLowerCase();
             const entranceExamText = String(uni.entrance_exam_name || '').toLowerCase();
@@ -1245,7 +1264,7 @@ function renderUniversities() {
                 campusesText.includes(query) ||
                 entranceExamText.includes(query) ||
                 branchesText.includes(query);
-            return matchesState && matchesQuery;
+            return matchesState && matchesBudget && matchesQuery;
         })
         .sort((a, b) => {
             const isExamA = isEntranceExamOnlyMode(a.uni);
@@ -1259,7 +1278,7 @@ function renderUniversities() {
             }
 
             if (state.stateFilter === 'ALL' && isExamA !== isExamB) {
-                return isExamA ? -1 : 1;
+                return isExamA ? 1 : -1;
             }
 
             if (isExamA && isExamB) {
@@ -1280,7 +1299,7 @@ function renderUniversities() {
     if (filteredWithMeta.length === 0) {
         grid.innerHTML = `
             <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-sky-100">
-                <p class="text-slate-600 font-semibold text-xs">No universities match your filter in this category.</p>
+                <p class="text-slate-600 font-semibold text-xs">No universities match your filter or budget range.</p>
             </div>
         `;
         return;

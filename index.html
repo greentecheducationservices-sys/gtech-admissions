@@ -115,8 +115,8 @@
                 <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700 bg-sky-100">
                     <div class="w-full h-full shrink-0 bg-sky-100 animate-pulse"></div>
                 </div>
-                <button type="button" onclick="prevSlide()" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❮</button>
-                <button type="button" onclick="nextSlide()" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❯</button>
+                <button type="button" onclick="prevSlide()" aria-label="Previous slide" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❮</button>
+                <button type="button" onclick="nextSlide()" aria-label="Next slide" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❯</button>
             </div>
 
             <!-- 4-Card Service Suite -->
@@ -192,7 +192,7 @@
         </div>
     </section>
 
-    <!-- Region Selector Filter -->
+    <!-- Region Selector & Marks/Budget Filter Section -->
     <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-6">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
             <div>
@@ -207,7 +207,6 @@
 
         <div class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
             <button type="button" onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0">All Regions</button>
-            <button type="button" onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 transition whitespace-nowrap shrink-0"><i class="fa-solid fa-file-lines mr-1"></i> Entrance Exams</button>
             <button type="button" onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
             <button type="button" onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Telangana</button>
             <button type="button" onclick="setStateFilter('Chennai / Tamil Nadu')" data-state="Chennai / Tamil Nadu" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Chennai / Tamil Nadu</button>
@@ -217,7 +216,7 @@
             <button type="button" onclick="setStateFilter('Gujarat')" data-state="Gujarat" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Gujarat</button>
         </div>
 
-        <!-- Andhra Pradesh Quota Legend / Info Strip (Shown when Andhra Pradesh is selected) -->
+        <!-- Andhra Pradesh Quota Info Strip -->
         <div id="ap-quota-filter-bar" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
             <div class="flex items-center gap-2 font-bold">
                 <i class="fa-solid fa-landmark text-emerald-700"></i>
@@ -526,7 +525,7 @@
                         <label for="guide-uni" class="block text-[11px] font-bold text-slate-700 mb-1">
                             <i class="fa-solid fa-university text-sky-600 mr-1"></i>Preferred University (Optional)
                         </label>
-                        <input type="text" id="guide-uni" placeholder="e.g. VIT, SRM, Manipal" class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="guide-uni" oninput="populateCampusSelectForUniversity(this.value)" placeholder="e.g. VIT, SRM, Manipal" class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                     </div>
 
                     <div>
@@ -784,7 +783,7 @@
         </div>
     </div>
 
-    <!-- AUTHENTICATED STUDENT PORTAL MODAL (PREMIUM SEGMENTED SINGLE-ROW HEADER) -->
+    <!-- AUTHENTICATED STUDENT PORTAL MODAL -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 overflow-x-hidden">
         <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 border border-indigo-200/80 rounded-2xl sm:rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="px-2.5 py-2.5 sm:px-5 sm:py-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-b border-indigo-800/60 flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">

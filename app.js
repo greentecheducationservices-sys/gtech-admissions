@@ -60,9 +60,22 @@ const state = {
 
 function hideAddedMarksBudgetFilterBar() {
     const stateBar = document.getElementById('state-filter-bar');
-    if (stateBar) stateBar.classList.remove('hidden');
+    if (stateBar) {
+        stateBar.classList.remove('hidden');
+        stateBar.style.display = 'flex';
+        let parent = stateBar.parentElement;
+        while (parent && parent !== document.body) {
+            parent.classList.remove('hidden');
+            parent = parent.parentElement;
+        }
+        stateBar.querySelectorAll('.state-btn').forEach(btn => {
+            btn.classList.remove('hidden');
+            btn.style.display = 'inline-flex';
+        });
+    }
 
     const idsToHide = [
+        'instant-scholarship-checker',
         'home-cards-filter-section',
         'marks-budget-filter-bar',
         'sch-filter-bar',
@@ -72,22 +85,6 @@ function hideAddedMarksBudgetFilterBar() {
     idsToHide.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
-    });
-
-    const headingTexts = ['filter cards by marks & budget', 'home cards filter'];
-    document.querySelectorAll('section, div, form').forEach(container => {
-        if (
-            container.id === 'state-filter-bar' ||
-            container.id === 'universities-grid' ||
-            container.closest('#universities-grid')
-        ) {
-            return;
-        }
-        const text = (container.textContent || '').toLowerCase();
-        const hasInputs = Boolean(container.querySelector('#sch-score-input, #sch-budget-input, #sch-option-select'));
-        if (hasInputs || (container.children.length <= 6 && headingTexts.some(h => text.includes(h) && text.length < 450))) {
-            container.classList.add('hidden');
-        }
     });
 }
 

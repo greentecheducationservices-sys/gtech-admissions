@@ -84,7 +84,7 @@
                 Admissions and Guidance Portal
             </p>
             <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
-                Enter your marks, percentage, or yearly budget to see eligible scholarships, reduced yearly fees, and 4-year tuition totals—sorted from lowest fee to highest fee.
+                Filter by Inter Marks, PCM Marks, or JEE Marks to see eligible scholarships, tuition per year, and 4 years fee—sorted from lowest fee to highest fee.
             </p>
             <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                 <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
@@ -198,7 +198,7 @@
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
-                <p class="text-xs text-slate-600 mt-0.5">Select a branch &amp; enter your percentage/rank on any card to auto-calculate scholarship and request extra fee concession from Gtech.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Filter by Inter Marks, PCM Marks, or JEE Marks to see scholarship amount, tuition per year, and 4 years fee.</p>
             </div>
             <div class="w-full md:w-72">
                 <input type="text" id="uni-search" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
@@ -226,36 +226,35 @@
             <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
         </div>
 
-        <!-- Instant Scholarship & Concession Check Bar -->
+        <!-- Marks & Budget Filter Bar -->
         <div id="instant-scholarship-checker" class="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Instant Scholarship &amp; Concession Check</span>
-                    <h3 class="text-sm sm:text-base font-black text-slate-900">Check Marks, Yearly Budget &amp; 4-Year Tuition (Low to High Fee)</h3>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Scholarship &amp; Fee Filter</span>
+                    <h3 class="text-sm sm:text-base font-black text-slate-900">Filter by Inter Marks, PCM Marks, JEE Marks &amp; Budget</h3>
                 </div>
                 <span id="sch-branch-fee-badge" class="px-3 py-1 rounded-xl bg-white border border-sky-200 text-xs font-extrabold text-sky-900">
-                    Selected Branch Fee: ₹90,000/yr
+                    Sorted: Low to High Fee
                 </span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                 <div>
                     <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Select Marks Option
+                        Select Marks Type
                     </label>
-                    <select id="sch-option-select" onchange="handleScholarshipOptionChange()" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                    <select id="sch-option-select" onchange="handleScholarshipOptionChange(); applyGlobalMarksFilter();" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                         <option value="inter">Inter Marks (%)</option>
-                        <option value="pcm">PCM Percentage (%)</option>
-                        <option value="mains">JEE Mains Percentile (%)</option>
-                        <option value="eamcet">AP EAMCET Rank</option>
+                        <option value="pcm">PCM Marks (%)</option>
+                        <option value="mains">JEE Marks / Percentile (%)</option>
                     </select>
                 </div>
 
                 <div>
                     <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Enter Inter Percentage (%)
+                        Enter Inter Marks (%)
                     </label>
-                    <input type="number" step="any" id="sch-score-input" placeholder="e.g. 95" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                    <input type="number" step="any" id="sch-score-input" placeholder="e.g. 95" oninput="applyGlobalMarksFilter()" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                 </div>
 
                 <div>
@@ -265,21 +264,24 @@
                     <input type="number" min="0" step="5000" id="sch-budget-input" placeholder="e.g. 120000" oninput="handleGlobalBudgetChange(this.value)" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                 </div>
 
-                <div>
-                    <button type="button" onclick="checkStudentScholarship()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-black text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-calculator"></i>
-                        <span>Check Scholarship</span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="checkStudentScholarship()" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-black text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-filter"></i>
+                        <span>Apply Filter</span>
+                    </button>
+                    <button type="button" onclick="clearGlobalMarksFilter()" class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
+                        Reset
                     </button>
                 </div>
             </div>
 
             <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600">
-                Enter your marks (e.g. <strong>95%</strong>) and/or <strong>Your Budget Per Year</strong> to view eligible scholarship cards, reduced yearly tuition, 4-year tuition totals, and automatic low-to-high fee sorting.
+                Enter your <strong>Inter Marks (%)</strong>, <strong>PCM Marks (%)</strong>, or <strong>JEE Marks (%)</strong> to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong> on every university card.
             </div>
         </div>
     </section>
 
-    <!-- Universities Grid Container (Cards render live score inputs, auto-scholarship, and Gtech Extra Fee Concession) -->
+    <!-- Universities Grid Container -->
     <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
         <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
@@ -437,17 +439,17 @@
                         <strong id="modal-actual-fee" class="font-mono text-slate-800 line-through">₹90,000/yr</strong>
                     </div>
                     <div class="flex justify-between items-center text-emerald-800">
-                        <span id="modal-sch-badge-label" class="font-bold">You Got</span>
+                        <span id="modal-sch-badge-label" class="font-bold">You Got Scholarship</span>
                         <strong id="modal-sch-discount" class="font-mono text-sm font-black text-emerald-700">- ₹50,000/yr</strong>
                     </div>
                     <div class="border-t border-emerald-200 pt-2.5 flex justify-between items-center gap-2">
-                        <span class="font-black text-slate-900 text-xs sm:text-sm">Reduced Tuition &amp; 4-Yr Total</span>
-                        <strong id="modal-final-fee" class="font-mono text-xs sm:text-sm font-black text-sky-700 text-right">₹40,000/yr | 4-Yr Total: ₹1,60,000</strong>
+                        <span class="font-black text-slate-900 text-xs sm:text-sm">Tuition Per Year &amp; 4 Years Fee</span>
+                        <strong id="modal-final-fee" class="font-mono text-xs sm:text-sm font-black text-sky-700 text-right">₹40,000/yr | 4 Years Fee: ₹1,60,000</strong>
                     </div>
                 </div>
 
                 <p class="text-[11px] text-slate-500 text-center leading-relaxed">
-                    You are eligible for this scholarship based on your entered marks. Claim your seat now or use <strong>For Gtech Extra Fee Concession — Call to Gtech</strong> on the card.
+                    You are eligible for this scholarship based on your entered marks. Claim your seat now or use <strong>Call to Expert for Extra Fee Concession</strong> on the card.
                 </p>
 
                 <div class="flex gap-2.5 pt-1">

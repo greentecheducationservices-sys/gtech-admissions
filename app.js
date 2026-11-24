@@ -1015,12 +1015,13 @@ function parseBranchesObject(rawBranches) {
 
 function matchesStateFilter(uni, selectedFilter) {
     const mode = String(uni?.admission_type || 'Direct Admission Only');
+    const states = getUniversityStates(uni).map(s => s.toLowerCase());
+
     if (!selectedFilter || selectedFilter === 'ALL') return true;
     if (selectedFilter === 'Entrance Exams') {
-        return mode.toLowerCase().includes('entrance exam');
+        return mode.toLowerCase().includes('entrance exam') || states.includes('entrance exams');
     }
 
-    const states = getUniversityStates(uni).map(s => s.toLowerCase());
     const target = String(selectedFilter).toLowerCase();
 
     if (states.includes(target)) return true;
@@ -1361,6 +1362,8 @@ function setStateFilter(stateName) {
     document.querySelectorAll('.state-btn').forEach(btn => {
         if (btn.getAttribute('data-state') === stateName) {
             btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0';
+        } else if (btn.getAttribute('data-state') === 'Entrance Exams') {
+            btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50 transition whitespace-nowrap shrink-0';
         } else {
             btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0';
         }
@@ -1385,7 +1388,8 @@ function renderUniversities() {
     const filteredWithMeta = state.universities
         .map((uni, idx) => ({ uni, idx }))
         .filter(({ uni }) => {
-            if (isEntranceExamOnlyMode(uni)) return false;
+            const isExamOnly = isEntranceExamOnlyMode(uni);
+            if (state.stateFilter !== 'Entrance Exams' && isExamOnly) return false;
 
             const matchesState = matchesStateFilter(uni, state.stateFilter);
             const statesText = getUniversityStates(uni).join(' ').toLowerCase();
@@ -1430,7 +1434,72 @@ function renderUniversities() {
         const campusesList = getUniversityCampuses(uni);
         const isAP = statesList.some(s => s.toLowerCase() === 'andhra pradesh');
         const mode = String(uni.admission_type || 'Direct Admission Only');
+        const isExamOnly = isEntranceExamOnlyMode(uni);
         const isEntranceAndDirect = mode === 'Entrance Exam & Direct Admission';
+
+        const safeUniName = String(uni.name || '').replace(/'/g, "\\'");
+        const safeUniKey = String(uniKey).replace(/'/g, "\\'");
+
+        const campusPills = campusesList.length > 0
+            ? `<div class="mt-2.5 flex flex-wrap gap-1.5">
+                ${campusesList.map(c => `<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-900 border border-sky-200"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i>${c}</span>`).join('')}
+               </div>`
+            : '';
+
+        if (isExamOnly) {
+            return `
+                <div class="bg-white rounded-3xl border border-indigo-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-300 transition duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50">
+                            <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
+                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-indigo-800 border border-indigo-100 shadow-xs">${statesDisplay}</span>
+                            <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
+                                ${uni.nirf ? `<span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf}</span>` : ''}
+                                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white">Entrance Exam Only</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-5">
+                            <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
+                            <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
+                                <i class="fa-solid fa-location-dot text-indigo-600 mt-0.5 shrink-0"></i>
+                                <span>${uni.address || ''}</span>
+                            </p>
+                            ${campusPills}
+
+                            <div class="mt-3 p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 space-y-1.5 text-xs">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-black uppercase tracking-wider text-indigo-900 text-[11px]">
+                                        <i class="fa-solid fa-file-pen mr-1"></i> Entrance Exam Admission
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-extrabold">Exam Only</span>
+                                </div>
+                                ${uni.entrance_exam_name ? `<p class="text-indigo-950 font-bold">Entrance Exam: <span class="font-mono">${uni.entrance_exam_name}</span></p>` : ''}
+                                <p class="text-slate-600 text-[11px]">We assist with entrance exam applications only—not direct admissions.</p>
+                            </div>
+
+                            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
+                                    <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
+                                    <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
+                                </div>
+                                <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-100">
+                                    <span class="text-[10px] text-sky-800 block font-semibold">Application Fee</span>
+                                    <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 sm:p-5 pt-0">
+                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-headset"></i> Get Expert Application Help
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
         const eamcetAvailable = isAP && String(uni.eamcet_seats || 'not_available').toLowerCase() === 'available';
         const mgmtAvailable = !isAP || String(uni.management_seats || 'available').toLowerCase() === 'available';
@@ -1455,15 +1524,6 @@ function renderUniversities() {
                 `;
             }).join('')
             : `<p class="text-[11px] text-slate-500">Branch fee details will be shared during counselling/application.</p>`;
-
-        const campusPills = campusesList.length > 0
-            ? `<div class="mt-2.5 flex flex-wrap gap-1.5">
-                ${campusesList.map(c => `<span class="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-sky-50 text-sky-900 border border-sky-200"><i class="fa-solid fa-location-dot text-sky-600 mr-1"></i>${c}</span>`).join('')}
-               </div>`
-            : '';
-
-        const safeUniName = String(uni.name || '').replace(/'/g, "\\'");
-        const safeUniKey = String(uniKey).replace(/'/g, "\\'");
 
         const rules = parseScholarshipRules(uni);
         const allowedCriteria = getAllowedCriteriaForUni(uni);

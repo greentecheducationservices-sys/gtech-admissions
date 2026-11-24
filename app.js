@@ -59,6 +59,9 @@ const state = {
 };
 
 function hideAddedMarksBudgetFilterBar() {
+    const stateBar = document.getElementById('state-filter-bar');
+    if (stateBar) stateBar.classList.remove('hidden');
+
     const idsToHide = [
         'home-cards-filter-section',
         'marks-budget-filter-bar',
@@ -73,7 +76,13 @@ function hideAddedMarksBudgetFilterBar() {
 
     const headingTexts = ['filter cards by marks & budget', 'home cards filter'];
     document.querySelectorAll('section, div, form').forEach(container => {
-        if (container.id === 'universities-grid' || container.closest('#universities-grid')) return;
+        if (
+            container.id === 'state-filter-bar' ||
+            container.id === 'universities-grid' ||
+            container.closest('#universities-grid')
+        ) {
+            return;
+        }
         const text = (container.textContent || '').toLowerCase();
         const hasInputs = Boolean(container.querySelector('#sch-score-input, #sch-budget-input, #sch-option-select'));
         if (hasInputs || (container.children.length <= 6 && headingTexts.some(h => text.includes(h) && text.length < 450))) {

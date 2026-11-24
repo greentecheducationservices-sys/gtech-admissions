@@ -10,17 +10,17 @@ const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
 const SCH_OPTION_LABELS = {
     inter: {
         optionText: 'Inter Marks (%)',
-        inputLabel: 'Enter Inter Percentage (%)',
+        inputLabel: 'Enter Inter Marks (%)',
         placeholder: 'e.g. 95'
     },
     pcm: {
-        optionText: 'PCM Percentage (%)',
-        inputLabel: 'Enter PCM Percentage (%)',
+        optionText: 'PCM Marks (%)',
+        inputLabel: 'Enter PCM Marks (%)',
         placeholder: 'e.g. 92'
     },
     mains: {
-        optionText: 'JEE Mains Percentile (%)',
-        inputLabel: 'Enter JEE Mains Percentile (%)',
+        optionText: 'JEE Marks / Percentile (%)',
+        inputLabel: 'Enter JEE Marks / Percentile (%)',
         placeholder: 'e.g. 88.5'
     },
     eamcet: {
@@ -48,7 +48,7 @@ const state = {
     loginCooldownTimer: null,
     cardScores: {}, // { [uniKey]: { branch, inter, pcm, mains, eamcet } }
     lastScholarshipOffer: null,
-    budgetPerYear: null // Yearly tuition budget filter/comparison in INR
+    budgetPerYear: null
 };
 
 function isBeforeMarch16_2027(dateObj = new Date()) {
@@ -70,7 +70,7 @@ function formatFourYearSummary(yearlyFee) {
     return `${formatINR(cleanYearly)}/yr • 4-Yr Total: ${formatINR(fourYearTotal)}`;
 }
 
-// --- BUDGET & INSTANT SCHOLARSHIP CHECKER ---
+// --- BUDGET, GLOBAL MARKS FILTER & INSTANT SCHOLARSHIP CHECKER ---
 function handleGlobalBudgetChange(rawValue) {
     const trimmed = String(rawValue ?? '').trim();
     if (!trimmed) {
@@ -82,6 +82,108 @@ function handleGlobalBudgetChange(rawValue) {
 
     syncScholarshipCheckerHeaderFee();
     renderUniversities();
+}
+
+function applyGlobalMarksFilter() {
+    const opt = document.getElementById('sch-option-select')?.value || 'inter';
+    const rawScore = String(document.getElementById('sch-score-input')?.value || '').trim();
+    const rawBudget = String(document.getElementById('sch-budget-input')?.value || '').trim();
+    const inlineBox = document.getElementById('sch-inline-summary');
+
+    if (rawBudget) {
+        const parsedBudget = Number(rawBudget);
+        state.budgetPerYear = Number.isFinite(parsedBudget) && parsedBudget >= 0 ? parsedBudget : null;
+    } else {
+        state.budgetPerYear = null;
+    }
+
+    const score = Number(rawScore);
+    const hasScore = Boolean(rawScore) && Number.isFinite(score) && score >= 0;
+
+    if (hasScore) {
+        state.universities.forEach((uni, idx) => {
+            if (isEntranceExamOnlyMode(uni)) return;
+            const uniKey = getUniKey(uni, idx);
+            const branchesObj = parseBranchesObject(uni.branches);
+            const current = getCardScoreState(uniKey, branchesObj);
+            current[opt] = rawScore;
+            state.cardScores[uniKey] = current;
+        });
+    }
+
+    syncScholarshipCheckerHeaderFee();
+    renderUniversities();
+
+    if (inlineBox) {
+        if (!hasScore && state.budgetPerYear === null) {
+            inlineBox.innerHTML = `Enter your <strong>Inter Marks (%)</strong>, <strong>PCM Marks (%)</strong>, or <strong>JEE Marks (%)</strong> to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong> on every university card.`;
+            return;
+        }
+
+        const { university, branchName, branchFee } = getActiveScholarshipTarget();
+        let discountAmount = 0;
+        let labelText = '';
+
+        if (hasScore) {
+            const evalRes = evaluateUniversityScholarship(university, {
+                selectedFee: branchFee,
+                inter: opt === 'inter' ? score : '',
+                pcm: opt === 'pcm' ? score : '',
+                mains: opt === 'mains' ? score : '',
+                eamcet: opt === 'eamcet' ? score : ''
+            });
+            discountAmount = evalRes.discountAmount;
+            labelText = evalRes.breakdownText;
+
+            if (discountAmount === 0) {
+                const fb = calculateFallbackMeritDiscount(opt, score, branchFee);
+                discountAmount = fb.discount;
+                labelText = fb.label;
+            }
+        }
+
+        const netFee = Math.max(0, branchFee - discountAmount);
+        const fourYrFee = netFee * 4;
+        const optLabel = SCH_OPTION_LABELS[opt]?.optionText || 'Marks';
+
+        inlineBox.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2 text-slate-900">
+                <div class="space-y-0.5">
+                    <div class="font-extrabold text-xs sm:text-sm text-indigo-950">
+                        Active Filter: <span class="text-sky-700">${hasScore ? `${optLabel}: ${score}` : 'Budget Only'}</span>
+                        ${state.budgetPerYear !== null ? ` • Budget: <span class="text-emerald-700">${formatINR(state.budgetPerYear)}/yr</span>` : ''}
+                    </div>
+                    <div class="text-[11px] text-slate-600">
+                        Sample (${university.name || 'University'} — ${branchName}):
+                        ${hasScore ? `Scholarship <strong>${formatINR(discountAmount)}/yr</strong> (${labelText || 'Slab Check'}) • ` : ''}
+                        Tuition: <strong class="text-sky-800">${formatINR(netFee)}/yr</strong> • 4 Years Fee: <strong class="text-indigo-900">${formatINR(fourYrFee)}</strong>
+                    </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] font-extrabold text-emerald-800">
+                    Sorted Low to High Fee
+                </span>
+            </div>
+        `;
+    }
+}
+
+function clearGlobalMarksFilter() {
+    const scoreInput = document.getElementById('sch-score-input');
+    const budgetInput = document.getElementById('sch-budget-input');
+    const inlineBox = document.getElementById('sch-inline-summary');
+
+    if (scoreInput) scoreInput.value = '';
+    if (budgetInput) budgetInput.value = '';
+    state.budgetPerYear = null;
+    state.lastScholarshipOffer = null;
+    state.cardScores = {};
+
+    syncScholarshipCheckerHeaderFee();
+    renderUniversities();
+
+    if (inlineBox) {
+        inlineBox.innerHTML = `Enter your <strong>Inter Marks (%)</strong>, <strong>PCM Marks (%)</strong>, or <strong>JEE Marks (%)</strong> to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong> on every university card.`;
+    }
 }
 
 function getActiveScholarshipTarget() {
@@ -102,11 +204,10 @@ function getActiveScholarshipTarget() {
 function syncScholarshipCheckerHeaderFee() {
     const badge = document.getElementById('sch-branch-fee-badge');
     if (!badge) return;
-    const { branchFee } = getActiveScholarshipTarget();
     const budgetPart = state.budgetPerYear !== null
-        ? ` | Budget: ${formatINR(state.budgetPerYear)}/yr (${formatINR(state.budgetPerYear * 4)} / 4-Yr)`
+        ? ` • Budget: ${formatINR(state.budgetPerYear)}/yr`
         : '';
-    badge.textContent = `Base Fee: ${formatINR(branchFee)}/yr${budgetPart}`;
+    badge.textContent = `Sorted: Low to High Fee${budgetPart}`;
 }
 
 function handleScholarshipOptionChange() {
@@ -135,59 +236,48 @@ function calculateFallbackMeritDiscount(optionKey, score, branchFee) {
 }
 
 function checkStudentScholarship() {
+    applyGlobalMarksFilter();
+
     const opt = document.getElementById('sch-option-select')?.value || 'inter';
     const rawInput = String(document.getElementById('sch-score-input')?.value || '').trim();
-    const rawBudget = String(document.getElementById('sch-budget-input')?.value || '').trim();
-    const inlineBox = document.getElementById('sch-inline-summary');
-
-    if (rawBudget) {
-        const parsedBudget = Number(rawBudget);
-        state.budgetPerYear = Number.isFinite(parsedBudget) && parsedBudget >= 0 ? parsedBudget : null;
-    } else {
-        state.budgetPerYear = null;
-    }
-
     const score = Number(rawInput);
     const hasValidScore = Boolean(rawInput) && Number.isFinite(score) && score >= 0;
 
     if (!hasValidScore && state.budgetPerYear === null) {
+        const inlineBox = document.getElementById('sch-inline-summary');
         if (inlineBox) {
-            inlineBox.innerHTML = `<span class="text-rose-700 font-bold">Enter valid marks/rank or a yearly budget (₹) and click Check Scholarship.</span>`;
+            inlineBox.innerHTML = `<span class="text-rose-700 font-bold">Enter valid marks or a yearly budget (₹) and click Apply Filter.</span>`;
         }
         return;
     }
+
+    if (!hasValidScore) return;
 
     const { university, branchName, branchFee } = getActiveScholarshipTarget();
     let discountAmount = 0;
     let labelText = '';
 
-    if (hasValidScore) {
-        const scorePayload = {
-            selectedFee: branchFee,
-            inter: opt === 'inter' ? score : '',
-            pcm: opt === 'pcm' ? score : '',
-            mains: opt === 'mains' ? score : '',
-            eamcet: opt === 'eamcet' ? score : ''
-        };
+    const evalRes = evaluateUniversityScholarship(university, {
+        selectedFee: branchFee,
+        inter: opt === 'inter' ? score : '',
+        pcm: opt === 'pcm' ? score : '',
+        mains: opt === 'mains' ? score : '',
+        eamcet: opt === 'eamcet' ? score : ''
+    });
+    discountAmount = evalRes.discountAmount;
+    labelText = evalRes.breakdownText;
 
-        const evalRes = evaluateUniversityScholarship(university, scorePayload);
-        discountAmount = evalRes.discountAmount;
-        labelText = evalRes.breakdownText;
-
-        if (discountAmount === 0) {
-            const fallback = calculateFallbackMeritDiscount(opt, score, branchFee);
-            discountAmount = fallback.discount;
-            labelText = fallback.label;
-        }
+    if (discountAmount === 0) {
+        const fallback = calculateFallbackMeritDiscount(opt, score, branchFee);
+        discountAmount = fallback.discount;
+        labelText = fallback.label;
     }
 
     const finalFee = Math.max(0, branchFee - discountAmount);
     const fourYearFee = finalFee * 4;
     const withinBudget = state.budgetPerYear === null ? null : finalFee <= state.budgetPerYear;
 
-    renderUniversities();
-
-    if (hasValidScore && discountAmount > 0) {
+    if (discountAmount > 0) {
         state.lastScholarshipOffer = {
             uniName: university.name || 'Partner University',
             branchName,
@@ -201,47 +291,7 @@ function checkStudentScholarship() {
             optionKey: opt,
             score
         };
-
-        if (inlineBox) {
-            inlineBox.innerHTML = `
-                <div class="flex flex-wrap items-center justify-between gap-2 text-emerald-950">
-                    <div class="space-y-0.5">
-                        <div class="font-black text-emerald-700 text-xs sm:text-sm">
-                            Scholarship: ${formatINR(discountAmount)}/yr <span class="text-[11px] font-bold text-slate-600">(${labelText || 'Merit Eligible'})</span>
-                        </div>
-                        <div class="text-xs font-extrabold text-slate-900">
-                            Reduced Fee: <span class="text-sky-700 text-sm font-black">${formatINR(finalFee)}/yr</span>
-                            <span class="text-[11px] text-indigo-900 font-bold ml-1">• 4-Year Total: ${formatINR(fourYearFee)}</span>
-                            <span class="text-[11px] text-slate-500 font-normal line-through ml-1.5">${formatINR(branchFee)}/yr</span>
-                        </div>
-                        ${state.budgetPerYear !== null ? `
-                            <div class="text-[11px] font-bold ${withinBudget ? 'text-emerald-700' : 'text-amber-800'}">
-                                ${withinBudget ? `Fits within your ${formatINR(state.budgetPerYear)}/yr budget` : `Above your ${formatINR(state.budgetPerYear)}/yr budget (sorted low-to-high below)`}
-                            </div>
-                        ` : ''}
-                    </div>
-                    <button type="button" onclick="openScholarshipCongratsModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] cursor-pointer transition">
-                        View Eligibility Pop-up
-                    </button>
-                </div>
-            `;
-        }
-
         openScholarshipCongratsModal();
-    } else if (inlineBox) {
-        const budgetText = state.budgetPerYear !== null
-            ? ` • Budget: <strong>${formatINR(state.budgetPerYear)}/yr</strong> (${formatINR(state.budgetPerYear * 4)} / 4-Yr)`
-            : '';
-        inlineBox.innerHTML = `
-            <div class="flex flex-wrap items-center justify-between gap-2 text-amber-900">
-                <span>
-                    ${hasValidScore ? `No slab matched for <strong>${score}</strong>. ` : ''}Base Tuition: <strong>${formatINR(branchFee)}/yr</strong> (<strong>${formatINR(branchFee * 4)}</strong> for 4 years)${budgetText}. Cards are sorted low to high fee.
-                </span>
-                <button type="button" onclick="openScholarshipModal('${String(university.name || '').replace(/'/g, "\\'")}', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-[11px] cursor-pointer">
-                    Ask Counselor
-                </button>
-            </div>
-        `;
     }
 }
 
@@ -254,10 +304,10 @@ function openScholarshipCongratsModal() {
 
     document.getElementById('modal-sch-uni-name').textContent = offer.uniName;
     document.getElementById('modal-sch-branch-name').textContent = `${offer.branchName} • ${SCH_OPTION_LABELS[offer.optionKey]?.optionText || 'Marks'}: ${offer.score}`;
-    document.getElementById('modal-actual-fee').textContent = `${formatINR(offer.actualFee)}/yr (${formatINR(offer.actualFee * 4)} / 4-Yr)`;
-    document.getElementById('modal-sch-badge-label').textContent = `Scholarship Amount (${offer.label})`;
+    document.getElementById('modal-actual-fee').textContent = `${formatINR(offer.actualFee)}/yr (${formatINR(offer.actualFee * 4)} / 4 Years)`;
+    document.getElementById('modal-sch-badge-label').textContent = `You Got Scholarship (${offer.label})`;
     document.getElementById('modal-sch-discount').textContent = `- ${formatINR(offer.discount)}/yr`;
-    document.getElementById('modal-final-fee').textContent = `${formatINR(offer.finalFee)}/yr | 4-Yr Total: ${formatINR(fourYrTotal)}`;
+    document.getElementById('modal-final-fee').textContent = `${formatINR(offer.finalFee)}/yr | 4 Years Fee: ${formatINR(fourYrTotal)}`;
 
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -853,8 +903,8 @@ function refreshSingleUniversityCalcUI(uniKey) {
     if (!hasAnyScore && evalRes.discountAmount === 0) {
         calcBox.innerHTML = `
             <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-indigo-900">
-                <span>Selected Fee: <strong>${formatINR(selectedFee)}/yr</strong> (${formatINR(selectedFee * 4)} / 4-Yr)</span>
-                ${budgetBadge || `<span class="font-bold text-indigo-700">Enter marks/rank to preview</span>`}
+                <span>Tuition Per Year: <strong>${formatINR(selectedFee)}/yr</strong> • 4 Years Fee: <strong>${formatINR(selectedFee * 4)}</strong></span>
+                ${budgetBadge || `<span class="font-bold text-indigo-700">Enter marks/JEE to preview</span>`}
             </div>
             ${evalRes.extraConcessionText ? `<p class="text-[10px] text-emerald-800 font-bold mt-1">Extra Concession Note: ${evalRes.extraConcessionText}</p>` : ''}
         `;
@@ -865,14 +915,14 @@ function refreshSingleUniversityCalcUI(uniKey) {
         <div class="space-y-1 text-[11px]">
             <div class="flex items-center justify-between">
                 <span class="text-slate-600 font-semibold">Branch Base Fee (${scoreState.branch || 'Selected'}):</span>
-                <span class="font-bold text-slate-900">${formatINR(selectedFee)}/yr (${formatINR(selectedFee * 4)} / 4-Yr)</span>
+                <span class="font-bold text-slate-900">${formatINR(selectedFee)}/yr (${formatINR(selectedFee * 4)} / 4 Years)</span>
             </div>
             <div class="flex items-center justify-between">
-                <span class="text-emerald-800 font-bold">${evalRes.breakdownText || 'Scholarship Estimate'}:</span>
+                <span class="text-emerald-800 font-bold">You Got Scholarship (${evalRes.breakdownText || 'Merit Slab'}):</span>
                 <span class="font-black text-emerald-700">-${formatINR(evalRes.discountAmount)}/yr</span>
             </div>
             <div class="flex items-center justify-between pt-1 border-t border-indigo-200/80 text-xs">
-                <span class="font-black text-indigo-950">Net Tuition (1-Yr / 4-Yr):</span>
+                <span class="font-black text-indigo-950">Tuition Per Year / 4 Years Fee:</span>
                 <span class="font-black text-indigo-700">${formatINR(evalRes.netTuition)}/yr • ${formatINR(evalRes.fourYearTuition)}</span>
             </div>
             ${budgetBadge ? `<div class="pt-0.5">${budgetBadge}</div>` : ''}
@@ -1005,7 +1055,7 @@ function renderUniversities() {
                 return `
                     <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px] gap-2">
                         <span class="text-slate-700 font-bold">${branch}</span>
-                        <span class="text-emerald-700 font-extrabold text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4-Yr)</span></span>
+                        <span class="text-emerald-700 font-extrabold text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
                     </div>
                 `;
             }).join('')
@@ -1061,12 +1111,12 @@ function renderUniversities() {
                 <div id="uni-calc-box-${uniKey}" class="p-2.5 rounded-xl bg-white border border-indigo-100">
                     ${initialEval.discountAmount > 0 ? `
                         <div class="space-y-1 text-[11px]">
-                            <div class="flex justify-between"><span class="text-emerald-800 font-bold">${initialEval.breakdownText}:</span><span class="font-black text-emerald-700">-${formatINR(initialEval.discountAmount)}/yr</span></div>
-                            <div class="flex justify-between text-xs"><span class="font-black text-indigo-950">Net Tuition (1-Yr / 4-Yr):</span><span class="font-black text-indigo-700">${formatINR(initialEval.netTuition)}/yr • ${formatINR(initialEval.fourYearTuition)}</span></div>
+                            <div class="flex justify-between"><span class="text-emerald-800 font-bold">You Got Scholarship (${initialEval.breakdownText}):</span><span class="font-black text-emerald-700">-${formatINR(initialEval.discountAmount)}/yr</span></div>
+                            <div class="flex justify-between text-xs"><span class="font-black text-indigo-950">Tuition Per Year / 4 Years Fee:</span><span class="font-black text-indigo-700">${formatINR(initialEval.netTuition)}/yr • ${formatINR(initialEval.fourYearTuition)}</span></div>
                         </div>
                     ` : `
                         <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-indigo-900">
-                            <span>Selected Fee: <strong>${formatINR(selectedFee)}/yr</strong> (${formatINR(selectedFee * 4)} / 4-Yr)</span>
+                            <span>Tuition Per Year: <strong>${formatINR(selectedFee)}/yr</strong> • 4 Years Fee: <strong>${formatINR(selectedFee * 4)}</strong></span>
                             <span class="font-bold text-indigo-700">Enter marks/JEE to preview</span>
                         </div>
                     `}
@@ -1251,7 +1301,7 @@ function renderUniversities() {
                         ${campusPills}
 
                         <div class="mt-4 p-3 rounded-2xl bg-sky-50/70 border border-sky-100">
-                            <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Branch Tuition Fees (Per Year &amp; 4-Yr):</p>
+                            <p class="text-[11px] font-bold text-sky-800 mb-2 uppercase tracking-wide">Branch Tuition Fees (Tuition Per Year &amp; 4 Years Fee):</p>
                             <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
                                 ${branchRows}
                             </div>
@@ -1397,7 +1447,7 @@ async function handleGuidanceSubmission(e) {
     }
 
     const budgetNote = state.budgetPerYear !== null
-        ? `Yearly Budget: ${formatINR(state.budgetPerYear)}/yr (${formatINR(state.budgetPerYear * 4)} / 4-Yr)`
+        ? `Yearly Budget: ${formatINR(state.budgetPerYear)}/yr (${formatINR(state.budgetPerYear * 4)} / 4 Years)`
         : '';
 
     const marksSummary = [
@@ -2145,7 +2195,7 @@ function openUniversityStatusModal(uniName) {
                 return `
                     <div class="flex items-center justify-between py-1.5 border-b border-sky-100 last:border-none gap-2">
                         <span class="font-bold text-slate-700">${branch}</span>
-                        <span class="font-extrabold text-indigo-700 text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4-Yr)</span></span>
+                        <span class="font-extrabold text-indigo-700 text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
                     </div>
                 `;
             }).join('')
@@ -2177,7 +2227,7 @@ function openUniversityStatusModal(uniName) {
         feeStructureHtml = `
             <div class="flex items-center justify-between py-1.5">
                 <span class="font-bold text-slate-700">University Tuition Fee</span>
-                <span class="font-extrabold text-indigo-700">${formatINR(yrFee)}/yr (${formatINR(yrFee * 4)} / 4-Yr)</span>
+                <span class="font-extrabold text-indigo-700">${formatINR(yrFee)}/yr (${formatINR(yrFee * 4)} / 4 Years)</span>
             </div>
         `;
     } else {
@@ -2492,6 +2542,8 @@ window.calculateIntermediateTotal = calculateIntermediateTotal;
 window.handleOtpBoxInput = handleOtpBoxInput;
 window.handleOtpBoxKeydown = handleOtpBoxKeydown;
 window.handleGlobalBudgetChange = handleGlobalBudgetChange;
+window.applyGlobalMarksFilter = applyGlobalMarksFilter;
+window.clearGlobalMarksFilter = clearGlobalMarksFilter;
 window.handleScholarshipOptionChange = handleScholarshipOptionChange;
 window.checkStudentScholarship = checkStudentScholarship;
 window.openScholarshipCongratsModal = openScholarshipCongratsModal;

@@ -225,6 +225,51 @@
             </div>
             <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
         </div>
+
+        <!-- Instant Scholarship & Concession Check Bar -->
+        <div id="instant-scholarship-checker" class="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Instant Scholarship &amp; Concession Check</span>
+                    <h3 class="text-sm sm:text-base font-black text-slate-900">Select Inter Marks / Percentage &amp; Check Tuition Fee Per Year</h3>
+                </div>
+                <span id="sch-branch-fee-badge" class="px-3 py-1 rounded-xl bg-white border border-sky-200 text-xs font-extrabold text-sky-900">
+                    Selected Branch Fee: ₹90,000/yr
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                <div>
+                    <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">
+                        Select Marks Option
+                    </label>
+                    <select id="sch-option-select" onchange="handleScholarshipOptionChange()" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                        <option value="inter">Inter Marks (%)</option>
+                        <option value="pcm">PCM Percentage (%)</option>
+                        <option value="mains">JEE Mains Percentile (%)</option>
+                        <option value="eamcet">AP EAMCET Rank</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">
+                        Enter Inter Percentage (%)
+                    </label>
+                    <input type="number" step="any" id="sch-score-input" placeholder="e.g. 90" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                </div>
+
+                <div>
+                    <button type="button" onclick="checkStudentScholarship()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-black text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-calculator"></i>
+                        <span>Check Scholarship</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600">
+                Select <strong>Inter Marks (%)</strong>, enter your percentage, and click <strong>Check Scholarship</strong> to view your scholarship amount and tuition fee per year.
+            </div>
+        </div>
     </section>
 
     <!-- Universities Grid Container (Cards render live score inputs, auto-scholarship, and Call to Expert) -->
@@ -358,6 +403,58 @@
         </div>
     </div>
 
+    <!-- PROFESSIONAL CONGRATULATIONS POP-UP MODAL FOR SCHOLARSHIP ELIGIBILITY -->
+    <div id="sch-congrats-modal" class="fixed inset-0 z-[120] hidden items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-emerald-200 gtech-pop-in">
+            <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 px-6 py-5 text-white text-center relative">
+                <button type="button" onclick="closeScholarshipCongratsModal()" aria-label="Close congratulations pop-up" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-sm flex items-center justify-center cursor-pointer transition">
+                    ✕
+                </button>
+                <div class="w-12 h-12 mx-auto mb-2.5 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-100">Official Merit Assessment</p>
+                <h3 class="text-xl font-black mt-0.5">Congratulations!</h3>
+                <p class="text-xs text-white/95 font-semibold mt-1">You are Eligible for a Scholarship</p>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+                <div class="text-center">
+                    <span id="modal-sch-uni-name" class="font-black text-sm text-slate-900 block">Selected University</span>
+                    <span id="modal-sch-branch-name" class="text-slate-600 font-semibold">CSE (DS)</span>
+                </div>
+
+                <div class="rounded-2xl bg-emerald-50/80 border border-emerald-200 p-4 space-y-2.5">
+                    <div class="flex justify-between items-center text-slate-600">
+                        <span>Standard Tuition Fee / Year</span>
+                        <strong id="modal-actual-fee" class="font-mono text-slate-800 line-through">₹90,000/yr</strong>
+                    </div>
+                    <div class="flex justify-between items-center text-emerald-800">
+                        <span id="modal-sch-badge-label" class="font-bold">Scholarship Amount</span>
+                        <strong id="modal-sch-discount" class="font-mono text-sm font-black text-emerald-700">- ₹0/yr</strong>
+                    </div>
+                    <div class="border-t border-emerald-200 pt-2.5 flex justify-between items-center">
+                        <span class="font-black text-slate-900 text-sm">Tuition Fee Per Year</span>
+                        <strong id="modal-final-fee" class="font-mono text-lg font-black text-sky-700">₹90,000/yr</strong>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-slate-500 text-center leading-relaxed">
+                    You are eligible for this scholarship based on your entered marks. Claim your seat now or speak with our counselor for extra concession support.
+                </p>
+
+                <div class="flex gap-2.5 pt-1">
+                    <button type="button" onclick="closeScholarshipCongratsModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold transition cursor-pointer">
+                        Close
+                    </button>
+                    <button type="button" onclick="proceedWithScholarshipApplication()" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-sm transition cursor-pointer">
+                        Claim &amp; Apply Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SCHOLARSHIP AND VISITING APPLICATION FORM POP-UP MODAL -->
     <div id="scholarship-app-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="relative bg-gradient-to-b from-indigo-50 via-white to-sky-50 border-2 border-indigo-200 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden my-auto gtech-pop-in">
@@ -370,7 +467,7 @@
                         SCHOLARSHIP &amp; VISITING APPLICATION FORM
                     </h3>
                 </div>
-                <button type="button" onclick="closeScholarshipModal()" aria-label="Close application form" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-rose-500 text-white font-black flex items-center justify-center text-sm transition shrink-0">
+                <button type="button" onclick="closeScholarshipApplicationModal()" aria-label="Close application form" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-rose-500 text-white font-black flex items-center justify-center text-sm transition shrink-0">
                     ✕
                 </button>
             </div>
@@ -508,7 +605,7 @@
                         <i class="fa-solid fa-paper-plane"></i>
                         <span>SUBMIT APPLICATION</span>
                     </button>
-                    <button type="button" onclick="closeScholarshipModal()" class="px-4 py-3.5 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition">
+                    <button type="button" onclick="closeScholarshipApplicationModal()" class="px-4 py-3.5 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition">
                         Close
                     </button>
                 </div>
@@ -895,6 +992,7 @@
 
     <script>
         function closeEarlyOfferPopup() {
+            sessionStorage.setItem('gtech_early_offer_dismissed', '1');
             document.getElementById('early-offer-popup')?.classList.add('hidden');
         }
         function showEarlyOfferPopupIfEligible() {

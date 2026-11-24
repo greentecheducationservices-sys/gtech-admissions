@@ -883,6 +883,12 @@ function matchesStateFilter(uni, selectedFilter) {
     if (target.includes('karnataka') || target.includes('bangalore')) {
         return states.some(s => s.includes('karnataka') || s.includes('bangalore'));
     }
+    if (target === 'uttar pradesh' || target === 'up') {
+        return states.some(s => s === 'up' || s.includes('uttar pradesh'));
+    }
+    if (target === 'madhya pradesh' || target === 'mp') {
+        return states.some(s => s === 'mp' || s.includes('madhya pradesh'));
+    }
     return false;
 }
 

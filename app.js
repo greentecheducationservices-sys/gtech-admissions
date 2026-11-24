@@ -160,7 +160,7 @@ function applyGlobalMarksFilter() {
                     </div>
                 </div>
                 <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] font-extrabold text-emerald-800">
-                    Sorted Low to High Fee
+                    Sorted Low to High Tuition Fee
                 </span>
             </div>
         `;
@@ -187,7 +187,10 @@ function clearGlobalMarksFilter() {
 }
 
 function getActiveScholarshipTarget() {
-    const filteredUnis = state.universities.filter(u => !isEntranceExamOnlyMode(u) && matchesStateFilter(u, state.stateFilter));
+    const filteredUnis = state.universities
+        .filter(u => !isEntranceExamOnlyMode(u) && matchesStateFilter(u, state.stateFilter))
+        .sort((a, b) => getEffectiveYearlyFeeForSort(a) - getEffectiveYearlyFeeForSort(b));
+
     const targetUni = filteredUnis[0] || state.universities.find(u => !isEntranceExamOnlyMode(u)) || null;
     const branchesObj = targetUni ? parseBranchesObject(targetUni.branches) : {};
     const entries = Object.entries(branchesObj);
@@ -207,7 +210,7 @@ function syncScholarshipCheckerHeaderFee() {
     const budgetPart = state.budgetPerYear !== null
         ? ` • Budget: ${formatINR(state.budgetPerYear)}/yr`
         : '';
-    badge.textContent = `Sorted: Low to High Fee${budgetPart}`;
+    badge.textContent = `Sorted: Low to High Tuition Fee${budgetPart}`;
 }
 
 function handleScholarshipOptionChange() {
@@ -636,8 +639,8 @@ async function loadActiveCarousel() {
 
 // --- ADMISSION MODE, MULTI-STATE, CAMPUS & QUOTA HELPERS ---
 function isEntranceExamOnlyMode(uni) {
-    const mode = String(uni?.admission_type || 'Direct Admission Only').trim().toLowerCase();
-    return mode === 'entrance exam only';
+    const mode = String(uni?.admission_type || '').trim().toLowerCase();
+    return mode.includes('entrance exam only');
 }
 
 function getUniversityStates(uni) {
@@ -823,36 +826,46 @@ function evaluateUniversityScholarship(uni, studentScores = {}) {
     };
 }
 
-function getEffectiveYearlyFeeForSort(uni) {
+function getEffectiveYearlyFeeForSort(uni, fallbackIdx = 0) {
     if (isEntranceExamOnlyMode(uni)) return Number.POSITIVE_INFINITY;
     const branches = parseBranchesObject(uni.branches);
     const fees = Object.values(branches).map(v => Number(v || 0)).filter(n => n > 0);
     if (fees.length === 0) return Number.POSITIVE_INFINITY;
 
-    const minBaseFee = Math.min(...fees);
+    const uniKey = getUniKey(uni, fallbackIdx);
+    const scoreState = getCardScoreState(uniKey, branches);
+    const chosenBranchFee = Number(branches[scoreState.branch] ?? 0);
+    const activeBaseFee = chosenBranchFee > 0 ? chosenBranchFee : Math.min(...fees);
+
     const rules = parseScholarshipRules(uni.scholarship_rules);
     const rawOpt = document.getElementById('sch-option-select')?.value || 'inter';
-    const rawScore = String(document.getElementById('sch-score-input')?.value || '').trim();
-    const score = Number(rawScore);
+    const rawGlobalScore = String(document.getElementById('sch-score-input')?.value || '').trim();
+    const globalScore = Number(rawGlobalScore);
 
-    if (rawScore && Number.isFinite(score) && score >= 0) {
-        const evalRes = evaluateUniversityScholarship(uni, {
-            selectedFee: minBaseFee,
-            inter: rawOpt === 'inter' ? score : '',
-            pcm: rawOpt === 'pcm' ? score : '',
-            mains: rawOpt === 'mains' ? score : '',
-            eamcet: rawOpt === 'eamcet' ? score : ''
-        });
+    const effectiveScores = {
+        selectedFee: activeBaseFee,
+        inter: scoreState.inter || (rawOpt === 'inter' && rawGlobalScore ? rawGlobalScore : ''),
+        pcm: scoreState.pcm || (rawOpt === 'pcm' && rawGlobalScore ? rawGlobalScore : ''),
+        mains: scoreState.mains || (rawOpt === 'mains' && rawGlobalScore ? rawGlobalScore : ''),
+        eamcet: scoreState.eamcet || (rawOpt === 'eamcet' && rawGlobalScore ? rawGlobalScore : '')
+    };
+
+    const hasAnyScore = Boolean(
+        effectiveScores.inter || effectiveScores.pcm || effectiveScores.mains || effectiveScores.eamcet
+    );
+
+    if (hasAnyScore) {
+        const evalRes = evaluateUniversityScholarship(uni, effectiveScores);
         if (evalRes.discountAmount > 0) {
             return evalRes.netTuition;
         }
-        if (!rules?.enabled) {
-            const fb = calculateFallbackMeritDiscount(rawOpt, score, minBaseFee);
-            if (fb.discount > 0) return Math.max(0, minBaseFee - fb.discount);
+        if (!rules?.enabled && rawGlobalScore && Number.isFinite(globalScore) && globalScore >= 0) {
+            const fb = calculateFallbackMeritDiscount(rawOpt, globalScore, activeBaseFee);
+            if (fb.discount > 0) return Math.max(0, activeBaseFee - fb.discount);
         }
     }
 
-    return minBaseFee;
+    return activeBaseFee;
 }
 
 function getCardScoreState(uniKey, branchesObj = {}) {
@@ -865,7 +878,7 @@ function getCardScoreState(uniKey, branchesObj = {}) {
             mains: '',
             eamcet: ''
         };
-    } else if (!state.cardScores[uniKey].branch && Object.keys(branchesObj).length > 0) {
+    } else if ((!state.cardScores[uniKey].branch || !(state.cardScores[uniKey].branch in branchesObj)) && Object.keys(branchesObj).length > 0) {
         state.cardScores[uniKey].branch = Object.keys(branchesObj)[0];
     }
     return state.cardScores[uniKey];
@@ -875,6 +888,10 @@ function updateCardScoreAndRefresh(uniKey, field, rawValue) {
     const current = state.cardScores[uniKey] || {};
     current[field] = rawValue;
     state.cardScores[uniKey] = current;
+    if (field === 'branch') {
+        renderUniversities();
+        return;
+    }
     refreshSingleUniversityCalcUI(uniKey);
 }
 
@@ -903,7 +920,7 @@ function refreshSingleUniversityCalcUI(uniKey) {
     if (!hasAnyScore && evalRes.discountAmount === 0) {
         calcBox.innerHTML = `
             <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-indigo-900">
-                <span>Tuition Per Year: <strong>${formatINR(selectedFee)}/yr</strong> • 4 Years Fee: <strong>${formatINR(selectedFee * 4)}</strong></span>
+                <span>Chosen Branch (${scoreState.branch || 'Selected'}): <strong>${formatINR(selectedFee)}/yr</strong> • 4 Years Fee: <strong>${formatINR(selectedFee * 4)}</strong></span>
                 ${budgetBadge || `<span class="font-bold text-indigo-700">Enter marks/JEE to preview</span>`}
             </div>
             ${evalRes.extraConcessionText ? `<p class="text-[10px] text-emerald-800 font-bold mt-1">Extra Concession Note: ${evalRes.extraConcessionText}</p>` : ''}
@@ -914,7 +931,7 @@ function refreshSingleUniversityCalcUI(uniKey) {
     calcBox.innerHTML = `
         <div class="space-y-1 text-[11px]">
             <div class="flex items-center justify-between">
-                <span class="text-slate-600 font-semibold">Branch Base Fee (${scoreState.branch || 'Selected'}):</span>
+                <span class="text-slate-600 font-semibold">Chosen Branch (${scoreState.branch || 'Selected'}):</span>
                 <span class="font-bold text-slate-900">${formatINR(selectedFee)}/yr (${formatINR(selectedFee * 4)} / 4 Years)</span>
             </div>
             <div class="flex items-center justify-between">
@@ -936,7 +953,7 @@ function openExpertConcessionCall(uniName, uniKey) {
     const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
     const scoreState = state.cardScores[uniKey] || {};
     const summaryBits = [
-        scoreState.branch ? `Branch: ${scoreState.branch}` : '',
+        scoreState.branch ? `Chosen Branch: ${scoreState.branch}` : '',
         scoreState.inter ? `Inter: ${scoreState.inter}%` : '',
         scoreState.pcm ? `PCM: ${scoreState.pcm}%` : '',
         scoreState.mains ? `JEE Mains: ${scoreState.mains}` : '',
@@ -995,8 +1012,12 @@ function renderUniversities() {
     const searchInput = document.getElementById('uni-search');
     const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
 
-    const filtered = state.universities
-        .filter(uni => {
+    const filteredWithMeta = state.universities
+        .map((uni, idx) => ({ uni, idx }))
+        .filter(({ uni }) => {
+            // Remove Entrance Exam Only cards in all regions
+            if (isEntranceExamOnlyMode(uni)) return false;
+
             const matchesState = matchesStateFilter(uni, state.stateFilter);
             const statesText = getUniversityStates(uni).join(' ').toLowerCase();
             const campusesText = getUniversityCampuses(uni).join(' ').toLowerCase();
@@ -1016,15 +1037,15 @@ function renderUniversities() {
             return matchesState && matchesQuery;
         })
         .sort((a, b) => {
-            const feeA = getEffectiveYearlyFeeForSort(a);
-            const feeB = getEffectiveYearlyFeeForSort(b);
-            if (feeA === feeB) return String(a.name || '').localeCompare(String(b.name || ''));
+            const feeA = getEffectiveYearlyFeeForSort(a.uni, a.idx);
+            const feeB = getEffectiveYearlyFeeForSort(b.uni, b.idx);
+            if (feeA === feeB) return String(a.uni.name || '').localeCompare(String(b.uni.name || ''));
             return feeA - feeB;
         });
 
     if (!grid) return;
 
-    if (filtered.length === 0) {
+    if (filteredWithMeta.length === 0) {
         grid.innerHTML = `
             <div class="col-span-full py-12 text-center bg-white rounded-2xl border border-sky-100">
                 <p class="text-slate-600 font-semibold text-xs">No universities match your filter in this category.</p>
@@ -1033,28 +1054,29 @@ function renderUniversities() {
         return;
     }
 
-    grid.innerHTML = filtered.map((uni, idx) => {
+    grid.innerHTML = filteredWithMeta.map(({ uni, idx }) => {
         const uniKey = getUniKey(uni, idx);
         const statesList = getUniversityStates(uni);
         const statesDisplay = statesList.join(' • ') || uni.state || 'India';
         const campusesList = getUniversityCampuses(uni);
         const isAP = statesList.some(s => s.toLowerCase() === 'andhra pradesh');
         const mode = String(uni.admission_type || 'Direct Admission Only');
-        const isEntranceOnly = isEntranceExamOnlyMode(uni);
         const isEntranceAndDirect = mode === 'Entrance Exam & Direct Admission';
-        const entranceExamName = String(uni.entrance_exam_name || '').trim();
 
         const eamcetAvailable = isAP && String(uni.eamcet_seats || 'not_available').toLowerCase() === 'available';
         const mgmtAvailable = !isAP || String(uni.management_seats || 'available').toLowerCase() === 'available';
 
-        const branches = !isEntranceOnly ? parseBranchesObject(uni.branches) : {};
+        const branches = parseBranchesObject(uni.branches);
         const branchEntries = Object.entries(branches);
+        const scoreState = getCardScoreState(uniKey, branches);
+
         const branchRows = branchEntries.length > 0
             ? branchEntries.map(([branch, fee]) => {
                 const yrFee = Number(fee || 0);
+                const isChosen = scoreState.branch === branch;
                 return `
-                    <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px] gap-2">
-                        <span class="text-slate-700 font-bold">${branch}</span>
+                    <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px] gap-2 ${isChosen ? 'bg-indigo-50/80 px-1.5 rounded-lg' : ''}">
+                        <span class="text-slate-700 font-bold">${branch} ${isChosen ? '<span class="text-[9px] font-black text-indigo-700">(Chosen)</span>' : ''}</span>
                         <span class="text-emerald-700 font-extrabold text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
                     </div>
                 `;
@@ -1071,7 +1093,6 @@ function renderUniversities() {
         const safeUniKey = String(uniKey).replace(/'/g, "\\'");
 
         const rules = parseScholarshipRules(uni.scholarship_rules);
-        const scoreState = getCardScoreState(uniKey, branches);
         const selectedFee = Number(branches[scoreState.branch] ?? Object.values(branches)[0] ?? 0);
         const initialEval = evaluateUniversityScholarship(uni, {
             selectedFee,
@@ -1081,17 +1102,17 @@ function renderUniversities() {
             eamcet: scoreState.eamcet
         });
 
-        const budgetFitTag = state.budgetPerYear !== null && !isEntranceOnly && selectedFee > 0
+        const budgetFitTag = state.budgetPerYear !== null && selectedFee > 0
             ? (initialEval.netTuition <= state.budgetPerYear
                 ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">Within Budget</span>`
                 : `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">Over Budget</span>`)
             : '';
 
-        const calculatorWidgetHtml = !isEntranceOnly && branchEntries.length > 0 ? `
+        const calculatorWidgetHtml = branchEntries.length > 0 ? `
             <div class="mt-3 p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2.5">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <span class="text-[10px] font-black uppercase tracking-wider text-indigo-900">
-                        <i class="fa-solid fa-calculator mr-1"></i> Instant Scholarship &amp; Concession Check
+                        <i class="fa-solid fa-calculator mr-1"></i> Scholarship &amp; Fee Filter
                     </span>
                     <div class="flex items-center gap-1.5">
                         ${budgetFitTag}
@@ -1099,10 +1120,14 @@ function renderUniversities() {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 text-[11px]">
-                    <select onchange="updateCardScoreAndRefresh('${safeUniKey}', 'branch', this.value)" class="col-span-2 bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-800">
-                        ${branchEntries.map(([bName, bFee]) => `<option value="${String(bName).replace(/"/g, '&quot;')}" ${scoreState.branch === bName ? 'selected' : ''}>${bName} (${formatINR(bFee)})</option>`).join('')}
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wide text-indigo-900">Chosen Branch</label>
+                    <select onchange="updateCardScoreAndRefresh('${safeUniKey}', 'branch', this.value)" class="w-full bg-white border border-indigo-200 rounded-lg px-2.5 py-1.5 text-[11px] font-bold text-slate-800">
+                        ${branchEntries.map(([bName, bFee]) => `<option value="${String(bName).replace(/"/g, '&quot;')}" ${scoreState.branch === bName ? 'selected' : ''}>${bName} — ${formatINR(bFee)}/yr</option>`).join('')}
                     </select>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1.5 text-[11px]">
                     <input type="number" step="any" placeholder="Inter %" value="${scoreState.inter || ''}" oninput="updateCardScoreAndRefresh('${safeUniKey}', 'inter', this.value)" class="bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-mono">
                     <input type="number" step="any" placeholder="PCM %" value="${scoreState.pcm || ''}" oninput="updateCardScoreAndRefresh('${safeUniKey}', 'pcm', this.value)" class="bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-mono">
                     <input type="number" step="any" placeholder="JEE %" value="${scoreState.mains || ''}" oninput="updateCardScoreAndRefresh('${safeUniKey}', 'mains', this.value)" class="bg-white border border-indigo-200 rounded-lg px-2 py-1.5 text-[11px] font-mono">
@@ -1111,12 +1136,13 @@ function renderUniversities() {
                 <div id="uni-calc-box-${uniKey}" class="p-2.5 rounded-xl bg-white border border-indigo-100">
                     ${initialEval.discountAmount > 0 ? `
                         <div class="space-y-1 text-[11px]">
+                            <div class="flex justify-between"><span class="text-slate-600 font-semibold">Chosen Branch (${scoreState.branch || 'Selected'}):</span><span class="font-bold text-slate-900">${formatINR(selectedFee)}/yr</span></div>
                             <div class="flex justify-between"><span class="text-emerald-800 font-bold">You Got Scholarship (${initialEval.breakdownText}):</span><span class="font-black text-emerald-700">-${formatINR(initialEval.discountAmount)}/yr</span></div>
                             <div class="flex justify-between text-xs"><span class="font-black text-indigo-950">Tuition Per Year / 4 Years Fee:</span><span class="font-black text-indigo-700">${formatINR(initialEval.netTuition)}/yr • ${formatINR(initialEval.fourYearTuition)}</span></div>
                         </div>
                     ` : `
                         <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-indigo-900">
-                            <span>Tuition Per Year: <strong>${formatINR(selectedFee)}/yr</strong> • 4 Years Fee: <strong>${formatINR(selectedFee * 4)}</strong></span>
+                            <span>Chosen Branch (${scoreState.branch || 'Selected'}): <strong>${formatINR(selectedFee)}/yr</strong> • 4 Years Fee: <strong>${formatINR(selectedFee * 4)}</strong></span>
                             <span class="font-bold text-indigo-700">Enter marks/JEE to preview</span>
                         </div>
                     `}
@@ -1128,50 +1154,6 @@ function renderUniversities() {
                 </button>
             </div>
         ` : '';
-
-        if (isEntranceOnly) {
-            return `
-                <div class="bg-white rounded-3xl border border-indigo-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-indigo-300 transition duration-300 flex flex-col justify-between">
-                    <div>
-                        <div class="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50">
-                            <img src="${uni.image}" alt="${uni.name}" class="w-full h-full object-cover object-center">
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/55 via-transparent to-transparent"></div>
-                            <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-indigo-800 border border-indigo-100 shadow-xs">${statesDisplay}</span>
-                            <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
-                                ${uni.nirf ? `<span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf}</span>` : ''}
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-indigo-600 text-white">Entrance Exam Only</span>
-                            </div>
-                        </div>
-
-                        <div class="p-4 sm:p-5">
-                            <h3 class="font-black text-base text-slate-900 leading-snug">${uni.name}</h3>
-                            <p class="text-xs text-slate-600 mt-1 flex items-start gap-1.5">
-                                <i class="fa-solid fa-location-dot text-indigo-600 mt-0.5 shrink-0"></i>
-                                <span>${uni.address || ''}</span>
-                            </p>
-                            ${campusPills}
-
-                            <div class="mt-3 p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-xs text-indigo-950 space-y-1">
-                                <strong class="block font-black">Entrance Exam Application Support Only</strong>
-                                ${entranceExamName ? `<div class="text-[11px] font-bold text-indigo-900">Accepted Entrance Exam: ${entranceExamName}</div>` : ''}
-                                <span class="block text-[11px] text-indigo-800">Admission is strictly via entrance exam. Branch tuition and hostel fees are not shown for Entrance Exam Only mode.</span>
-                            </div>
-
-                            <div class="mt-3 p-3 rounded-xl bg-sky-50/70 border border-sky-100 flex items-center justify-between text-xs">
-                                <span class="text-[11px] text-sky-900 font-bold">Application Fee</span>
-                                <strong class="text-indigo-900 text-xs">${formatINR(uni.application_fee || 0)}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-4 sm:p-5 pt-0">
-                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                            <i class="fa-solid fa-headset"></i> Get Expert Application Help
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
 
         if (isAP) {
             return `

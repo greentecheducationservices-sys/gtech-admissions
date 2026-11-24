@@ -28,6 +28,19 @@
     scrollbar-width: none;
 }
 
+/* State & Entrance Exam Filter Strip Visibility */
+#state-filter-bar {
+    display: flex;
+    visibility: visible;
+    opacity: 1;
+}
+
+#state-filter-bar .state-btn {
+    display: inline-flex;
+    align-items: center;
+    visibility: visible;
+}
+
 /* About Section Carousel Track */
 #about-carousel {
     display: flex;

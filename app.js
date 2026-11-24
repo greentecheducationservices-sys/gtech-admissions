@@ -7,6 +7,29 @@ const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
 const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/send-notification` : '');
 const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
 
+const SCH_OPTION_LABELS = {
+    inter: {
+        optionText: 'Inter Marks (%)',
+        inputLabel: 'Enter Inter Percentage (%)',
+        placeholder: 'e.g. 90'
+    },
+    pcm: {
+        optionText: 'PCM Percentage (%)',
+        inputLabel: 'Enter PCM Percentage (%)',
+        placeholder: 'e.g. 92'
+    },
+    mains: {
+        optionText: 'JEE Mains Percentile (%)',
+        inputLabel: 'Enter JEE Mains Percentile (%)',
+        placeholder: 'e.g. 88.5'
+    },
+    eamcet: {
+        optionText: 'AP EAMCET Rank',
+        inputLabel: 'Enter AP EAMCET Rank',
+        placeholder: 'e.g. 12500'
+    }
+};
+
 const state = {
     stateFilter: 'ALL',
     universities: [],
@@ -23,7 +46,8 @@ const state = {
     activeDashboardTab: 'dashboard',
     regCooldownTimer: null,
     loginCooldownTimer: null,
-    cardScores: {} // { [uniKey]: { branch, inter, pcm, mains, eamcet } }
+    cardScores: {}, // { [uniKey]: { branch, inter, pcm, mains, eamcet } }
+    lastScholarshipOffer: null
 };
 
 function isBeforeMarch16_2027(dateObj = new Date()) {
@@ -32,6 +56,163 @@ function isBeforeMarch16_2027(dateObj = new Date()) {
 
 function getUniKey(uni, fallbackIdx = 0) {
     return String(uni?.id ?? uni?.name ?? `uni_${fallbackIdx}`);
+}
+
+// --- INSTANT SCHOLARSHIP & CONCESSION CHECKER (INDEX BAR + CONGRATS POP-UP) ---
+function getActiveScholarshipTarget() {
+    const filteredUnis = state.universities.filter(u => !isEntranceExamOnlyMode(u) && matchesStateFilter(u, state.stateFilter));
+    const targetUni = filteredUnis[0] || state.universities.find(u => !isEntranceExamOnlyMode(u)) || null;
+    const branchesObj = targetUni ? parseBranchesObject(targetUni.branches) : {};
+    const entries = Object.entries(branchesObj);
+    const branchName = entries[0]?.[0] || 'B.Tech Tuition';
+    const branchFee = Number(entries[0]?.[1] || 90000);
+
+    return {
+        university: targetUni || { name: 'Gtech Partner University', scholarship_rules: null },
+        branchName,
+        branchFee
+    };
+}
+
+function syncScholarshipCheckerHeaderFee() {
+    const badge = document.getElementById('sch-branch-fee-badge');
+    if (!badge) return;
+    const { branchFee } = getActiveScholarshipTarget();
+    badge.textContent = `Selected Branch Fee: ${formatINR(branchFee)}/yr`;
+}
+
+function handleScholarshipOptionChange() {
+    const opt = document.getElementById('sch-option-select')?.value || 'inter';
+    const labelEl = document.getElementById('sch-value-label');
+    const inputEl = document.getElementById('sch-score-input');
+    const meta = SCH_OPTION_LABELS[opt] || SCH_OPTION_LABELS.inter;
+
+    if (labelEl) labelEl.textContent = meta.inputLabel;
+    if (inputEl) inputEl.placeholder = meta.placeholder;
+}
+
+function calculateFallbackMeritDiscount(optionKey, score, branchFee) {
+    if (optionKey === 'eamcet') {
+        if (score <= 5000) return { discount: Math.round(branchFee * 0.4), label: 'AP EAMCET Top Rank Merit (40%)' };
+        if (score <= 15000) return { discount: Math.round(branchFee * 0.25), label: 'AP EAMCET Merit Slab (25%)' };
+        if (score <= 35000) return { discount: Math.round(branchFee * 0.15), label: 'AP EAMCET Concession (15%)' };
+        return { discount: 0, label: '' };
+    }
+
+    if (score >= 95) return { discount: Math.round(branchFee * 0.4), label: 'Merit Slab 95%+ (40% Off)' };
+    if (score >= 90) return { discount: Math.round(branchFee * 0.3), label: 'Merit Slab 90–94.9% (30% Off)' };
+    if (score >= 85) return { discount: Math.round(branchFee * 0.2), label: 'Merit Slab 85–89.9% (20% Off)' };
+    if (score >= 75) return { discount: Math.round(branchFee * 0.1), label: 'Merit Slab 75–84.9% (10% Off)' };
+    return { discount: 0, label: '' };
+}
+
+function checkStudentScholarship() {
+    const opt = document.getElementById('sch-option-select')?.value || 'inter';
+    const rawInput = String(document.getElementById('sch-score-input')?.value || '').trim();
+    const inlineBox = document.getElementById('sch-inline-summary');
+    const score = Number(rawInput);
+
+    if (!rawInput || !Number.isFinite(score) || score < 0) {
+        if (inlineBox) {
+            inlineBox.innerHTML = `<span class="text-rose-700 font-bold">Please enter a valid percentage or rank and click Check Scholarship.</span>`;
+        }
+        return;
+    }
+
+    const { university, branchName, branchFee } = getActiveScholarshipTarget();
+    const scorePayload = {
+        selectedFee: branchFee,
+        inter: opt === 'inter' ? score : '',
+        pcm: opt === 'pcm' ? score : '',
+        mains: opt === 'mains' ? score : '',
+        eamcet: opt === 'eamcet' ? score : ''
+    };
+
+    const evalRes = evaluateUniversityScholarship(university, scorePayload);
+    let discountAmount = evalRes.discountAmount;
+    let labelText = evalRes.breakdownText;
+
+    if (discountAmount === 0) {
+        const fallback = calculateFallbackMeritDiscount(opt, score, branchFee);
+        discountAmount = fallback.discount;
+        labelText = fallback.label;
+    }
+
+    const finalFee = Math.max(0, branchFee - discountAmount);
+
+    if (discountAmount > 0) {
+        state.lastScholarshipOffer = {
+            uniName: university.name || 'Partner University',
+            branchName,
+            actualFee: branchFee,
+            discount: discountAmount,
+            finalFee,
+            label: labelText || 'Merit Scholarship',
+            optionKey: opt,
+            score
+        };
+
+        if (inlineBox) {
+            inlineBox.innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-2 text-emerald-950">
+                    <div class="space-y-0.5">
+                        <div class="font-black text-emerald-700 text-xs sm:text-sm">
+                            Scholarship Amount: ${formatINR(discountAmount)}/yr <span class="text-[11px] font-bold text-slate-600">(${labelText || 'Merit Eligible'})</span>
+                        </div>
+                        <div class="text-xs font-extrabold text-slate-900">
+                            Tuition Fee Per Year: <span class="text-sky-700 text-sm font-black">${formatINR(finalFee)}/yr</span>
+                            <span class="text-[11px] text-slate-500 font-normal line-through ml-1.5">${formatINR(branchFee)}/yr</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openScholarshipCongratsModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[11px] cursor-pointer transition">
+                        View Eligibility Pop-up
+                    </button>
+                </div>
+            `;
+        }
+
+        openScholarshipCongratsModal();
+    } else if (inlineBox) {
+        inlineBox.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2 text-amber-900">
+                <span>
+                    No scholarship slab matched for <strong>${score}</strong>. Standard Tuition Fee Per Year: <strong>${formatINR(branchFee)}/yr</strong>.
+                </span>
+                <button type="button" onclick="openScholarshipModal('${String(university.name || '').replace(/'/g, "\\'")}', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-[11px] cursor-pointer">
+                    Ask Counselor
+                </button>
+            </div>
+        `;
+    }
+}
+
+function openScholarshipCongratsModal() {
+    const offer = state.lastScholarshipOffer;
+    const modal = document.getElementById('sch-congrats-modal');
+    if (!offer || !modal) return;
+
+    document.getElementById('modal-sch-uni-name').textContent = offer.uniName;
+    document.getElementById('modal-sch-branch-name').textContent = `${offer.branchName} • ${SCH_OPTION_LABELS[offer.optionKey]?.optionText || 'Marks'}: ${offer.score}`;
+    document.getElementById('modal-actual-fee').textContent = `${formatINR(offer.actualFee)}/yr`;
+    document.getElementById('modal-sch-badge-label').textContent = `Scholarship Amount (${offer.label})`;
+    document.getElementById('modal-sch-discount').textContent = `- ${formatINR(offer.discount)}/yr`;
+    document.getElementById('modal-final-fee').textContent = `${formatINR(offer.finalFee)}/yr`;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeScholarshipCongratsModal() {
+    const modal = document.getElementById('sch-congrats-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function proceedWithScholarshipApplication() {
+    const offer = state.lastScholarshipOffer;
+    closeScholarshipCongratsModal();
+    openScholarshipModal(offer?.uniName || '', 'Scholarship Based on Marks');
 }
 
 // --- EMAIL NOTIFICATION HELPER ---
@@ -627,6 +808,7 @@ async function fetchUniversitiesFromSupabase() {
         return;
     }
     state.universities = data || [];
+    syncScholarshipCheckerHeaderFee();
     renderUniversities();
 }
 
@@ -650,6 +832,7 @@ function setStateFilter(stateName) {
         apBar.classList.toggle('hidden', stateName !== 'Andhra Pradesh');
     }
 
+    syncScholarshipCheckerHeaderFee();
     renderUniversities();
 }
 
@@ -1039,11 +1222,16 @@ function openScholarshipModal(uniName = '', assistanceType = '') {
     modal.classList.add('flex');
 }
 
-function closeScholarshipModal() {
+function closeScholarshipApplicationModal() {
     const modal = document.getElementById('scholarship-app-modal');
     if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+}
+
+// Keep alias for any external callers
+function closeScholarshipModal() {
+    closeScholarshipApplicationModal();
 }
 
 function prefillGuidanceFormWithStudent() {
@@ -1178,7 +1366,7 @@ async function handleGuidanceSubmission(e) {
         document.getElementById('guide-inter-total').value = '';
         document.getElementById('guide-campus-wrap')?.classList.add('hidden');
         prefillGuidanceFormWithStudent();
-        closeScholarshipModal();
+        closeScholarshipApplicationModal();
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
@@ -2177,7 +2365,13 @@ window.sanitizeNumericInput = sanitizeNumericInput;
 window.calculateIntermediateTotal = calculateIntermediateTotal;
 window.handleOtpBoxInput = handleOtpBoxInput;
 window.handleOtpBoxKeydown = handleOtpBoxKeydown;
+window.handleScholarshipOptionChange = handleScholarshipOptionChange;
+window.checkStudentScholarship = checkStudentScholarship;
+window.openScholarshipCongratsModal = openScholarshipCongratsModal;
+window.closeScholarshipCongratsModal = closeScholarshipCongratsModal;
+window.proceedWithScholarshipApplication = proceedWithScholarshipApplication;
 window.openScholarshipModal = openScholarshipModal;
+window.closeScholarshipApplicationModal = closeScholarshipApplicationModal;
 window.closeScholarshipModal = closeScholarshipModal;
 window.openAuthModal = openAuthModal;
 window.closeAuthModal = closeAuthModal;
@@ -2206,6 +2400,7 @@ window.prevSlide = prevSlide;
 
 window.onload = async function () {
     detectIncomingReferralLink();
+    handleScholarshipOptionChange();
     listenToAuthChanges();
     await restoreStudentSession();
     await fetchUniversitiesFromSupabase();

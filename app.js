@@ -53,7 +53,7 @@ const state = {
     activeDashboardTab: 'dashboard',
     regCooldownTimer: null,
     loginCooldownTimer: null,
-    cardScores: {}, // { [uniKey]: { branch, inter, pcm, mains, eamcet } }
+    cardScores: {},
     lastScholarshipOffer: null,
     budgetPerYear: null
 };
@@ -71,13 +71,6 @@ function formatINR(value) {
     return `₹${num.toLocaleString('en-IN')}`;
 }
 
-function formatFourYearSummary(yearlyFee) {
-    const cleanYearly = Math.max(0, Number(yearlyFee || 0));
-    const fourYearTotal = cleanYearly * 4;
-    return `${formatINR(cleanYearly)}/yr • 4-Yr Total: ${formatINR(fourYearTotal)}`;
-}
-
-// --- SCHOLARSHIP RULE EXTRACTION & DISPLAY HELPERS ---
 function getBranchRulesListForUni(uni, targetBranch = '') {
     const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
     const collected = [];
@@ -212,7 +205,6 @@ function buildScholarshipBreakdownHtml(uni, chosenBranch = '') {
     `;
 }
 
-// --- ADMIN SCHOLARSHIP CRITERIA HELPERS ---
 function getAllowedCriteriaForUni(uni) {
     const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
     const rawList = Array.isArray(rules.allowed_criteria)
@@ -279,7 +271,6 @@ function syncGlobalCriteriaHint() {
     }
 }
 
-// --- BUDGET, GLOBAL MARKS FILTER & INSTANT SCHOLARSHIP CHECKER ---
 function handleGlobalBudgetChange(rawValue) {
     const trimmed = String(rawValue ?? '').trim();
     if (!trimmed) {
@@ -551,7 +542,6 @@ function proceedWithScholarshipApplication() {
     openScholarshipModal(offer?.uniName || '', 'Scholarship Based on Marks');
 }
 
-// --- EMAIL NOTIFICATION HELPER ---
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
     const payload = {
         to: to || ADMIN_EMAIL,
@@ -584,7 +574,6 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
     return false;
 }
 
-// --- NUMERIC KEYBOARD & INTERMEDIATE AUTO-TOTAL CALCULATION ---
 function sanitizeNumericInput(inputEl, maxLength = 15) {
     if (!inputEl) return;
     const cleaned = String(inputEl.value || '').replace(/\D+/g, '').slice(0, maxLength);
@@ -673,7 +662,6 @@ function startOtpCountdown(type, seconds = 60) {
     }
 }
 
-// --- SEQUENTIAL GTECH ID GENERATOR (STARTS FROM GTECH6001) ---
 async function generateNextGtechId() {
     let maxNumber = 6000;
     try {
@@ -708,7 +696,6 @@ async function generateNextGtechId() {
     return `GTECH${nextNum}`;
 }
 
-// --- REFERRAL CODE CAPTURE ---
 function detectIncomingReferralLink() {
     const params = new URLSearchParams(window.location.search);
     const refParam = params.get('ref');
@@ -735,7 +722,6 @@ function detectIncomingReferralLink() {
     }
 }
 
-// --- TOAST NOTIFICATIONS ---
 let toastTimeout;
 function showToast(title, message, type = 'success') {
     const toast = document.getElementById('gtech-toast');
@@ -770,7 +756,6 @@ function hideToast() {
     if (toast) toast.classList.add('hidden');
 }
 
-// --- CENTER-SCREEN ₹2,000 OFFER MODAL ---
 function openEarlyOfferModal(gtechId) {
     const modal = document.getElementById('early-offer-center-modal');
     const idEl = document.getElementById('offer-popup-gtech-id');
@@ -791,7 +776,6 @@ function closeEarlyOfferModal() {
     continueAfterAuth();
 }
 
-// --- CAROUSEL ---
 function nextSlide() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
@@ -859,7 +843,6 @@ async function loadActiveCarousel() {
     `).join('');
 }
 
-// --- ADMISSION MODE, MULTI-STATE, CAMPUS & QUOTA HELPERS ---
 function isEntranceExamOnlyMode(uni) {
     const mode = String(uni?.admission_type || '').trim().toLowerCase();
     return mode.includes('entrance exam only');
@@ -887,15 +870,44 @@ function getUniversityCampuses(uni) {
 
 function parseBranchesObject(rawBranches) {
     if (!rawBranches) return {};
-    if (typeof rawBranches === 'string') {
+    let data = rawBranches;
+
+    if (typeof data === 'string') {
         try {
-            const parsed = JSON.parse(rawBranches);
-            return parsed && typeof parsed === 'object' ? parsed : {};
+            data = JSON.parse(data);
         } catch (_) {
             return {};
         }
     }
-    return typeof rawBranches === 'object' ? rawBranches : {};
+
+    if (Array.isArray(data)) {
+        const out = {};
+        data.forEach(item => {
+            if (!item || typeof item !== 'object') return;
+            const name = String(item.branch || item.name || item.title || '').trim();
+            const fee = Number(item.fee ?? item.tuition_fee ?? item.yearly_fee ?? item.amount ?? 0);
+            if (name) out[name] = Number.isFinite(fee) ? fee : 0;
+        });
+        return out;
+    }
+
+    if (data && typeof data === 'object') {
+        const out = {};
+        Object.entries(data).forEach(([key, val]) => {
+            const cleanKey = String(key || '').trim();
+            if (!cleanKey) return;
+            if (typeof val === 'number' || typeof val === 'string') {
+                const num = Number(String(val).replace(/[^\d.]/g, ''));
+                out[cleanKey] = Number.isFinite(num) ? num : 0;
+            } else if (val && typeof val === 'object') {
+                const num = Number(val.fee ?? val.tuition_fee ?? val.yearly_fee ?? val.amount ?? 0);
+                out[cleanKey] = Number.isFinite(num) ? num : 0;
+            }
+        });
+        return out;
+    }
+
+    return {};
 }
 
 function parseScholarshipRules(rawRules) {
@@ -950,7 +962,6 @@ function populateCampusSelectForUniversity(uniName) {
     }
 }
 
-// --- SCHOLARSHIP & FEE CONCESSION EVALUATOR (SLABS + BRANCH-WISE RULES) ---
 function evaluateUniversityScholarship(uni, studentScores = {}) {
     const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
     const baseTuition = Number(studentScores.selectedFee || 0);
@@ -1238,7 +1249,6 @@ function openExpertConcessionCall(uniName, uniKey) {
     openScholarshipModal(uniName, 'Scholarship Based on Marks');
 }
 
-// --- UNIVERSITIES & CATALOG ---
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -1625,7 +1635,6 @@ function renderUniversities() {
     }).join('');
 }
 
-// --- SCHOLARSHIP & VISITING APPLICATION MODAL ---
 function openScholarshipModal(uniName = '', assistanceType = '') {
     if (!state.currentStudent) {
         state.pendingPostLoginAction = {
@@ -1829,7 +1838,6 @@ async function handleGuidanceSubmission(e) {
     }
 }
 
-// --- AUTH MODAL & OTP HANDLERS ---
 function openAuthModal(mode = 'login', noticeText = '') {
     const modal = document.getElementById('student-auth-modal');
     const noticeBox = document.getElementById('auth-redirect-notice');
@@ -1957,7 +1965,6 @@ async function verifyEmailOtpCode(email, code, purpose) {
     return { verified: true, user: data?.user || null };
 }
 
-// --- 1. REGISTRATION FLOW ---
 async function handleSendRegistrationOtp(e) {
     if (e) e.preventDefault();
     const errId = 'reg-error-msg';
@@ -2156,7 +2163,6 @@ async function handleVerifyRegistrationOtp() {
     }
 }
 
-// --- 2. EMAIL-ONLY LOGIN FLOW ---
 async function handleSendLoginOtp(e) {
     if (e) e.preventDefault();
     const errId = 'login-error-msg';
@@ -2350,7 +2356,6 @@ async function handleStudentLogout() {
     showToast('Signed Out', 'You have signed out of your student portal.', 'success');
 }
 
-// --- STUDENT PORTAL TABS ---
 function switchDashboardSection(tabName) {
     state.activeDashboardTab = tabName;
     const tabs = ['dashboard', 'referral'];
@@ -2700,7 +2705,6 @@ async function openStudentDashboardModal(defaultTab = 'dashboard') {
     renderStudentDashboard();
 }
 
-// --- REFERRAL SHARE & COPY HELPERS ---
 function copyMyReferralCode() {
     const code = document.getElementById('my-referral-code-text')?.textContent || '';
     if (!code) return;
@@ -2733,7 +2737,6 @@ function shareReferralInstagram() {
     window.open('https://www.instagram.com/', '_blank', 'noopener');
 }
 
-// --- REALTIME WATCHER ---
 function subscribeToStudentMailUpdates() {
     _supabase
         .channel('gtech-student-updates')
@@ -2819,7 +2822,6 @@ function subscribeToStudentMailUpdates() {
         .subscribe();
 }
 
-// Global scope exposure
 window.showToast = showToast;
 window.hideToast = hideToast;
 window.openEarlyOfferModal = openEarlyOfferModal;
@@ -2865,6 +2867,9 @@ window.nextSlide = nextSlide;
 window.prevSlide = prevSlide;
 
 async function initGtechPortal() {
+    const searchInput = document.getElementById('uni-search');
+    if (searchInput) searchInput.value = '';
+
     detectIncomingReferralLink();
     handleScholarshipOptionChange();
     listenToAuthChanges();

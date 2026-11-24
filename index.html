@@ -201,7 +201,7 @@
                 <p class="text-xs text-slate-600 mt-0.5">Filter cards on home and enter marks directly in each card's Scholarship &amp; Fee Filter box to calculate scholarship and 4 years fee.</p>
             </div>
             <div class="w-full md:w-72">
-                <input type="text" id="uni-search" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
+                <input type="text" id="uni-search" autocomplete="off" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
             </div>
         </div>
 
@@ -550,7 +550,6 @@
                     </div>
                 </div>
 
-                <!-- Optional Preferred Campus Location (Populated dynamically when university has multiple campuses) -->
                 <div id="guide-campus-wrap" class="hidden">
                     <label for="guide-campus" class="block text-[11px] font-bold text-slate-700 mb-1">
                         <i class="fa-solid fa-location-dot text-sky-600 mr-1"></i>Preferred Campus Location
@@ -558,7 +557,6 @@
                     <select id="guide-campus" class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-indigo-500"></select>
                 </div>
 
-                <!-- Academic Marks Section -->
                 <div id="guide-marks-section" class="p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 shadow-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-black uppercase tracking-wider text-indigo-800">
@@ -846,7 +844,6 @@
                         </div>
                     </div>
 
-                    <!-- ₹2,000 Early Registration Offer Card in Student Dashboard -->
                     <div id="dash-early-offer-card" class="hidden p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-emerald-50 border-2 border-amber-300 shadow-xs">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex items-center gap-3">

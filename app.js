@@ -30,6 +30,13 @@ const SCH_OPTION_LABELS = {
     }
 };
 
+const CRITERIA_DISPLAY_LABELS = {
+    inter: 'Inter %',
+    pcm: 'PCM %',
+    mains: 'JEE %',
+    eamcet: 'EAMCET Rank'
+};
+
 const state = {
     stateFilter: 'ALL',
     universities: [],
@@ -68,6 +75,141 @@ function formatFourYearSummary(yearlyFee) {
     const cleanYearly = Math.max(0, Number(yearlyFee || 0));
     const fourYearTotal = cleanYearly * 4;
     return `${formatINR(cleanYearly)}/yr • 4-Yr Total: ${formatINR(fourYearTotal)}`;
+}
+
+// --- SCHOLARSHIP RULE EXTRACTION & DISPLAY HELPERS ---
+function getBranchRulesListForUni(uni, targetBranch = '') {
+    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
+    const collected = [];
+
+    if (Array.isArray(rules.branch_scholarships)) {
+        rules.branch_scholarships.forEach(r => {
+            if (r && r.branch) collected.push({ ...r, branch: String(r.branch).trim() });
+        });
+    }
+
+    if (rules.branch_scholarships_by_branch && typeof rules.branch_scholarships_by_branch === 'object') {
+        Object.entries(rules.branch_scholarships_by_branch).forEach(([branchKey, val]) => {
+            const list = Array.isArray(val) ? val : (val && typeof val === 'object' ? [val] : []);
+            list.forEach(r => {
+                const bName = String(r?.branch || branchKey || '').trim();
+                if (!bName) return;
+                const duplicate = collected.some(
+                    existing =>
+                        existing.branch.toLowerCase() === bName.toLowerCase() &&
+                        String(existing.criterion || '') === String(r.criterion || '') &&
+                        Number(existing.min ?? 0) === Number(r.min ?? 0) &&
+                        Number(existing.max ?? 100) === Number(r.max ?? 100) &&
+                        Number(existing.value ?? 0) === Number(r.value ?? 0) &&
+                        String(existing.type || '') === String(r.type || '')
+                );
+                if (!duplicate) {
+                    collected.push({ ...r, branch: bName });
+                }
+            });
+        });
+    }
+
+    if (Array.isArray(rules.slabs)) {
+        rules.slabs.forEach(s => {
+            if (s && s.branch && String(s.branch).toUpperCase() !== 'ALL') {
+                collected.push({ ...s, branch: String(s.branch).trim() });
+            }
+        });
+    }
+
+    if (!targetBranch) return collected;
+    const cleanTarget = String(targetBranch).trim().toLowerCase();
+    return collected.filter(r => String(r.branch || '').trim().toLowerCase() === cleanTarget);
+}
+
+function formatRuleBenefit(rule) {
+    const val = Number(rule?.value || 0);
+    if (rule?.type === 'flat') return `${formatINR(val)}/yr Off`;
+    return `${val}% Tuition Off`;
+}
+
+function formatRuleRange(rule) {
+    const critLabel = CRITERIA_DISPLAY_LABELS[String(rule?.criterion || 'inter').toLowerCase()] || String(rule?.criterion || '').toUpperCase();
+    const minVal = rule?.min ?? 0;
+    const maxVal = rule?.max ?? 100;
+    return `${critLabel} ${minVal}–${maxVal}`;
+}
+
+function buildScholarshipBreakdownHtml(uni, chosenBranch = '') {
+    const rules = parseScholarshipRules(uni?.scholarship_rules);
+    if (!rules) return '';
+
+    const slabs = Array.isArray(rules.slabs) ? rules.slabs : [];
+    const branchRules = getBranchRulesListForUni(uni);
+    const activeBranchRules = chosenBranch ? getBranchRulesListForUni(uni, chosenBranch) : [];
+    const extraNote = String(rules.extra_concession_text || '').trim();
+    const expertPhone = String(rules.expert_phone || '').trim();
+
+    if (!rules.enabled && branchRules.length === 0 && !extraNote && !expertPhone) {
+        return '';
+    }
+
+    const slabsHtml = rules.enabled && slabs.length > 0
+        ? `<div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-wider text-purple-900 block">Scholarship Slabs (${String(rules.multi_mode || 'best_of').replace('_', ' ')})</span>
+            <div class="space-y-1">
+                ${slabs.map(s => {
+                    const scopeTag = s.branch && s.branch !== 'ALL' ? `[${s.branch}] ` : '[All Branches] ';
+                    const benefit = formatRuleBenefit(s);
+                    const rangeText = formatRuleRange(s);
+                    return `
+                        <div class="flex items-center justify-between gap-2 px-2 py-1 rounded-lg bg-white border border-purple-100 text-[10px]">
+                            <span class="font-bold text-slate-800">${scopeTag}${s.note ? `${s.note} • ` : ''}<span class="font-mono text-purple-800">${rangeText}</span></span>
+                            <strong class="text-emerald-700 shrink-0">${benefit}</strong>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+           </div>`
+        : '';
+
+    const branchBreakdownHtml = branchRules.length > 0
+        ? `<div class="space-y-1 pt-1.5 border-t border-purple-200/70">
+            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-900 block">
+                Branch-Wise Scholarship Breakdown ${chosenBranch ? `(Highlighting ${chosenBranch})` : ''}
+            </span>
+            <div class="space-y-1 max-h-32 overflow-y-auto pr-0.5">
+                ${branchRules.map(br => {
+                    const isHighlighted = chosenBranch && String(br.branch).toLowerCase() === String(chosenBranch).toLowerCase();
+                    return `
+                        <div class="flex items-center justify-between gap-2 px-2 py-1 rounded-lg text-[10px] ${isHighlighted ? 'bg-indigo-100/90 border border-indigo-300' : 'bg-white border border-indigo-100'}">
+                            <span class="font-bold text-slate-900">${br.branch} <span class="font-mono font-normal text-indigo-800">(${formatRuleRange(br)})</span>${br.note ? ` • ${br.note}` : ''}</span>
+                            <strong class="text-emerald-700 shrink-0">${formatRuleBenefit(br)}</strong>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+           </div>`
+        : '';
+
+    const chosenBranchNoticeHtml = chosenBranch && activeBranchRules.length > 0
+        ? `<div class="px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-950">
+            <i class="fa-solid fa-check-circle text-emerald-600 mr-1"></i>
+            ${chosenBranch} Scholarship: ${activeBranchRules.map(r => `${formatRuleRange(r)} → ${formatRuleBenefit(r)}${r.note ? ` (${r.note})` : ''}`).join(' | ')}
+           </div>`
+        : '';
+
+    const extraFooterHtml = (extraNote || expertPhone)
+        ? `<div class="pt-1.5 border-t border-purple-200/70 flex flex-wrap items-center justify-between gap-1 text-[10px] font-bold text-purple-950">
+            ${extraNote ? `<span><i class="fa-solid fa-tag text-purple-700 mr-1"></i>${extraNote}</span>` : '<span></span>'}
+            ${expertPhone ? `<span class="font-mono text-indigo-800"><i class="fa-solid fa-phone mr-1"></i>${expertPhone}</span>` : ''}
+           </div>`
+        : '';
+
+    return `
+        <div class="mt-3 p-3 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2">
+            ${slabsHtml}
+            ${chosenBranchNoticeHtml}
+            ${branchBreakdownHtml}
+            ${extraFooterHtml}
+        </div>
+    `;
 }
 
 // --- ADMIN SCHOLARSHIP CRITERIA HELPERS ---
@@ -198,6 +340,7 @@ function applyGlobalMarksFilter() {
 
         if (hasScore && isCriterionAllowedForUni(university, opt)) {
             const evalRes = evaluateUniversityScholarship(university, {
+                branch: branchName,
                 selectedFee: branchFee,
                 inter: opt === 'inter' ? score : '',
                 pcm: opt === 'pcm' ? score : '',
@@ -339,6 +482,7 @@ function checkStudentScholarship() {
     let labelText = '';
 
     const evalRes = evaluateUniversityScholarship(university, {
+        branch: branchName,
         selectedFee: branchFee,
         inter: opt === 'inter' ? score : '',
         pcm: opt === 'pcm' ? score : '',
@@ -806,11 +950,12 @@ function populateCampusSelectForUniversity(uniName) {
     }
 }
 
-// --- SCHOLARSHIP & FEE CONCESSION EVALUATOR ---
+// --- SCHOLARSHIP & FEE CONCESSION EVALUATOR (SLABS + BRANCH-WISE RULES) ---
 function evaluateUniversityScholarship(uni, studentScores = {}) {
     const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
     const baseTuition = Number(studentScores.selectedFee || 0);
     const allowedCriteria = getAllowedCriteriaForUni(uni);
+    const chosenBranch = String(studentScores.branch || '').trim().toLowerCase();
 
     const filteredScores = {
         inter: allowedCriteria.includes('inter') ? studentScores.inter : '',
@@ -819,7 +964,21 @@ function evaluateUniversityScholarship(uni, studentScores = {}) {
         eamcet: allowedCriteria.includes('eamcet') ? studentScores.eamcet : ''
     };
 
-    if (!rules.enabled || !Array.isArray(rules.slabs) || rules.slabs.length === 0) {
+    const candidateRules = [];
+    if (rules.enabled && Array.isArray(rules.slabs)) {
+        rules.slabs.forEach(slab => {
+            const slabBranch = String(slab.branch || 'ALL').trim().toLowerCase();
+            if (slabBranch && slabBranch !== 'all' && chosenBranch && slabBranch !== chosenBranch) {
+                return;
+            }
+            candidateRules.push(slab);
+        });
+    }
+
+    const branchRules = getBranchRulesListForUni(uni, studentScores.branch || '');
+    branchRules.forEach(br => candidateRules.push(br));
+
+    if (candidateRules.length === 0) {
         return {
             matchedSlabs: [],
             discountAmount: 0,
@@ -834,7 +993,7 @@ function evaluateUniversityScholarship(uni, studentScores = {}) {
     const mode = rules.multi_mode || 'best_of';
     const matched = [];
 
-    rules.slabs.forEach(slab => {
+    candidateRules.forEach(slab => {
         const c1 = String(slab.criterion || '').toLowerCase();
         if (!allowedCriteria.includes(c1)) return;
 
@@ -886,7 +1045,10 @@ function evaluateUniversityScholarship(uni, studentScores = {}) {
         const winners = Object.values(bestByCriterion);
         const total = Math.min(baseTuition > 0 ? baseTuition : Infinity, winners.reduce((sum, w) => sum + w.amount, 0));
         const net = Math.max(0, baseTuition - total);
-        const labels = winners.map(w => `${String(w.slab.criterion).toUpperCase()} (${w.slab.type === 'flat' ? formatINR(w.slab.value) : w.slab.value + '%'})`);
+        const labels = winners.map(w => {
+            const bTag = w.slab.branch && w.slab.branch !== 'ALL' ? `${w.slab.branch} ` : '';
+            return `${bTag}${String(w.slab.criterion).toUpperCase()} (${w.slab.type === 'flat' ? formatINR(w.slab.value) : w.slab.value + '%'})`;
+        });
         return {
             matchedSlabs: winners.map(w => w.slab),
             discountAmount: total,
@@ -902,9 +1064,10 @@ function evaluateUniversityScholarship(uni, studentScores = {}) {
     const top = matched[0];
     const cappedDiscount = baseTuition > 0 ? Math.min(baseTuition, top.amount) : top.amount;
     const net = Math.max(0, baseTuition - cappedDiscount);
+    const branchPrefix = top.slab.branch && top.slab.branch !== 'ALL' ? `${top.slab.branch} • ` : '';
     const label = top.slab.criterion2
-        ? `${String(top.slab.criterion).toUpperCase()} + ${String(top.slab.criterion2).toUpperCase()} Qualified`
-        : `${String(top.slab.criterion).toUpperCase()} Merit Slab`;
+        ? `${branchPrefix}${String(top.slab.criterion).toUpperCase()} + ${String(top.slab.criterion2).toUpperCase()} Qualified`
+        : `${branchPrefix}${String(top.slab.criterion).toUpperCase()} Merit Slab`;
 
     return {
         matchedSlabs: [top.slab],
@@ -934,6 +1097,7 @@ function getEffectiveYearlyFeeForSort(uni, fallbackIdx = 0) {
     const globalScore = Number(rawGlobalScore);
 
     const effectiveScores = {
+        branch: scoreState.branch,
         selectedFee: activeBaseFee,
         inter: scoreState.inter || (rawOpt === 'inter' && rawGlobalScore ? rawGlobalScore : ''),
         pcm: scoreState.pcm || (rawOpt === 'pcm' && rawGlobalScore ? rawGlobalScore : ''),
@@ -1002,6 +1166,7 @@ function refreshSingleUniversityCalcUI(uniKey) {
     const selectedFee = Number(branchesObj[scoreState.branch] ?? Object.values(branchesObj)[0] ?? 0);
 
     const evalRes = evaluateUniversityScholarship(uni, {
+        branch: scoreState.branch,
         selectedFee,
         inter: scoreState.inter,
         pcm: scoreState.pcm,
@@ -1177,9 +1342,13 @@ function renderUniversities() {
             ? branchEntries.map(([branch, fee]) => {
                 const yrFee = Number(fee || 0);
                 const isChosen = scoreState.branch === branch;
+                const bRules = getBranchRulesListForUni(uni, branch);
+                const bBadge = bRules.length > 0
+                    ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 text-[9px] font-extrabold">${bRules.map(r => formatRuleBenefit(r)).join(', ')}</span>`
+                    : '';
                 return `
                     <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px] gap-2 ${isChosen ? 'bg-indigo-50/80 px-1.5 rounded-lg' : ''}">
-                        <span class="text-slate-700 font-bold">${branch} ${isChosen ? '<span class="text-[9px] font-black text-indigo-700">(Chosen)</span>' : ''}</span>
+                        <span class="text-slate-700 font-bold">${branch} ${isChosen ? '<span class="text-[9px] font-black text-indigo-700">(Chosen)</span>' : ''}${bBadge}</span>
                         <span class="text-emerald-700 font-extrabold text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
                     </div>
                 `;
@@ -1201,12 +1370,15 @@ function renderUniversities() {
 
         const selectedFee = Number(branches[scoreState.branch] ?? Object.values(branches)[0] ?? 0);
         const initialEval = evaluateUniversityScholarship(uni, {
+            branch: scoreState.branch,
             selectedFee,
             inter: scoreState.inter,
             pcm: scoreState.pcm,
             mains: scoreState.mains,
             eamcet: scoreState.eamcet
         });
+
+        const scholarshipBreakdownHtml = buildScholarshipBreakdownHtml(uni, scoreState.branch);
 
         const budgetFitTag = state.budgetPerYear !== null && selectedFee > 0
             ? (initialEval.netTuition <= state.budgetPerYear
@@ -1341,6 +1513,7 @@ function renderUniversities() {
                                 </div>
                             ` : ''}
 
+                            ${scholarshipBreakdownHtml}
                             ${calculatorWidgetHtml}
                         </div>
                     </div>
@@ -1421,6 +1594,7 @@ function renderUniversities() {
                             </div>
                         </div>
 
+                        ${scholarshipBreakdownHtml}
                         ${calculatorWidgetHtml}
                     </div>
                 </div>
@@ -2295,10 +2469,17 @@ function openUniversityStatusModal(uniName) {
         const branchRowsHtml = entries.length > 0
             ? entries.map(([branch, fee]) => {
                 const yrFee = Number(fee || 0);
+                const bRules = getBranchRulesListForUni(matchedUni, branch);
+                const bRuleNote = bRules.length > 0
+                    ? `<span class="block text-[10px] font-bold text-purple-800">Scholarship: ${bRules.map(r => `${formatRuleRange(r)} → ${formatRuleBenefit(r)}`).join(', ')}</span>`
+                    : '';
                 return `
                     <div class="flex items-center justify-between py-1.5 border-b border-sky-100 last:border-none gap-2">
-                        <span class="font-bold text-slate-700">${branch}</span>
-                        <span class="font-extrabold text-indigo-700 text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
+                        <div>
+                            <span class="font-bold text-slate-700">${branch}</span>
+                            ${bRuleNote}
+                        </div>
+                        <span class="font-extrabold text-indigo-700 text-right shrink-0">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
                     </div>
                 `;
             }).join('')
@@ -2337,6 +2518,8 @@ function openUniversityStatusModal(uniName) {
         feeStructureHtml = `<p class="text-slate-500">Fee structure will be updated by admin shortly.</p>`;
     }
 
+    const slabSummaryHtml = matchedUni ? buildScholarshipBreakdownHtml(matchedUni, latestApp.branch || '') : '';
+
     const offerBadgeHtml = state.currentStudent?.early_offer_eligible
         ? `<div class="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-900">
              Early Registration Offer (Before March 16, 2027): ₹1,000/- off Admission Fee + ₹1,000/- off College Fee (₹2,000 OFF).
@@ -2355,6 +2538,7 @@ function openUniversityStatusModal(uniName) {
             ${feeStructureHtml}
         </div>
 
+        ${slabSummaryHtml}
         ${offerBadgeHtml}
 
         <div class="p-4 rounded-2xl ${isScholarshipApproved ? 'bg-emerald-50 border border-emerald-300' : 'bg-amber-50 border border-amber-200'} space-y-2">

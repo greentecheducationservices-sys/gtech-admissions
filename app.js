@@ -71,44 +71,147 @@ function formatINR(value) {
     return `₹${num.toLocaleString('en-IN')}`;
 }
 
-function getBranchRulesListForUni(uni, targetBranch = '') {
-    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
-    const collected = [];
+function normalizeScholarshipConfig(uni) {
+    let raw = uni?.scholarship_rules ?? uni?.scholarships ?? uni?.scholarship_config ?? null;
+    if (typeof raw === 'string') {
+        try {
+            raw = JSON.parse(raw);
+        } catch (_) {
+            raw = null;
+        }
+    }
 
-    if (Array.isArray(rules.branch_scholarships)) {
-        rules.branch_scholarships.forEach(r => {
-            if (r && r.branch) collected.push({ ...r, branch: String(r.branch).trim() });
+    let parsedBranches = uni?.branches;
+    if (typeof parsedBranches === 'string') {
+        try {
+            parsedBranches = JSON.parse(parsedBranches);
+        } catch (_) {
+            parsedBranches = null;
+        }
+    }
+
+    const slabs = Array.isArray(raw?.slabs)
+        ? raw.slabs
+        : (Array.isArray(raw?.rules) ? raw.rules : (Array.isArray(raw) ? raw : []));
+
+    const branchScholarships = Array.isArray(raw?.branch_scholarships)
+        ? raw.branch_scholarships
+        : (Array.isArray(raw?.branchRules) ? raw.branchRules : []);
+
+    const byBranchObj = (raw?.branch_scholarships_by_branch && typeof raw.branch_scholarships_by_branch === 'object')
+        ? raw.branch_scholarships_by_branch
+        : {};
+
+    if (parsedBranches && typeof parsedBranches === 'object') {
+        const entries = Array.isArray(parsedBranches)
+            ? parsedBranches.map(item => [item?.branch || item?.name, item])
+            : Object.entries(parsedBranches);
+
+        entries.forEach(([bKey, bVal]) => {
+            if (!bKey || !bVal || typeof bVal !== 'object') return;
+            const bRules = Array.isArray(bVal.slabs)
+                ? bVal.slabs
+                : (Array.isArray(bVal.scholarships) ? bVal.scholarships : (Array.isArray(bVal.rules) ? bVal.rules : []));
+            if (bRules.length > 0) {
+                const existing = Array.isArray(byBranchObj[bKey]) ? byBranchObj[bKey] : [];
+                byBranchObj[bKey] = [...existing, ...bRules.map(r => ({ ...r, branch: r.branch || bKey }))];
+            }
         });
     }
 
-    if (rules.branch_scholarships_by_branch && typeof rules.branch_scholarships_by_branch === 'object') {
-        Object.entries(rules.branch_scholarships_by_branch).forEach(([branchKey, val]) => {
-            const list = Array.isArray(val) ? val : (val && typeof val === 'object' ? [val] : []);
-            list.forEach(r => {
-                const bName = String(r?.branch || branchKey || '').trim();
-                if (!bName) return;
-                const duplicate = collected.some(
-                    existing =>
-                        existing.branch.toLowerCase() === bName.toLowerCase() &&
-                        String(existing.criterion || '') === String(r.criterion || '') &&
-                        Number(existing.min ?? 0) === Number(r.min ?? 0) &&
-                        Number(existing.max ?? 100) === Number(r.max ?? 100) &&
-                        Number(existing.value ?? 0) === Number(r.value ?? 0) &&
-                        String(existing.type || '') === String(r.type || '')
-                );
-                if (!duplicate) {
-                    collected.push({ ...r, branch: bName });
-                }
+    if (!raw || typeof raw !== 'object') {
+        const hasBranchRules = Object.keys(byBranchObj).length > 0;
+        if (!hasBranchRules && !uni?.extra_concession_text && !uni?.expert_phone) return null;
+        return {
+            enabled: hasBranchRules,
+            multi_mode: 'best_of',
+            slabs: [],
+            branch_scholarships: [],
+            branch_scholarships_by_branch: byBranchObj,
+            extra_concession_text: String(uni?.extra_concession_text || '').trim(),
+            expert_phone: String(uni?.expert_phone || '').trim()
+        };
+    }
+
+    const hasRules =
+        raw.enabled === true ||
+        slabs.length > 0 ||
+        branchScholarships.length > 0 ||
+        Object.keys(byBranchObj).length > 0 ||
+        Boolean(raw.extra_concession_text || uni?.extra_concession_text);
+
+    return {
+        ...raw,
+        enabled: hasRules,
+        multi_mode: raw.multi_mode || 'best_of',
+        slabs,
+        branch_scholarships: branchScholarships,
+        branch_scholarships_by_branch: byBranchObj,
+        extra_concession_text: String(raw.extra_concession_text || uni?.extra_concession_text || '').trim(),
+        expert_phone: String(raw.expert_phone || uni?.expert_phone || '').trim()
+    };
+}
+
+function parseScholarshipRules(rawRulesOrUni) {
+    if (!rawRulesOrUni) return null;
+    if (typeof rawRulesOrUni === 'object' && ('name' in rawRulesOrUni || 'branches' in rawRulesOrUni || 'scholarship_rules' in rawRulesOrUni)) {
+        return normalizeScholarshipConfig(rawRulesOrUni);
+    }
+    return normalizeScholarshipConfig({ scholarship_rules: rawRulesOrUni });
+}
+
+function getBranchRulesListForUni(uni, targetBranch = '') {
+    const rules = normalizeScholarshipConfig(uni) || {};
+    const collected = [];
+
+    const addRule = (r, fallbackBranch = '') => {
+        if (!r || typeof r !== 'object') return;
+        const bName = String(r.branch || fallbackBranch || '').trim();
+        if (!bName || bName.toUpperCase() === 'ALL') return;
+
+        const minVal = Number(r.min ?? r.min_percent ?? r.minPercentage ?? r.from ?? 0);
+        const maxVal = Number(r.max ?? r.max_percent ?? r.maxPercentage ?? r.to ?? 100);
+        const val = Number(r.value ?? r.discount ?? r.percentage ?? r.amount ?? r.concession ?? 0);
+        const type = r.type || (r.amount && !r.percentage ? 'flat' : 'percent');
+        const criterion = String(r.criterion || r.criteria || 'inter').trim().toLowerCase();
+
+        const isDup = collected.some(
+            item =>
+                item.branch.toLowerCase() === bName.toLowerCase() &&
+                item.criterion === criterion &&
+                Number(item.min) === minVal &&
+                Number(item.max) === maxVal &&
+                Number(item.value) === val &&
+                item.type === type
+        );
+
+        if (!isDup) {
+            collected.push({
+                ...r,
+                branch: bName,
+                criterion,
+                min: minVal,
+                max: maxVal,
+                value: val,
+                type,
+                note: r.note || r.label || ''
             });
+        }
+    };
+
+    if (Array.isArray(rules.branch_scholarships)) {
+        rules.branch_scholarships.forEach(r => addRule(r));
+    }
+
+    if (rules.branch_scholarships_by_branch && typeof rules.branch_scholarships_by_branch === 'object') {
+        Object.entries(rules.branch_scholarships_by_branch).forEach(([bKey, listOrObj]) => {
+            const items = Array.isArray(listOrObj) ? listOrObj : (listOrObj && typeof listOrObj === 'object' ? [listOrObj] : []);
+            items.forEach(r => addRule(r, bKey));
         });
     }
 
     if (Array.isArray(rules.slabs)) {
-        rules.slabs.forEach(s => {
-            if (s && s.branch && String(s.branch).toUpperCase() !== 'ALL') {
-                collected.push({ ...s, branch: String(s.branch).trim() });
-            }
-        });
+        rules.slabs.forEach(s => addRule(s));
     }
 
     if (!targetBranch) return collected;
@@ -130,7 +233,7 @@ function formatRuleRange(rule) {
 }
 
 function buildScholarshipBreakdownHtml(uni, chosenBranch = '') {
-    const rules = parseScholarshipRules(uni?.scholarship_rules);
+    const rules = parseScholarshipRules(uni);
     if (!rules) return '';
 
     const slabs = Array.isArray(rules.slabs) ? rules.slabs : [];
@@ -206,7 +309,7 @@ function buildScholarshipBreakdownHtml(uni, chosenBranch = '') {
 }
 
 function getAllowedCriteriaForUni(uni) {
-    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
+    const rules = parseScholarshipRules(uni) || {};
     const rawList = Array.isArray(rules.allowed_criteria)
         ? rules.allowed_criteria
         : (Array.isArray(rules.criteria) ? rules.criteria : []);
@@ -910,18 +1013,6 @@ function parseBranchesObject(rawBranches) {
     return {};
 }
 
-function parseScholarshipRules(rawRules) {
-    if (!rawRules) return null;
-    if (typeof rawRules === 'string') {
-        try {
-            return JSON.parse(rawRules);
-        } catch (_) {
-            return null;
-        }
-    }
-    return typeof rawRules === 'object' ? rawRules : null;
-}
-
 function matchesStateFilter(uni, selectedFilter) {
     const mode = String(uni?.admission_type || 'Direct Admission Only');
     if (!selectedFilter || selectedFilter === 'ALL') return true;
@@ -963,7 +1054,7 @@ function populateCampusSelectForUniversity(uniName) {
 }
 
 function evaluateUniversityScholarship(uni, studentScores = {}) {
-    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
+    const rules = parseScholarshipRules(uni) || {};
     const baseTuition = Number(studentScores.selectedFee || 0);
     const allowedCriteria = getAllowedCriteriaForUni(uni);
     const chosenBranch = String(studentScores.branch || '').trim().toLowerCase();
@@ -1102,7 +1193,7 @@ function getEffectiveYearlyFeeForSort(uni, fallbackIdx = 0) {
     const chosenBranchFee = Number(branches[scoreState.branch] ?? 0);
     const activeBaseFee = chosenBranchFee > 0 ? chosenBranchFee : Math.min(...fees);
 
-    const rules = parseScholarshipRules(uni.scholarship_rules);
+    const rules = parseScholarshipRules(uni);
     const rawOpt = document.getElementById('sch-option-select')?.value || 'inter';
     const rawGlobalScore = String(document.getElementById('sch-score-input')?.value || '').trim();
     const globalScore = Number(rawGlobalScore);
@@ -1228,7 +1319,7 @@ function refreshSingleUniversityCalcUI(uniKey) {
 
 function openExpertConcessionCall(uniName, uniKey) {
     const uni = state.universities.find((u, idx) => getUniKey(u, idx) === uniKey);
-    const rules = parseScholarshipRules(uni?.scholarship_rules) || {};
+    const rules = parseScholarshipRules(uni) || {};
     const scoreState = state.cardScores[uniKey] || {};
     const summaryBits = [
         scoreState.branch ? `Chosen Branch: ${scoreState.branch}` : '',
@@ -1374,7 +1465,7 @@ function renderUniversities() {
         const safeUniName = String(uni.name || '').replace(/'/g, "\\'");
         const safeUniKey = String(uniKey).replace(/'/g, "\\'");
 
-        const rules = parseScholarshipRules(uni.scholarship_rules);
+        const rules = parseScholarshipRules(uni);
         const allowedCriteria = getAllowedCriteriaForUni(uni);
         const isInterOnlyCard = allowedCriteria.length === 1 && allowedCriteria[0] === 'inter';
 
@@ -2737,6 +2828,19 @@ function shareReferralInstagram() {
     window.open('https://www.instagram.com/', '_blank', 'noopener');
 }
 
+function subscribeToUniversityScholarshipChanges() {
+    _supabase
+        .channel('gtech-universities-scholarship-sync')
+        .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'universities' },
+            async () => {
+                await fetchUniversitiesFromSupabase();
+            }
+        )
+        .subscribe();
+}
+
 function subscribeToStudentMailUpdates() {
     _supabase
         .channel('gtech-student-updates')
@@ -2878,6 +2982,7 @@ async function initGtechPortal() {
     await fetchInquiriesFromSupabase();
     await loadActiveCarousel();
     subscribeToStudentMailUpdates();
+    subscribeToUniversityScholarshipChanges();
 
     setInterval(() => {
         nextSlide();

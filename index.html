@@ -84,7 +84,7 @@
                 Admissions and Guidance Portal
             </p>
             <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
-                Enter your marks or percentage on any university card to see your instant scholarship &amp; fee concession, request an expert call for extra concession, or book a free campus visit.
+                Enter your marks, percentage, or yearly budget to see eligible scholarships, reduced yearly fees, and 4-year tuition totals—sorted from lowest fee to highest fee.
             </p>
             <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                 <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
@@ -198,7 +198,7 @@
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
-                <p class="text-xs text-slate-600 mt-0.5">Select a branch &amp; enter your percentage/rank on any card to auto-calculate scholarship and request extra fee concession from an expert.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Select a branch &amp; enter your percentage/rank on any card to auto-calculate scholarship and request extra fee concession from Gtech.</p>
             </div>
             <div class="w-full md:w-72">
                 <input type="text" id="uni-search" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
@@ -231,14 +231,14 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Instant Scholarship &amp; Concession Check</span>
-                    <h3 class="text-sm sm:text-base font-black text-slate-900">Select Inter Marks / Percentage &amp; Check Tuition Fee Per Year</h3>
+                    <h3 class="text-sm sm:text-base font-black text-slate-900">Check Marks, Yearly Budget &amp; 4-Year Tuition (Low to High Fee)</h3>
                 </div>
                 <span id="sch-branch-fee-badge" class="px-3 py-1 rounded-xl bg-white border border-sky-200 text-xs font-extrabold text-sky-900">
                     Selected Branch Fee: ₹90,000/yr
                 </span>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                 <div>
                     <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">
                         Select Marks Option
@@ -255,7 +255,14 @@
                     <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">
                         Enter Inter Percentage (%)
                     </label>
-                    <input type="number" step="any" id="sch-score-input" placeholder="e.g. 90" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                    <input type="number" step="any" id="sch-score-input" placeholder="e.g. 95" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                </div>
+
+                <div>
+                    <label for="sch-budget-input" class="block text-[11px] font-bold text-slate-700 mb-1">
+                        Your Budget Per Year (₹)
+                    </label>
+                    <input type="number" min="0" step="5000" id="sch-budget-input" placeholder="e.g. 120000" oninput="handleGlobalBudgetChange(this.value)" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                 </div>
 
                 <div>
@@ -267,12 +274,12 @@
             </div>
 
             <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600">
-                Select <strong>Inter Marks (%)</strong>, enter your percentage, and click <strong>Check Scholarship</strong> to view your scholarship amount and tuition fee per year.
+                Enter your marks (e.g. <strong>95%</strong>) and/or <strong>Your Budget Per Year</strong> to view eligible scholarship cards, reduced yearly tuition, 4-year tuition totals, and automatic low-to-high fee sorting.
             </div>
         </div>
     </section>
 
-    <!-- Universities Grid Container (Cards render live score inputs, auto-scholarship, and Call to Expert) -->
+    <!-- Universities Grid Container (Cards render live score inputs, auto-scholarship, and Gtech Extra Fee Concession) -->
     <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
         <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
@@ -421,26 +428,26 @@
             <div class="p-6 space-y-4 text-xs">
                 <div class="text-center">
                     <span id="modal-sch-uni-name" class="font-black text-sm text-slate-900 block">Selected University</span>
-                    <span id="modal-sch-branch-name" class="text-slate-600 font-semibold">CSE (DS)</span>
+                    <span id="modal-sch-branch-name" class="text-slate-600 font-semibold">CSE</span>
                 </div>
 
                 <div class="rounded-2xl bg-emerald-50/80 border border-emerald-200 p-4 space-y-2.5">
                     <div class="flex justify-between items-center text-slate-600">
-                        <span>Standard Tuition Fee / Year</span>
+                        <span>Actual Tuition Fee</span>
                         <strong id="modal-actual-fee" class="font-mono text-slate-800 line-through">₹90,000/yr</strong>
                     </div>
                     <div class="flex justify-between items-center text-emerald-800">
-                        <span id="modal-sch-badge-label" class="font-bold">Scholarship Amount</span>
-                        <strong id="modal-sch-discount" class="font-mono text-sm font-black text-emerald-700">- ₹0/yr</strong>
+                        <span id="modal-sch-badge-label" class="font-bold">You Got</span>
+                        <strong id="modal-sch-discount" class="font-mono text-sm font-black text-emerald-700">- ₹50,000/yr</strong>
                     </div>
-                    <div class="border-t border-emerald-200 pt-2.5 flex justify-between items-center">
-                        <span class="font-black text-slate-900 text-sm">Tuition Fee Per Year</span>
-                        <strong id="modal-final-fee" class="font-mono text-lg font-black text-sky-700">₹90,000/yr</strong>
+                    <div class="border-t border-emerald-200 pt-2.5 flex justify-between items-center gap-2">
+                        <span class="font-black text-slate-900 text-xs sm:text-sm">Reduced Tuition &amp; 4-Yr Total</span>
+                        <strong id="modal-final-fee" class="font-mono text-xs sm:text-sm font-black text-sky-700 text-right">₹40,000/yr | 4-Yr Total: ₹1,60,000</strong>
                     </div>
                 </div>
 
                 <p class="text-[11px] text-slate-500 text-center leading-relaxed">
-                    You are eligible for this scholarship based on your entered marks. Claim your seat now or speak with our counselor for extra concession support.
+                    You are eligible for this scholarship based on your entered marks. Claim your seat now or use <strong>For Gtech Extra Fee Concession — Call to Gtech</strong> on the card.
                 </p>
 
                 <div class="flex gap-2.5 pt-1">

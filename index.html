@@ -84,7 +84,7 @@
                 Admissions and Guidance Portal
             </p>
             <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
-                Filter by marks, EAMCET rank, and budget, and enter marks directly on each university card to see scholarship slabs, branch-wise concessions, tuition per year, and 4 years fee.
+                Explore universities and entrance exams across India, and enter marks directly on each university card to see scholarship slabs, branch-wise concessions, tuition per year, and 4 years fee.
             </p>
             <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                 <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
@@ -192,13 +192,13 @@
         </div>
     </section>
 
-    <!-- Region Selector & Marks/Budget Filter Section -->
+    <!-- Region Selector & Universities Section -->
     <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-6">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
-                <p class="text-xs text-slate-600 mt-0.5">Filter cards on home and enter marks directly in each card's Scholarship &amp; Fee Filter box to calculate scholarship and 4 years fee.</p>
+                <p class="text-xs text-slate-600 mt-0.5">Entrance exams are sorted by application fee (low to high) and universities by tuition fee (low to high). Enter marks inside each card's Scholarship &amp; Fee Filter box.</p>
             </div>
             <div class="w-full md:w-72">
                 <input type="text" id="uni-search" autocomplete="off" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
@@ -206,6 +206,9 @@
         </div>
 
         <div class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
+            <button type="button" onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50 transition whitespace-nowrap shrink-0">
+                <i class="fa-solid fa-file-pen mr-1"></i>Entrance Exams
+            </button>
             <button type="button" onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0">All Regions</button>
             <button type="button" onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
             <button type="button" onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Telangana</button>
@@ -214,9 +217,6 @@
             <button type="button" onclick="setStateFilter('UP')" data-state="UP" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">UP</button>
             <button type="button" onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Maharashtra</button>
             <button type="button" onclick="setStateFilter('Gujarat')" data-state="Gujarat" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Gujarat</button>
-            <button type="button" onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50 transition whitespace-nowrap shrink-0">
-                <i class="fa-solid fa-file-pen mr-1"></i>Entrance Exams
-            </button>
         </div>
 
         <!-- Andhra Pradesh Quota Info Strip -->
@@ -228,8 +228,8 @@
             <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
         </div>
 
-        <!-- Home Cards Filter Bar -->
-        <div id="instant-scholarship-checker" class="mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
+        <!-- Hidden Legacy Filter Bar (kept hidden so all cards remain visible by default) -->
+        <div id="instant-scholarship-checker" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Home Cards Filter</span>
@@ -280,7 +280,7 @@
 
             <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
                 <span>
-                    Use this bar to filter cards on Home, and enter marks directly inside each card's <strong>Scholarship &amp; Fee Filter</strong> box to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong>.
+                    Use each card's <strong>Scholarship &amp; Fee Filter</strong> box to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong>.
                 </span>
                 <span id="sch-allowed-criteria-hint" class="text-[11px] font-bold text-indigo-700">
                     Criteria follow Admin rules per university

@@ -1357,15 +1357,9 @@ function renderUniversities() {
                                 <p class="text-slate-600 text-[11px]">We assist with entrance exam applications only—not direct admissions.</p>
                             </div>
 
-                            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                                <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100">
-                                    <span class="text-[10px] text-amber-800 block font-semibold">Hostel Fee</span>
-                                    <strong class="text-amber-900 text-xs">₹${Number(uni.hostel_fee || 0).toLocaleString('en-IN')}/yr</strong>
-                                </div>
-                                <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-100">
-                                    <span class="text-[10px] text-sky-800 block font-semibold">Application Fee</span>
-                                    <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
-                                </div>
+                            <div class="mt-3 p-2.5 rounded-xl bg-sky-50/70 border border-sky-100 text-xs">
+                                <span class="text-[10px] text-sky-800 block font-semibold">Application Fee</span>
+                                <strong class="text-sky-900 text-xs">₹${Number(uni.application_fee || 0).toLocaleString('en-IN')}</strong>
                             </div>
                         </div>
                     </div>
@@ -1390,13 +1384,9 @@ function renderUniversities() {
             ? branchEntries.map(([branch, fee]) => {
                 const yrFee = Number(fee || 0);
                 const isChosen = scoreState.branch === branch;
-                const bRules = getBranchRulesListForUni(uni, branch);
-                const bBadge = bRules.length > 0
-                    ? `<span class="ml-1 px-1.5 py-0.5 rounded bg-purple-100 text-purple-900 text-[9px] font-extrabold">${bRules.map(r => formatRuleBenefit(r)).join(', ')}</span>`
-                    : '';
                 return `
                     <div class="flex justify-between items-center py-1 border-b border-sky-100 text-[11px] gap-2 ${isChosen ? 'bg-indigo-50/80 px-1.5 rounded-lg' : ''}">
-                        <span class="text-slate-700 font-bold">${branch} ${isChosen ? '<span class="text-[9px] font-black text-indigo-700">(Chosen)</span>' : ''}${bBadge}</span>
+                        <span class="text-slate-700 font-bold">${branch} ${isChosen ? '<span class="text-[9px] font-black text-indigo-700">(Chosen)</span>' : ''}</span>
                         <span class="text-emerald-700 font-extrabold text-right">${formatINR(yrFee)}/yr <span class="text-[10px] text-slate-500 font-semibold">(${formatINR(yrFee * 4)} / 4 Years)</span></span>
                     </div>
                 `;

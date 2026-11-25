@@ -2384,10 +2384,10 @@ function switchDashboardSection(tabName) {
 
         if (t === tabName) {
             sectionEl.classList.remove('hidden');
-            btnEl.className = 'flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg bg-white text-indigo-950 text-[10px] sm:text-xs font-black whitespace-nowrap shrink-0 shadow-sm transition flex items-center justify-center gap-1';
+            btnEl.className = 'px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-indigo-600 text-white text-[10px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 shadow-xs transition flex items-center gap-1';
         } else {
             sectionEl.classList.add('hidden');
-            btnEl.className = 'flex-1 sm:flex-initial px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center justify-center gap-1';
+            btnEl.className = 'px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-slate-700 hover:bg-white text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center gap-1';
         }
     });
 }

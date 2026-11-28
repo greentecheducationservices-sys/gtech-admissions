@@ -14,21 +14,32 @@ const transporter = nodemailer.createTransport({
 });
 
 function createSignedOtpToken(email, purpose, code, expiresAt) {
-    const payload = `${email.toLowerCase()}|${purpose}|${code}|${expiresAt}`;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const payload = `${cleanEmail}|${purpose}|${code}|${expiresAt}`;
     const sig = crypto.createHmac('sha256', OTP_SECRET).update(payload).digest('hex');
     return Buffer.from(`${payload}|${sig}`).toString('base64');
 }
 
 function verifySignedOtpToken(token, email, purpose, code) {
     try {
+        if (!token || typeof token !== 'string') return false;
         const decoded = Buffer.from(token, 'base64').toString('utf8');
         const [tokEmail, tokPurpose, tokCode, expiresAt, sig] = decoded.split('|');
+        if (!tokEmail || !tokPurpose || !tokCode || !expiresAt || !sig) return false;
         if (Date.now() > Number(expiresAt)) return false;
-        if (tokEmail !== email.toLowerCase() || tokPurpose !== purpose || tokCode !== code) return false;
+
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanCode = String(code || '').trim();
+        if (tokEmail !== cleanEmail || tokPurpose !== purpose || tokCode !== cleanCode) return false;
 
         const expectedPayload = `${tokEmail}|${tokPurpose}|${tokCode}|${expiresAt}`;
         const expectedSig = crypto.createHmac('sha256', OTP_SECRET).update(expectedPayload).digest('hex');
-        return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig));
+
+        const sigBuf = Buffer.from(sig, 'utf8');
+        const expectedBuf = Buffer.from(expectedSig, 'utf8');
+        if (sigBuf.length !== expectedBuf.length) return false;
+
+        return crypto.timingSafeEqual(sigBuf, expectedBuf);
     } catch {
         return false;
     }
@@ -224,21 +235,27 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
 
-    const { action, email, purpose, code, token, to, adminEmail, subject, text, eventType, details } = req.body || {};
+    const bodyData = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const { action, email, purpose, code, token, to, adminEmail, subject, text, eventType, details } = bodyData;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPurpose = purpose === 'register' ? 'register' : 'login';
 
     try {
         if (action === 'send-otp') {
-            if (!email) return res.status(400).json({ message: 'Email is required' });
+            if (!cleanEmail) {
+                return res.status(400).json({ ok: false, sent: false, message: 'Email is required' });
+            }
+
             const otpCode = String(Math.floor(100000 + Math.random() * 900000));
             const expiresAt = Date.now() + 10 * 60 * 1000;
-            const otpToken = createSignedOtpToken(email, purpose || 'login', otpCode, expiresAt);
+            const otpToken = createSignedOtpToken(cleanEmail, cleanPurpose, otpCode, expiresAt);
 
             const otpHtml = wrapGtechEmailLayout({
-                badge: purpose === 'register' ? 'Registration Verification' : 'Secure Login OTP',
+                badge: cleanPurpose === 'register' ? 'Registration Verification' : 'Secure Login OTP',
                 heading: 'Your 6-Digit Verification Code',
                 bodyHtml: `
                     <p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#334155;">
-                        Enter the 6-digit verification code below to complete your ${purpose === 'register' ? 'student registration' : 'student portal login'}:
+                        Enter the 6-digit verification code below to complete your ${cleanPurpose === 'register' ? 'student registration' : 'student portal login'}:
                     </p>
                     <div style="font-size:30px;font-weight:900;letter-spacing:8px;color:#1e1b4b;background:#f0f9ff;border:1px dashed #38bdf8;padding:16px 20px;border-radius:14px;text-align:center;margin:16px 0;font-family:monospace;">
                         ${otpCode}
@@ -251,26 +268,26 @@ export default async function handler(req, res) {
 
             await transporter.sendMail({
                 from: `"Gtech Admissions" <${process.env.SMTP_USER || 'admin@gtechadmissions.com'}>`,
-                to: email,
+                to: cleanEmail,
                 subject: `Your Gtech Admissions OTP: ${otpCode}`,
                 text: `Your Gtech Admissions verification code is: ${otpCode} (valid for 10 minutes).`,
                 html: otpHtml
             });
 
-            return res.status(200).json({ sent: true, otpToken });
+            return res.status(200).json({ ok: true, sent: true, otpToken });
         }
 
         if (action === 'verify-otp') {
-            const isValid = verifySignedOtpToken(token, email, purpose || 'login', String(code || '').trim());
+            const isValid = verifySignedOtpToken(token, cleanEmail, cleanPurpose, String(code || '').trim());
             if (!isValid) {
-                return res.status(400).json({ verified: false, message: 'Invalid or expired OTP code.' });
+                return res.status(400).json({ ok: false, verified: false, message: 'Invalid or expired OTP code.' });
             }
-            return res.status(200).json({ verified: true });
+            return res.status(200).json({ ok: true, verified: true });
         }
 
         if (action === 'send-notification') {
             if (!to || !subject || !text) {
-                return res.status(400).json({ message: 'Missing email fields' });
+                return res.status(400).json({ ok: false, sent: false, message: 'Missing email fields' });
             }
 
             const html = buildHtmlForEvent(eventType, details, text);
@@ -284,12 +301,12 @@ export default async function handler(req, res) {
                 html
             });
 
-            return res.status(200).json({ sent: true });
+            return res.status(200).json({ ok: true, sent: true });
         }
 
-        return res.status(400).json({ message: 'Invalid action' });
+        return res.status(400).json({ ok: false, message: 'Invalid action' });
     } catch (error) {
         console.error('Hostinger SMTP Error:', error);
-        return res.status(500).json({ message: error.message || 'Failed to send email' });
+        return res.status(500).json({ ok: false, message: error.message || 'Failed to send email' });
     }
 }

@@ -22,7 +22,6 @@
         #universities-grid [class*="bg-fuchsia-100"] {
             display: none !important;
         }
-        /* Keep only the scholarship form option inside university cards; remove visiting & expert call triggers there */
         #universities-grid button[onclick*="Visiting"],
         #universities-grid a[onclick*="Visiting"],
         #universities-grid button[onclick*="Expert"],
@@ -35,13 +34,12 @@
 <body class="bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 text-slate-800 font-sans selection:bg-sky-600 selection:text-white overflow-x-hidden">
 
     <!-- ===================================================================== -->
-    <!-- 1. FIRST-SCREEN LOGIN & REGISTER PAGE (APP VIEW, NO PAGE SCROLL)     -->
+    <!-- 1. FIRST-SCREEN LOGIN & REGISTER PAGE                                 -->
     <!-- ===================================================================== -->
     <section id="auth-first-screen" class="h-dvh w-full overflow-hidden lg:min-h-screen lg:overflow-x-hidden bg-gradient-to-br from-[#e7f2fe] via-[#f4f9ff] to-[#e6f7ef] flex flex-col justify-between relative">
         <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-sky-300/20 blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-emerald-300/20 blur-3xl pointer-events-none"></div>
 
-        <!-- Top Bar on Login / Register Page -->
         <div class="relative z-20 max-w-7xl w-full mx-auto px-3.5 sm:px-8 pt-2.5 sm:pt-6 flex items-center justify-between gap-2 shrink-0">
             <a href="#" onclick="event.preventDefault(); switchFirstScreenMode('login');" class="flex items-center space-x-2 shrink-0">
                 <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-8 sm:h-12 w-auto rounded-xl bg-white border border-sky-200 p-1 object-contain shadow-xs">
@@ -60,11 +58,9 @@
             </div>
         </div>
 
-        <!-- Main App-Like Auth Container (Fits in Mobile Viewport Without Scrolling) -->
         <div class="relative z-10 max-w-6xl w-full mx-auto px-3.5 sm:px-8 py-2 sm:py-8 my-auto flex-1 lg:flex-initial flex items-center min-h-0">
             <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-10 items-center">
 
-                <!-- TOP/LEFT SHOWCASE: ATTRACTIVE GTECH ADMISSIONS HEADING & ONLY 5 HIGHLIGHTS -->
                 <div class="lg:col-span-6 space-y-2 sm:space-y-5 text-center lg:text-left shrink-0">
                     <div class="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 border border-sky-200 shadow-xs text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-[#0c2d57]">
                         <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#16a34a]"></span>
@@ -82,7 +78,6 @@
                         </p>
                     </div>
 
-                    <!-- Compact App-Style Pills on Mobile, Cards on Desktop -->
                     <div class="flex flex-wrap justify-center lg:grid lg:grid-cols-2 gap-1.5 sm:gap-3 max-w-xl mx-auto lg:mx-0 text-left">
                         <div class="px-2.5 py-1.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/90 border border-sky-200/80 shadow-xs flex items-center gap-2 sm:gap-3">
                             <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-sky-100 text-[#0c2d57] flex items-center justify-center text-[11px] sm:text-base shrink-0">
@@ -121,18 +116,17 @@
                     </div>
                 </div>
 
-                <!-- RIGHT FORM CARD: LOGIN WITH GMAIL OTP & REGISTER WITH GMAIL OTP + REFERRAL CODE -->
                 <div class="lg:col-span-6 flex justify-center w-full min-h-0">
                     <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl sm:rounded-[2rem] border border-sky-100 shadow-xl sm:shadow-2xl p-4 sm:p-8 max-h-full overflow-y-auto">
 
-                        <!-- LOGIN FORM VIEW (LOGIN WITH GMAIL OTP) -->
+                        <!-- LOGIN FORM -->
                         <div id="first-screen-login-box" class="space-y-2.5 sm:space-y-4">
                             <div class="text-center space-y-0.5 sm:space-y-1.5">
                                 <div class="w-10 h-10 sm:w-14 sm:h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-[#0c2d57] flex items-center justify-center text-lg sm:text-2xl shadow-xs">
                                     <i class="fa-solid fa-envelope-open-text"></i>
                                 </div>
                                 <h2 class="text-xl sm:text-3xl font-black text-[#0c2d57]">Login</h2>
-                                <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">Login with your Gmail OTP</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">Login with Gmail OTP • Stay logged in for 7 days</p>
                             </div>
 
                             <form id="first-login-form" onsubmit="handleFirstLoginSendOtp(event)" class="space-y-2.5 sm:space-y-3.5">
@@ -145,8 +139,8 @@
 
                                 <div class="flex items-center justify-between text-[11px] sm:text-xs px-1">
                                     <label class="inline-flex items-center gap-1.5 text-slate-600 font-semibold cursor-pointer">
-                                        <input type="checkbox" checked class="rounded text-sky-600 focus:ring-0">
-                                        <span>Remember Me</span>
+                                        <input type="checkbox" id="first-login-remember" checked class="rounded text-sky-600 focus:ring-0">
+                                        <span>Keep logged in (1 Week)</span>
                                     </label>
                                     <span class="text-[10px] sm:text-[11px] font-bold text-[#16a34a]">Gmail OTP</span>
                                 </div>
@@ -188,7 +182,7 @@
                             </p>
                         </div>
 
-                        <!-- REGISTER FORM VIEW (GMAIL OTP + REFERRAL CODE — NO GOOGLE SIGN-UP) -->
+                        <!-- REGISTER FORM -->
                         <div id="first-screen-register-box" class="hidden space-y-2 sm:space-y-3.5">
                             <div class="text-center space-y-0.5">
                                 <div class="w-9 h-9 sm:w-14 sm:h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-[#0c2d57] flex items-center justify-center text-base sm:text-2xl shadow-xs">
@@ -276,19 +270,18 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- 2. HOME PAGE PORTAL (SHOWN AFTER LOGIN / REGISTRATION)                -->
+    <!-- 2. HOME PAGE PORTAL                                                   -->
     <!-- ===================================================================== -->
     <div id="home-page-content" class="hidden">
 
-    <!-- Referral Link Auto-Detection Top Banner -->
     <div id="referral-applied-banner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[11px] font-bold py-2 px-3 text-center">
         <i class="fa-solid fa-gift mr-1"></i> Referral Code <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Complete registration to link your referral.
     </div>
 
-    <!-- Responsive Student Navigation Header -->
+    <!-- Header with Application Form & Visiting Application -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-sky-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
-            <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
+            <a href="#" onclick="event.preventDefault(); showHomePortalView();" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
                 <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-9 sm:h-11 w-auto rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-100 p-1 object-contain shadow-sm group-hover:scale-105 transition shrink-0">
                 <div class="min-w-0">
                     <div class="flex items-center gap-1.5">
@@ -299,35 +292,37 @@
                 </div>
             </a>
 
-            <nav class="hidden md:flex items-center space-x-1 bg-sky-50/90 p-1.5 rounded-2xl border border-sky-100 text-xs font-bold text-slate-700">
-                <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">About</a>
-                <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">Universities</a>
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-award text-[11px]"></i> Scholarship Based on Marks
+            <nav class="hidden md:flex items-center space-x-1.5 bg-sky-50/90 p-1.5 rounded-2xl border border-sky-100 text-xs font-bold text-slate-700">
+                <button type="button" onclick="openGtechFormModal({ mode: 'application' })" class="px-3.5 py-2 rounded-xl bg-sky-600 text-white hover:bg-sky-500 shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-file-signature text-[11px]"></i> Application Form
                 </button>
+                <button type="button" onclick="openGtechFormModal({ mode: 'visiting' })" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-route text-[11px]"></i> Visiting Application
+                </button>
+                <button type="button" onclick="openGtechFormModal({ mode: 'scholarship' })" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-award text-[11px]"></i> Scholarship Form
+                </button>
+                <a href="#universities" class="px-3 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">Universities</a>
             </nav>
 
             <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-                <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none">
+                <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none cursor-pointer">
                     <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
                     <span id="header-student-name" class="truncate">Student Portal</span>
                 </button>
 
-                <button id="header-login-btn" type="button" onclick="openFirstScreen('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+                <button id="header-login-btn" type="button" onclick="openFirstScreen('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer">
                     <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
                     <span>Login</span>
-                </button>
-
-                <button id="header-register-btn" type="button" onclick="openFirstScreen('register')" class="hidden">
-                    Register
                 </button>
             </div>
         </div>
 
         <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-sky-100 bg-white px-3 py-2 text-[11px] font-bold scrollbar-none">
-            <a href="#about" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">About</a>
-            <a href="#universities" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">Universities</a>
-            <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 whitespace-nowrap shrink-0">Scholarship Based on Marks</button>
+            <button type="button" onclick="openGtechFormModal({ mode: 'application' })" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-800 whitespace-nowrap shrink-0">Application Form</button>
+            <button type="button" onclick="openGtechFormModal({ mode: 'visiting' })" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 whitespace-nowrap shrink-0">Visiting Application</button>
+            <button type="button" onclick="openGtechFormModal({ mode: 'scholarship' })" class="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 whitespace-nowrap shrink-0">Scholarship Form</button>
+            <a href="#universities" class="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 whitespace-nowrap shrink-0">Universities</a>
         </div>
     </header>
 
@@ -341,27 +336,27 @@
                 Admissions and Guidance Portal
             </p>
             <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
-                Explore universities and entrance exams across India, and enter marks directly on each university card to see scholarship slabs, branch-wise concessions, tuition per year, and 4 years fee.
+                Explore universities and entrance exams across India, check scholarships based on marks, plan campus visits, and apply for education loans.
             </p>
             <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+                <button type="button" onclick="openGtechFormModal({ mode: 'scholarship' })" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-graduation-cap"></i> Scholarship Based on Marks
                 </button>
-                <a href="#universities" class="px-5 py-3 rounded-2xl bg-white hover:bg-sky-50 text-sky-800 border border-sky-200 font-extrabold text-xs sm:text-sm shadow-xs transition">
-                    Explore Universities
-                </a>
+                <button type="button" onclick="openGtechFormModal({ mode: 'loan' })" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-building-columns"></i> Education Loan Apply Now
+                </button>
             </div>
         </div>
     </section>
 
-    <!-- ABOUT GTECH WITH CLEAN CAROUSEL -->
+    <!-- ABOUT GTECH WITH CAROUSEL & 4 SERVICE CARDS -->
     <section id="about" class="py-10 sm:py-14 bg-white border-b border-sky-100">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
                 <span class="text-xs font-bold uppercase tracking-widest text-emerald-600">Why Choose Gtech</span>
                 <h2 class="text-xl sm:text-3xl font-black text-slate-900">TRUSTED BY PARENTS AND STUDENTS FROM 5 YEARS</h2>
                 <p class="text-xs sm:text-sm text-slate-600">
-                    Structured admission guidance, scholarship evaluation based on marks, and free campus visiting before finalizing admissions.
+                    Structured admission guidance, scholarship evaluation based on marks, campus visiting support, and education loan assistance.
                 </p>
             </div>
 
@@ -373,38 +368,38 @@
                 <button type="button" onclick="nextSlide()" aria-label="Next slide" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❯</button>
             </div>
 
-            <!-- 4-Card Service Suite -->
+            <!-- 4-Card Suite: Scholarship Based on Marks shown ONCE; Visiting replaced with Application/Visiting; Loan uses Education Loan Apply Now -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                <div onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-sky-50/90 to-white border border-sky-100 hover:border-sky-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                <div onclick="openGtechFormModal({ mode: 'scholarship' })" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-indigo-50/90 to-white border border-indigo-100 hover:border-indigo-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                            <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
                                 <i class="fa-solid fa-award"></i>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Marks Based</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Marks Based</span>
                         </div>
                         <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Scholarship Based on Marks</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Enter your percentage or score to see instant scholarship eligibility &amp; fee concession.</p>
+                        <p class="text-xs text-slate-600 leading-relaxed">Check scholarship slabs, branch-wise concessions, tuition per year, and 4-year fee structure.</p>
                     </div>
-                    <div class="pt-4 mt-4 border-t border-sky-100 flex items-center justify-between text-[11px] font-bold text-sky-700">
-                        <span>Scholarship Form</span>
+                    <div class="pt-4 mt-4 border-t border-indigo-100 flex items-center justify-between text-[11px] font-bold text-indigo-700">
+                        <span>Gtech Scholarship Form</span>
                         <i class="fa-solid fa-arrow-right text-[10px]"></i>
                     </div>
                 </div>
 
-                <div onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-emerald-50/90 to-white border border-emerald-100 hover:border-emerald-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                <div onclick="openGtechFormModal({ mode: 'visiting' })" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-sky-50/90 to-white border border-sky-100 hover:border-sky-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
-                                <i class="fa-solid fa-graduation-cap"></i>
+                            <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                <i class="fa-solid fa-route"></i>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Merit Slab</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Campus Visit</span>
                         </div>
-                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Scholarship Based on Marks</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Check branch-wise fee concession, yearly tuition fee, and 4-year fee structure.</p>
+                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Visiting Application</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">Plan a guided campus visit to explore labs, hostels, and academics before admission.</p>
                     </div>
-                    <div class="pt-4 mt-4 border-t border-emerald-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
-                        <span>Scholarship Form</span>
+                    <div class="pt-4 mt-4 border-t border-sky-100 flex items-center justify-between text-[11px] font-bold text-sky-700">
+                        <span>Gtech Visiting Application Form</span>
                         <i class="fa-solid fa-arrow-right text-[10px]"></i>
                     </div>
                 </div>
@@ -426,19 +421,19 @@
                     </div>
                 </div>
 
-                <div onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-indigo-50/80 to-white border border-indigo-100 hover:border-indigo-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                <div onclick="openGtechFormModal({ mode: 'loan' })" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-emerald-50/90 to-white border border-emerald-100 hover:border-emerald-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
                                 <i class="fa-solid fa-building-columns"></i>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Loan Support</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Loan Support</span>
                         </div>
-                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Streamlined Education Loan Process</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Guidance and documentation support for education loans covering tuition and campus hostel charges.</p>
+                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Education Loan Apply Now</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">Apply for education loan guidance covering tuition fees and campus hostel expenses.</p>
                     </div>
-                    <div class="pt-4 mt-4 border-t border-indigo-100 flex items-center justify-between text-[11px] font-bold text-indigo-700">
-                        <span>Scholarship Form</span>
+                    <div class="pt-4 mt-4 border-t border-emerald-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
+                        <span>Education Loan Apply Now</span>
                         <i class="fa-solid fa-arrow-right text-[10px]"></i>
                     </div>
                 </div>
@@ -451,11 +446,11 @@
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
             <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
-                <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
-                <p class="text-xs text-slate-600 mt-0.5">Entrance exams are sorted by application fee (low to high) and universities by tuition fee (low to high). Enter marks inside each card's Scholarship &amp; Fee Filter box.</p>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Entrance Exams</h2>
+                <p class="text-xs text-slate-600 mt-0.5">Select Entrance Exams to click <strong>Apply Now</strong> for the Gtech Application Form, or filter universities by region and budget.</p>
             </div>
             <div class="w-full md:w-72">
-                <input type="text" id="uni-search" autocomplete="off" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
+                <input type="text" id="uni-search" autocomplete="off" oninput="renderUniversities()" placeholder="Search university, exam, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
             </div>
         </div>
 
@@ -474,7 +469,6 @@
             <button type="button" onclick="setStateFilter('Gujarat')" data-state="Gujarat" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Gujarat</button>
         </div>
 
-        <!-- Visible Budget Range Filter Bar -->
         <div id="active-budget-filter-bar" class="mt-3 p-3.5 rounded-2xl bg-white border border-sky-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2.5">
                 <label for="active-budget-input" class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
@@ -503,7 +497,6 @@
             </span>
         </div>
 
-        <!-- Andhra Pradesh Quota Info Strip -->
         <div id="ap-quota-filter-bar" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
             <div class="flex items-center gap-2 font-bold">
                 <i class="fa-solid fa-landmark text-emerald-700"></i>
@@ -512,7 +505,6 @@
             <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
         </div>
 
-        <!-- Hidden Legacy Filter Bar (kept hidden so all cards remain visible by default) -->
         <div id="instant-scholarship-checker" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -526,9 +518,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
                 <div>
-                    <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Select Marks Type
-                    </label>
+                    <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">Select Marks Type</label>
                     <select id="sch-option-select" onchange="handleScholarshipOptionChange(); applyGlobalMarksFilter();" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                         <option value="inter">Inter Marks (%)</option>
                         <option value="pcm">PCM Marks (%)</option>
@@ -538,16 +528,12 @@
                 </div>
 
                 <div>
-                    <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Enter Inter Marks (%)
-                    </label>
+                    <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">Enter Inter Marks (%)</label>
                     <input type="number" step="any" id="sch-score-input" placeholder="e.g. 95" oninput="applyGlobalMarksFilter()" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                 </div>
 
                 <div>
-                    <label for="sch-budget-input" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Your Budget Per Year (₹)
-                    </label>
+                    <label for="sch-budget-input" class="block text-[11px] font-bold text-slate-700 mb-1">Your Budget Per Year (₹)</label>
                     <input type="number" min="0" step="5000" id="sch-budget-input" placeholder="e.g. 120000" oninput="handleGlobalBudgetChange(this.value)" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
                 </div>
 
@@ -563,60 +549,65 @@
             </div>
 
             <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                <span>
-                    Use each card's <strong>Scholarship &amp; Fee Filter</strong> box to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong>.
-                </span>
-                <span id="sch-allowed-criteria-hint" class="text-[11px] font-bold text-indigo-700">
-                    Criteria follow Admin rules per university
-                </span>
+                <span>Use each card's <strong>Scholarship &amp; Fee Filter</strong> box to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong>.</span>
+                <span id="sch-allowed-criteria-hint" class="text-[11px] font-bold text-indigo-700">Criteria follow Admin rules per university</span>
             </div>
         </div>
     </section>
 
-    <!-- Universities Grid Container -->
+    <!-- Universities / Entrance Exams Grid -->
     <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
         <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </main>
 
-    <!-- SCHOLARSHIP BASED ON MARKS & VISITING APPLICATION FORM CTA BANNER (PRESERVED ON HOME PAGE) -->
+    <!-- Bottom Action Strip -->
     <section id="apply" class="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 border-t border-sky-100">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="bg-white border border-indigo-100 rounded-3xl p-6 sm:p-10 shadow-xl text-center space-y-4">
                 <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    <i class="fa-solid fa-award"></i> Scholarship Based on Marks • Visiting Application
+                    <i class="fa-solid fa-award"></i> Scholarship • Application • Visiting • Education Loan
                 </span>
                 <h2 class="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                    SCHOLARSHIP &amp; VISITING APPLICATION FORM
+                    GTECH ADMISSIONS SUPPORT DESK
                 </h2>
                 <p class="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
-                    Submit your Intermediate 1st &amp; 2nd year marks, PCM marks (out of 600 with practicals), optional JEE marks, and optional EAMCET rank or submit a Visiting Application for a free campus visit first. Once submitted, our expert will reach you within 10 mins.
+                    Choose the form you need below. Once submitted, our expert reaches out within 10 minutes to guide you through the next step.
                 </p>
                 <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
-                    <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-indigo-600/25 transition inline-flex items-center gap-2">
+                    <button type="button" onclick="openGtechFormModal({ mode: 'scholarship' })" class="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition inline-flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-award"></i>
-                        <span>SCHOLARSHIP BASED ON MARKS</span>
+                        <span>GTECH SCHOLARSHIP FORM</span>
                     </button>
-                    <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-emerald-600/25 transition inline-flex items-center gap-2">
+                    <button type="button" onclick="openGtechFormModal({ mode: 'application' })" class="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-sky-600/20 transition inline-flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-signature"></i>
+                        <span>GTECH APPLICATION FORM</span>
+                    </button>
+                    <button type="button" onclick="openGtechFormModal({ mode: 'visiting' })" class="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition inline-flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-route"></i>
-                        <span>VISITING APPLICATION</span>
+                        <span>GTECH VISITING APPLICATION FORM</span>
+                    </button>
+                    <button type="button" onclick="openGtechFormModal({ mode: 'loan' })" class="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition inline-flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-building-columns"></i>
+                        <span>EDUCATION LOAN APPLY NOW</span>
                     </button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="bg-white border-t border-sky-100 py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p class="font-semibold text-slate-700">Gtech Admissions under GreenTech Education Consultancy and Services. All rights reserved.</p>
-            <div class="flex items-center gap-4">
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="hover:text-indigo-600 transition font-bold text-indigo-600">Scholarship Form</button>
-                <button type="button" onclick="openFirstScreen('login')" class="hover:text-sky-600 transition font-bold text-sky-700">Student Login</button>
+            <div class="flex flex-wrap items-center gap-4">
+                <button type="button" onclick="openGtechFormModal({ mode: 'application' })" class="hover:text-sky-600 transition font-bold text-sky-700 cursor-pointer">Application Form</button>
+                <button type="button" onclick="openGtechFormModal({ mode: 'visiting' })" class="hover:text-emerald-600 transition font-bold text-emerald-700 cursor-pointer">Visiting Application</button>
+                <button type="button" onclick="openGtechFormModal({ mode: 'scholarship' })" class="hover:text-indigo-600 transition font-bold text-indigo-600 cursor-pointer">Scholarship Form</button>
+                <button type="button" onclick="openFirstScreen('login')" class="hover:text-slate-900 transition font-bold text-slate-700 cursor-pointer">Student Login</button>
             </div>
         </div>
     </footer>
 
-    <!-- QUARTER-PAGE (1/4th) CONGRATULATIONS & EARLY REGISTRATION OFFER POP-UP (BEFORE MARCH 16, 2027) -->
+    <!-- QUARTER-PAGE EARLY OFFER POP-UP -->
     <div id="early-offer-popup" class="fixed bottom-4 right-4 z-[70] hidden w-[92vw] sm:w-96 max-w-md max-h-[36vh] overflow-y-auto rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 text-white border-2 border-amber-300/80 shadow-2xl p-3.5 sm:p-4 gtech-pop-in">
         <div class="flex items-start justify-between gap-2">
             <div class="flex items-center gap-2">
@@ -648,20 +639,20 @@
         </div>
 
         <div class="mt-2.5 flex items-center justify-between gap-2">
-            <button type="button" onclick="closeEarlyOfferPopup(); openFirstScreen('register');" class="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 hover:opacity-95 text-slate-950 font-black text-[11px] transition">
-                Claim ₹2,000 Offer Now
+            <button type="button" onclick="closeEarlyOfferPopup(); openGtechFormModal({ mode: 'scholarship' });" class="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 hover:opacity-95 text-slate-950 font-black text-[11px] transition cursor-pointer">
+                Check Scholarship Now
             </button>
-            <button type="button" onclick="closeEarlyOfferPopup(); openStudentDashboardModal('referral');" class="py-1.5 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] transition">
+            <button type="button" onclick="closeEarlyOfferPopup(); openStudentDashboardModal('referral');" class="py-1.5 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] transition cursor-pointer">
                 Referral Rules
             </button>
         </div>
     </div>
 
-    <!-- CENTER-SCREEN CELEBRATORY ₹2,000 OFFER POP-UP AFTER REGISTRATION -->
+    <!-- CENTER CELEBRATORY ₹2,000 OFFER MODAL -->
     <div id="early-offer-center-modal" class="fixed inset-0 z-[110] bg-slate-950/75 backdrop-blur-md hidden items-center justify-center p-4">
         <div class="relative w-full max-w-md rounded-3xl overflow-hidden bg-white border-2 border-amber-300 shadow-2xl gtech-pop-in">
             <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 px-6 py-6 text-center text-white relative">
-                <button type="button" onclick="closeEarlyOfferModal()" aria-label="Close offer modal" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/20 hover:bg-black/35 text-white font-bold text-xs flex items-center justify-center transition">✕</button>
+                <button type="button" onclick="closeEarlyOfferModal()" aria-label="Close offer modal" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/20 hover:bg-black/35 text-white font-bold text-xs flex items-center justify-center transition cursor-pointer">✕</button>
                 <div class="w-16 h-16 mx-auto rounded-2xl bg-white/20 backdrop-blur-sm border border-white/40 flex items-center justify-center text-3xl shadow-inner mb-3">
                     <i class="fa-solid fa-gift"></i>
                 </div>
@@ -696,14 +687,14 @@
                     ₹2,000/- offer is now available in your Student Dashboard!
                 </div>
 
-                <button type="button" onclick="closeEarlyOfferModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg transition">
+                <button type="button" onclick="closeEarlyOfferModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg transition cursor-pointer">
                     OPEN MY STUDENT DASHBOARD →
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- PROFESSIONAL CONGRATULATIONS POP-UP MODAL FOR SCHOLARSHIP ELIGIBILITY -->
+    <!-- SCHOLARSHIP CONGRATULATIONS MODAL -->
     <div id="sch-congrats-modal" class="fixed inset-0 z-[120] hidden items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4">
         <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-emerald-200 gtech-pop-in">
             <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 px-6 py-5 text-white text-center relative">
@@ -740,7 +731,7 @@
                 </div>
 
                 <p class="text-[11px] text-slate-500 text-center leading-relaxed">
-                    You are eligible for this scholarship based on your entered marks. Claim your scholarship form below.
+                    You are eligible for this scholarship based on your entered marks. Claim your Gtech Scholarship Form below.
                 </p>
 
                 <div class="flex gap-2.5 pt-1">
@@ -755,25 +746,25 @@
         </div>
     </div>
 
-    <!-- SCHOLARSHIP AND VISITING APPLICATION FORM POP-UP MODAL -->
+    <!-- DYNAMIC FORM MODAL (GTECH SCHOLARSHIP FORM / GTECH APPLICATION FORM / GTECH VISITING APPLICATION FORM / GTECH EDUCATION LOAN FORM) -->
     <div id="scholarship-app-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="relative bg-gradient-to-b from-indigo-50 via-white to-sky-50 border-2 border-indigo-200 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden my-auto gtech-pop-in">
-            <div class="bg-gradient-to-r from-indigo-700 via-blue-700 to-sky-600 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white">
+            <div id="gtech-form-header" class="bg-gradient-to-r from-indigo-700 via-blue-700 to-sky-600 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white">
                 <div>
-                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/15 text-indigo-100 mb-1">
-                        Expert Callback Within 10 Mins • Scholarship &amp; Visiting Application
+                    <span id="gtech-form-kicker" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/15 text-indigo-100 mb-1">
+                        Gtech Admissions • Official Student Form
                     </span>
-                    <h3 class="text-sm sm:text-lg font-black tracking-tight leading-snug">
-                        SCHOLARSHIP &amp; VISITING APPLICATION FORM
+                    <h3 id="gtech-form-title" class="text-sm sm:text-lg font-black tracking-tight leading-snug">
+                        GTECH SCHOLARSHIP FORM
                     </h3>
                 </div>
-                <button type="button" onclick="closeScholarshipApplicationModal()" aria-label="Close application form" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-rose-500 text-white font-black flex items-center justify-center text-sm transition shrink-0">
+                <button type="button" onclick="closeScholarshipApplicationModal()" aria-label="Close application form" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-rose-500 text-white font-black flex items-center justify-center text-sm transition shrink-0 cursor-pointer">
                     ✕
                 </button>
             </div>
 
             <form id="guidance-inquiry-form" onsubmit="handleGuidanceSubmission(event)" class="p-5 sm:p-7 space-y-4 max-h-[82vh] overflow-y-auto">
-                <div id="guide-mode-banner" class="hidden p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-900"></div>
+                <div id="guide-mode-banner" class="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-900"></div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
@@ -814,23 +805,24 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                        <label for="guide-uni" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            <i class="fa-solid fa-university text-sky-600 mr-1"></i>Preferred University (Optional)
+                        <label id="guide-target-label" for="guide-uni" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            <i class="fa-solid fa-university text-sky-600 mr-1"></i>Preferred University / Exam (Optional)
                         </label>
-                        <input type="text" id="guide-uni" oninput="populateCampusSelectForUniversity(this.value)" placeholder="e.g. VIT, SRM, Manipal" class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="guide-uni" oninput="populateCampusSelectForUniversity(this.value)" placeholder="e.g. VIT, SRM, AP EAMCET" class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                     </div>
 
                     <div>
                         <label for="guide-assistance" class="block text-[11px] font-bold text-slate-700 mb-1">
-                            <i class="fa-solid fa-hands-helping text-emerald-600 mr-1"></i>Application Type *
+                            <i class="fa-solid fa-hands-helping text-emerald-600 mr-1"></i>Request Type *
                         </label>
                         <select id="guide-assistance" required class="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-indigo-500">
                             <option value="Scholarship Based on Marks">Scholarship Based on Marks</option>
+                            <option value="Entrance Exam Application">Entrance Exam Application</option>
                             <option value="Visiting Application">Visiting Application</option>
+                            <option value="Education Loan Apply Now">Education Loan Apply Now</option>
                             <option value="EAMCET Counselling Help">EAMCET Counselling Help</option>
                             <option value="Apply Management Quota">Apply Management Quota</option>
                             <option value="Get Expert Application Help">Get Expert Application Help</option>
-                            <option value="Education Loan Guidance">Education Loan Guidance</option>
                             <option value="Admission Guidance">Admission Guidance</option>
                         </select>
                     </div>
@@ -846,30 +838,24 @@
                 <div id="guide-marks-section" class="p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 shadow-xs">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-black uppercase tracking-wider text-indigo-800">
-                            <i class="fa-solid fa-calculator mr-1"></i> Intermediate &amp; Entrance Marks
+                            <i class="fa-solid fa-calculator mr-1"></i> Academic &amp; Entrance Details
                         </span>
-                        <span class="text-[10px] font-bold text-slate-500">JEE &amp; EAMCET Optional</span>
+                        <span class="text-[10px] font-bold text-slate-500">Optional where applicable</span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                            <label for="guide-inter-1st" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                Inter 1st Year Marks
-                            </label>
+                            <label for="guide-inter-1st" class="block text-[11px] font-bold text-slate-700 mb-1">Inter 1st Year Marks</label>
                             <input type="text" id="guide-inter-1st" inputMode="numeric" placeholder="e.g. 445" oninput="sanitizeNumericInput(this, 3); calculateIntermediateTotal()" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div>
-                            <label for="guide-inter-2nd" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                Inter 2nd Year Marks
-                            </label>
+                            <label for="guide-inter-2nd" class="block text-[11px] font-bold text-slate-700 mb-1">Inter 2nd Year Marks</label>
                             <input type="text" id="guide-inter-2nd" inputMode="numeric" placeholder="e.g. 495" oninput="sanitizeNumericInput(this, 3); calculateIntermediateTotal()" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div>
-                            <label for="guide-inter-total" class="block text-[11px] font-bold text-indigo-700 mb-1">
-                                Total in Intermediate
-                            </label>
+                            <label for="guide-inter-total" class="block text-[11px] font-bold text-indigo-700 mb-1">Total in Intermediate</label>
                             <input type="text" id="guide-inter-total" readonly placeholder="Auto-calculated" class="w-full bg-indigo-100/70 border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-indigo-950 font-mono font-extrabold">
                         </div>
                     </div>
@@ -877,37 +863,69 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                         <div>
                             <label for="guide-pcm-600" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                PCM Marks (600) <span class="text-[10px] font-semibold text-indigo-600">(note with practicals)</span>
+                                PCM Marks (600) <span class="text-[10px] font-semibold text-indigo-600">(with practicals)</span>
                             </label>
-                            <input type="text" id="guide-pcm-600" inputMode="numeric" placeholder="Out of 600 (note with practicals)" oninput="sanitizeNumericInput(this, 3)" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
+                            <input type="text" id="guide-pcm-600" inputMode="numeric" placeholder="Out of 600" oninput="sanitizeNumericInput(this, 3)" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div>
-                            <label for="guide-jee" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                JEE Marks / Percentile (Optional)
-                            </label>
+                            <label for="guide-jee" class="block text-[11px] font-bold text-slate-700 mb-1">JEE Marks / Percentile</label>
                             <input type="text" id="guide-jee" placeholder="Optional" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
                         </div>
 
                         <div>
-                            <label for="guide-eamcet" class="block text-[11px] font-bold text-slate-700 mb-1">
-                                EAMCET Rank (Optional)
-                            </label>
+                            <label for="guide-eamcet" class="block text-[11px] font-bold text-slate-700 mb-1">EAMCET Rank</label>
                             <input type="text" id="guide-eamcet" inputMode="numeric" placeholder="Optional" oninput="sanitizeNumericInput(this, 7)" class="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-mono focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3 pt-1">
-                    <button type="submit" id="btn-submit-guidance" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2">
+                    <button type="submit" id="btn-submit-guidance" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-paper-plane"></i>
-                        <span>SUBMIT APPLICATION</span>
+                        <span id="btn-submit-guidance-label">SUBMIT APPLICATION</span>
                     </button>
-                    <button type="button" onclick="closeScholarshipApplicationModal()" class="px-4 py-3.5 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition">
+                    <button type="button" onclick="closeScholarshipApplicationModal()" class="px-4 py-3.5 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
                         Close
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 10-MINUTE EXPERT CALLBACK POP-UP AFTER ENTRANCE EXAM APPLICATION -->
+    <div id="expert-callback-popup" class="fixed inset-0 z-[125] hidden items-center justify-center bg-slate-950/65 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border-2 border-sky-200 gtech-pop-in">
+            <div class="bg-gradient-to-r from-sky-700 via-blue-600 to-emerald-600 px-6 py-5 text-white text-center relative">
+                <button type="button" onclick="closeExpertCallbackPopup()" aria-label="Close callback pop-up" class="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white font-bold text-sm flex items-center justify-center cursor-pointer transition">
+                    ✕
+                </button>
+                <div class="w-12 h-12 mx-auto mb-2.5 rounded-2xl bg-white/20 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <span class="text-[10px] font-extrabold uppercase tracking-widest text-sky-100 block">Application Received</span>
+                <h3 class="text-lg font-black mt-0.5">Our Expert Will Reach You Within 10 Mins!</h3>
+                <p id="expert-callback-sub" class="text-xs text-white/95 font-semibold mt-1">Our admissions expert will call you shortly to assist with applying your application.</p>
+            </div>
+            <div class="p-6 space-y-4 text-xs">
+                <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 space-y-1.5">
+                    <div class="flex justify-between">
+                        <span class="text-slate-600 font-semibold">Gtech ID</span>
+                        <strong id="expert-callback-gtech-id" class="font-mono text-indigo-700">GTECH6001</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-600 font-semibold">Selected Exam / Form</span>
+                        <strong id="expert-callback-target" class="text-slate-900 text-right">Entrance Exam</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-600 font-semibold">Response Time</span>
+                        <strong class="text-emerald-700">Within 10 Minutes</strong>
+                    </div>
+                </div>
+                <button type="button" onclick="closeExpertCallbackPopup()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-md transition cursor-pointer">
+                    Got It, Continue Exploring
+                </button>
+            </div>
         </div>
     </div>
 
@@ -926,19 +944,19 @@
                 </div>
 
                 <div class="flex items-center gap-1 sm:gap-1.5 bg-slate-100 p-1 rounded-full border border-slate-200/80 shrink-0">
-                    <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-indigo-600 text-white text-[10px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 shadow-xs transition flex items-center gap-1">
+                    <button type="button" id="dash-tab-btn-dashboard" onclick="switchDashboardSection('dashboard')" class="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-indigo-600 text-white text-[10px] sm:text-xs font-extrabold whitespace-nowrap shrink-0 shadow-xs transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-house text-[10px]"></i>
                         <span>Portal</span>
                     </button>
-                    <button type="button" id="dash-tab-btn-referral" onclick="switchDashboardSection('referral')" class="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-slate-700 hover:bg-white text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center gap-1">
+                    <button type="button" id="dash-tab-btn-referral" onclick="switchDashboardSection('referral')" class="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-slate-700 hover:bg-white text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-share-nodes text-[10px] text-indigo-600"></i>
                         <span>Referral</span>
                     </button>
-                    <button type="button" onclick="handleStudentLogout(); openFirstScreen('login');" aria-label="Sign Out" title="Sign Out" class="px-2 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white hover:bg-slate-200/80 text-slate-700 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center gap-1">
+                    <button type="button" onclick="handleStudentLogout(); openFirstScreen('login');" aria-label="Sign Out" title="Sign Out" class="px-2 py-1 sm:px-3 sm:py-1.5 rounded-full bg-white hover:bg-slate-200/80 text-slate-700 text-[10px] sm:text-xs font-bold whitespace-nowrap shrink-0 transition flex items-center gap-1 cursor-pointer">
                         <i class="fa-solid fa-right-from-bracket text-[10px]"></i>
                         <span class="hidden sm:inline">Sign Out</span>
                     </button>
-                    <button type="button" onclick="closeStudentDashboardModal()" aria-label="Close" title="Close" class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-extrabold flex items-center justify-center shrink-0 transition">
+                    <button type="button" onclick="closeStudentDashboardModal()" aria-label="Close" title="Close" class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-extrabold flex items-center justify-center shrink-0 transition cursor-pointer">
                         ✕
                     </button>
                 </div>
@@ -949,7 +967,7 @@
                     <div class="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/90 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="space-y-1">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
-                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal
+                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal • 7-Day Session
                             </span>
                             <h4 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
                                 WELCOME TO GTECH FAMILY!
@@ -998,7 +1016,7 @@
                                 </h4>
                                 <p class="text-[11px] text-slate-500 mt-0.5">University-wise applications. Click <strong>Status</strong> to view fee structure, scholarship status &amp; admin-approved scholarship amount.</p>
                             </div>
-                            <button type="button" onclick="closeStudentDashboardModal(); openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold shadow-xs transition">
+                            <button type="button" onclick="closeStudentDashboardModal(); openGtechFormModal({ mode: 'scholarship' });" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-extrabold shadow-xs transition cursor-pointer">
                                 + Apply University Scholarship
                             </button>
                         </div>
@@ -1041,7 +1059,7 @@
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">Your Referral Code (Gtech ID)</span>
                                     <div class="flex items-center justify-between gap-2 mt-1 bg-white border border-sky-200 rounded-xl px-3.5 py-2.5">
                                         <strong id="my-referral-code-text" class="text-base font-mono font-black text-indigo-800">GTECH6001</strong>
-                                        <button type="button" onclick="copyMyReferralCode()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition">
+                                        <button type="button" onclick="copyMyReferralCode()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition cursor-pointer">
                                             <i class="fa-regular fa-copy mr-1"></i> Copy Code
                                         </button>
                                     </div>
@@ -1051,20 +1069,20 @@
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-sky-800 block">Your Referral Link</span>
                                     <div class="flex items-center justify-between gap-2 mt-1 bg-white border border-sky-200 rounded-xl px-3 py-2">
                                         <input type="text" id="my-referral-link-input" readonly class="w-full text-xs font-mono text-slate-700 bg-transparent focus:outline-none">
-                                        <button type="button" onclick="copyMyReferralLink()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold shrink-0 transition">
+                                        <button type="button" onclick="copyMyReferralLink()" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-bold shrink-0 transition cursor-pointer">
                                             Copy Link
                                         </button>
                                     </div>
                                 </div>
 
                                 <div class="flex flex-wrap items-center gap-2 pt-1">
-                                    <button type="button" onclick="shareReferralWhatsApp()" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                                    <button type="button" onclick="shareReferralWhatsApp()" class="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer">
                                         <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
                                     </button>
-                                    <button type="button" onclick="shareReferralInstagram()" class="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                                    <button type="button" onclick="shareReferralInstagram()" class="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer">
                                         <i class="fa-brands fa-instagram text-sm"></i> Instagram
                                     </button>
-                                    <button type="button" onclick="copyMyReferralCode()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                                    <button type="button" onclick="copyMyReferralCode()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer">
                                         <i class="fa-solid fa-copy"></i> Copy Code
                                     </button>
                                 </div>
@@ -1103,7 +1121,7 @@
                     <span class="block text-[10px] font-bold uppercase tracking-wider text-indigo-100">University Scholarship &amp; Fee Status</span>
                     <h4 id="uni-status-modal-title" class="text-sm sm:text-base font-black truncate">University Name</h4>
                 </div>
-                <button type="button" onclick="closeUniversityStatusModal()" class="px-3 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition">
+                <button type="button" onclick="closeUniversityStatusModal()" class="px-3 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition cursor-pointer">
                     Close
                 </button>
             </div>
@@ -1114,8 +1132,8 @@
 
     </div> <!-- END #home-page-content -->
 
-    <!-- Modern UI Toast Notification Container -->
-    <div id="gtech-toast" class="fixed bottom-4 right-4 left-4 sm:left-auto z-[100] hidden items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border border-emerald-300 text-slate-900 shadow-2xl sm:max-w-sm transition-all duration-300">
+    <!-- Toast Container -->
+    <div id="gtech-toast" class="fixed bottom-4 right-4 left-4 sm:left-auto z-[130] hidden items-center gap-3 px-4 py-3.5 rounded-2xl bg-white border border-emerald-300 text-slate-900 shadow-2xl sm:max-w-sm transition-all duration-300">
         <div id="gtech-toast-icon" class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-sm">
             ✓
         </div>
@@ -1127,9 +1145,178 @@
     </div>
 
     <script>
+        const SESSION_STORAGE_KEY = 'gtech_student_session';
+        const SESSION_COOKIE_NAME = 'gtech_session_7d';
+        const GTECH_ID_MAP_KEY = 'gtech_id_by_email';
+        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
         let gtechAuthOtpToken = '';
         let gtechAuthPending = null;
         let gtechAuthTimer = null;
+        let currentFormMode = 'scholarship';
+
+        function setSessionCookie(sessionObj) {
+            try {
+                const encoded = encodeURIComponent(JSON.stringify(sessionObj));
+                const maxAgeSeconds = 7 * 24 * 60 * 60;
+                document.cookie = `${SESSION_COOKIE_NAME}=${encoded}; max-age=${maxAgeSeconds}; path=/; SameSite=Lax`;
+            } catch (_) {}
+        }
+
+        function readSessionCookie() {
+            try {
+                const parts = document.cookie.split(';').map(p => p.trim());
+                const found = parts.find(p => p.startsWith(`${SESSION_COOKIE_NAME}=`));
+                if (!found) return null;
+                return JSON.parse(decodeURIComponent(found.slice(SESSION_COOKIE_NAME.length + 1)));
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function clearSessionCookie() {
+            try {
+                document.cookie = `${SESSION_COOKIE_NAME}=; max-age=0; path=/; SameSite=Lax`;
+            } catch (_) {}
+        }
+
+        function getOrCreateGtechId(email) {
+            const normalized = String(email || '').trim().toLowerCase();
+            let idMap = {};
+            try {
+                idMap = JSON.parse(localStorage.getItem(GTECH_ID_MAP_KEY) || '{}') || {};
+            } catch (_) {
+                idMap = {};
+            }
+
+            if (normalized && idMap[normalized]) {
+                return idMap[normalized];
+            }
+
+            const existingSession = getValidStudentSession();
+            if (
+                existingSession &&
+                existingSession.gtech_id &&
+                (!normalized || String(existingSession.email || '').toLowerCase() === normalized)
+            ) {
+                if (normalized) {
+                    idMap[normalized] = existingSession.gtech_id;
+                    localStorage.setItem(GTECH_ID_MAP_KEY, JSON.stringify(idMap));
+                }
+                return existingSession.gtech_id;
+            }
+
+            const newId = 'GTECH' + Math.floor(6000 + Math.random() * 3999);
+            if (normalized) {
+                idMap[normalized] = newId;
+                localStorage.setItem(GTECH_ID_MAP_KEY, JSON.stringify(idMap));
+            }
+            return newId;
+        }
+
+        function persistStudentSession(studentData) {
+            const email = String(studentData?.email || '').trim().toLowerCase();
+            const gtechId = studentData?.gtech_id || getOrCreateGtechId(email);
+            if (email && gtechId) {
+                try {
+                    const idMap = JSON.parse(localStorage.getItem(GTECH_ID_MAP_KEY) || '{}') || {};
+                    idMap[email] = gtechId;
+                    localStorage.setItem(GTECH_ID_MAP_KEY, JSON.stringify(idMap));
+                } catch (_) {}
+            }
+
+            const now = Date.now();
+            const sessionPayload = {
+                ...studentData,
+                email,
+                gtech_id: gtechId,
+                loginAt: studentData?.loginAt || now,
+                expiresAt: now + ONE_WEEK_MS
+            };
+
+            try {
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
+            } catch (_) {}
+            setSessionCookie(sessionPayload);
+            return sessionPayload;
+        }
+
+        function getValidStudentSession() {
+            const now = Date.now();
+            let parsed = null;
+
+            try {
+                const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+                if (raw) parsed = JSON.parse(raw);
+            } catch (_) {}
+
+            if (!parsed || !parsed.email) {
+                parsed = readSessionCookie();
+            }
+
+            if (!parsed || !parsed.email) return null;
+
+            const expiresAt = Number(parsed.expiresAt || (Number(parsed.loginAt || 0) + ONE_WEEK_MS));
+            if (!expiresAt || now > expiresAt) {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+                clearSessionCookie();
+                return null;
+            }
+
+            parsed.gtech_id = getOrCreateGtechId(parsed.email);
+            parsed.expiresAt = now + ONE_WEEK_MS;
+            try {
+                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(parsed));
+            } catch (_) {}
+            setSessionCookie(parsed);
+            return parsed;
+        }
+
+        function handleStudentLogout() {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            clearSessionCookie();
+            const dashBtn = document.getElementById('header-dashboard-btn');
+            const loginBtn = document.getElementById('header-login-btn');
+            if (dashBtn) dashBtn.classList.add('hidden');
+            if (loginBtn) loginBtn.classList.remove('hidden');
+        }
+
+        function syncStudentIdentityUI(studentData) {
+            const session = studentData || getValidStudentSession();
+            if (!session) return null;
+
+            const name = session.name || session.email.split('@')[0] || 'Student';
+            const gtechId = session.gtech_id || getOrCreateGtechId(session.email);
+
+            const headerName = document.getElementById('header-student-name');
+            const dashBtn = document.getElementById('header-dashboard-btn');
+            const loginBtn = document.getElementById('header-login-btn');
+            if (headerName) headerName.textContent = `${name} (${gtechId})`;
+            if (dashBtn) dashBtn.classList.remove('hidden');
+            if (loginBtn) loginBtn.classList.add('hidden');
+
+            const topName = document.getElementById('dash-topbar-name');
+            const topId = document.getElementById('dash-topbar-id');
+            const welcomeName = document.getElementById('student-welcome-name');
+            const dashId = document.getElementById('student-dash-id');
+            const refCode = document.getElementById('my-referral-code-text');
+            const refLink = document.getElementById('my-referral-link-input');
+
+            if (topName) topName.textContent = name;
+            if (topId) topId.textContent = gtechId;
+            if (welcomeName) welcomeName.textContent = `Hello, ${name}!`;
+            if (dashId) dashId.textContent = gtechId;
+            if (refCode) refCode.textContent = gtechId;
+            if (refLink) refLink.value = `${window.location.origin}/?ref=${encodeURIComponent(gtechId)}`;
+
+            return session;
+        }
+
+        function showHomePortalView() {
+            document.getElementById('auth-first-screen')?.classList.add('hidden');
+            document.getElementById('home-page-content')?.classList.remove('hidden');
+            document.getElementById('state-filter-bar')?.classList.remove('hidden');
+        }
 
         function switchFirstScreenMode(mode) {
             const isRegister = mode === 'register';
@@ -1159,18 +1346,9 @@
         }
 
         function goToHomePage(studentData) {
-            if (studentData) {
-                localStorage.setItem('gtech_student_session', JSON.stringify(studentData));
-                const nameEl = document.getElementById('header-student-name');
-                const dashBtn = document.getElementById('header-dashboard-btn');
-                const loginBtn = document.getElementById('header-login-btn');
-                if (nameEl) nameEl.textContent = studentData.name || studentData.gtech_id || 'Student Portal';
-                if (dashBtn) dashBtn.classList.remove('hidden');
-                if (loginBtn) loginBtn.classList.add('hidden');
-            }
-            document.getElementById('auth-first-screen')?.classList.add('hidden');
-            document.getElementById('home-page-content')?.classList.remove('hidden');
-            document.getElementById('state-filter-bar')?.classList.remove('hidden');
+            const saved = studentData ? persistStudentSession(studentData) : getValidStudentSession();
+            syncStudentIdentityUI(saved);
+            showHomePortalView();
             setTimeout(showEarlyOfferPopupIfEligible, 900);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1237,12 +1415,13 @@
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending OTP...</span>'; }
 
             try {
-                const res = await postMailApi({ action: 'send-otp', email, purpose: 'login' });
+                const gtechId = getOrCreateGtechId(email);
+                const res = await postMailApi({ action: 'send-otp', email, purpose: 'login', gtechId });
                 gtechAuthOtpToken = res.otpToken || '';
                 gtechAuthPending = {
                     email,
                     name: email.split('@')[0],
-                    gtech_id: 'GTECH' + Math.floor(6000 + Math.random() * 3999)
+                    gtech_id: gtechId
                 };
 
                 document.getElementById('first-login-otp-box')?.classList.remove('hidden');
@@ -1273,17 +1452,24 @@
                 });
                 errEl?.classList.add('hidden');
 
+                const session = persistStudentSession(gtechAuthPending);
+
                 await postMailApi({
                     action: 'send-notification',
                     to: 'admin@gtechadmissions.com',
-                    subject: `Student Login: ${gtechAuthPending.name} (${gtechAuthPending.gtech_id})`,
-                    text: `Student ${gtechAuthPending.name} (${gtechAuthPending.email}) logged in with Gtech ID ${gtechAuthPending.gtech_id}.`,
+                    subject: `Student Login: ${session.name} (${session.gtech_id})`,
+                    text: `Student ${session.name} (${session.email}) logged in with Gtech ID ${session.gtech_id}.`,
                     eventType: 'student_login',
-                    details: gtechAuthPending
+                    details: {
+                        student_name: session.name,
+                        gtech_id: session.gtech_id,
+                        email: session.email,
+                        session_validity: '7 Days'
+                    }
                 }).catch(() => {});
 
-                if (typeof showToast === 'function') showToast('Login Successful', 'Navigating to Home Page...');
-                goToHomePage(gtechAuthPending);
+                if (typeof showToast === 'function') showToast('Login Successful', `Welcome back (${session.gtech_id})`);
+                goToHomePage(session);
             } catch (err) {
                 if (errEl) { errEl.textContent = err.message || 'Invalid or expired OTP code.'; errEl.classList.remove('hidden'); }
             }
@@ -1308,10 +1494,10 @@
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending OTP...</span>'; }
 
             try {
-                const res = await postMailApi({ action: 'send-otp', email, purpose: 'register' });
+                const gtechId = getOrCreateGtechId(email);
+                const res = await postMailApi({ action: 'send-otp', email, purpose: 'register', gtechId });
                 gtechAuthOtpToken = res.otpToken || '';
-                const id = 'GTECH' + Math.floor(6000 + Math.random() * 3999);
-                gtechAuthPending = { name, phone, email, referral, gtech_id: id };
+                gtechAuthPending = { name, phone, email, referral, gtech_id: gtechId };
 
                 document.getElementById('first-reg-otp-box')?.classList.remove('hidden');
                 startFirstOtpTimer('first-reg-timer', 'btn-first-reg-resend');
@@ -1341,32 +1527,236 @@
                 });
                 errEl?.classList.add('hidden');
 
+                // Save session and go straight to Home Page (never back to login)
+                const session = persistStudentSession(gtechAuthPending);
+
                 await postMailApi({
                     action: 'send-notification',
-                    to: gtechAuthPending.email,
+                    to: session.email,
                     adminEmail: 'admin@gtechadmissions.com',
-                    subject: `Welcome to Gtech Admissions — Your ID: ${gtechAuthPending.gtech_id}`,
-                    text: `Welcome ${gtechAuthPending.name}! Your Gtech ID is ${gtechAuthPending.gtech_id}.`,
+                    subject: `Welcome to Gtech Admissions — Your ID: ${session.gtech_id}`,
+                    text: `Welcome ${session.name}! Your Gtech ID is ${session.gtech_id}.`,
                     eventType: 'new_student_registered',
                     details: {
-                        full_name: gtechAuthPending.name,
-                        student_id: gtechAuthPending.gtech_id,
-                        email: gtechAuthPending.email,
-                        phone: gtechAuthPending.phone,
-                        referral: gtechAuthPending.referral || 'None'
+                        full_name: session.name,
+                        gtech_id: session.gtech_id,
+                        email: session.email,
+                        phone: session.phone,
+                        referral: session.referral || 'None'
                     }
                 }).catch(() => {});
 
-                if (typeof showToast === 'function') showToast('Registered!', `Welcome ${gtechAuthPending.name}! Navigating to Home Page...`);
-                goToHomePage(gtechAuthPending);
+                if (typeof showToast === 'function') showToast('Registered!', `Welcome ${session.name}! Gtech ID: ${session.gtech_id}`);
+                goToHomePage(session);
+
                 const offerModal = document.getElementById('early-offer-center-modal');
                 const idDisp = document.getElementById('offer-popup-gtech-id');
-                if (idDisp) idDisp.textContent = gtechAuthPending.gtech_id;
+                if (idDisp) idDisp.textContent = session.gtech_id;
                 if (offerModal) { offerModal.classList.remove('hidden'); offerModal.classList.add('flex'); }
             } catch (err) {
                 if (errEl) { errEl.textContent = err.message || 'Invalid or expired OTP code.'; errEl.classList.remove('hidden'); }
             }
         }
+
+        // Dynamic Form Modal Controller
+        function openGtechFormModal(options = {}) {
+            const mode = options.mode || 'scholarship';
+            const prefillName = options.targetName || '';
+            currentFormMode = mode;
+
+            // Ensure user stays on home portal view if logged in
+            const session = getValidStudentSession();
+            if (session) {
+                showHomePortalView();
+                syncStudentIdentityUI(session);
+            }
+
+            const titleEl = document.getElementById('gtech-form-title');
+            const kickerEl = document.getElementById('gtech-form-kicker');
+            const bannerEl = document.getElementById('guide-mode-banner');
+            const targetLabelEl = document.getElementById('guide-target-label');
+            const uniInput = document.getElementById('guide-uni');
+            const assistSelect = document.getElementById('guide-assistance');
+            const submitLabelEl = document.getElementById('btn-submit-guidance-label');
+            const headerEl = document.getElementById('gtech-form-header');
+
+            const nameInput = document.getElementById('guide-name');
+            const emailInput = document.getElementById('guide-email');
+            const phoneInput = document.getElementById('guide-phone');
+            if (session) {
+                if (nameInput && !nameInput.value && session.name) nameInput.value = session.name;
+                if (emailInput && !emailInput.value && session.email) emailInput.value = session.email;
+                if (phoneInput && !phoneInput.value && session.phone) phoneInput.value = session.phone;
+            }
+
+            if (uniInput && prefillName) {
+                uniInput.value = prefillName;
+                if (typeof populateCampusSelectForUniversity === 'function') {
+                    populateCampusSelectForUniversity(prefillName);
+                }
+            }
+
+            if (mode === 'application') {
+                if (headerEl) headerEl.className = 'bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white';
+                if (kickerEl) kickerEl.textContent = 'Entrance Exam & Admission Desk';
+                if (titleEl) titleEl.textContent = prefillName ? `GTECH APPLICATION FORM — ${prefillName.toUpperCase()}` : 'GTECH APPLICATION FORM';
+                if (bannerEl) bannerEl.textContent = 'Complete this Gtech Application Form. After submitting, a pop-up will confirm that our expert will reach you within 10 minutes to help apply your application.';
+                if (targetLabelEl) targetLabelEl.innerHTML = '<i class="fa-solid fa-file-pen text-sky-600 mr-1"></i>Entrance Exam / University';
+                if (assistSelect) assistSelect.value = 'Entrance Exam Application';
+                if (submitLabelEl) submitLabelEl.textContent = 'SUBMIT APPLICATION FORM';
+            } else if (mode === 'visiting') {
+                if (headerEl) headerEl.className = 'bg-gradient-to-r from-emerald-700 via-teal-600 to-sky-600 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white';
+                if (kickerEl) kickerEl.textContent = 'Campus Visit Desk';
+                if (titleEl) titleEl.textContent = 'GTECH VISITING APPLICATION FORM';
+                if (bannerEl) bannerEl.textContent = 'Submit your details for the Gtech Visiting Application Form to schedule a guided campus visit with our admissions team.';
+                if (targetLabelEl) targetLabelEl.innerHTML = '<i class="fa-solid fa-route text-emerald-600 mr-1"></i>Preferred University / Campus';
+                if (assistSelect) assistSelect.value = 'Visiting Application';
+                if (submitLabelEl) submitLabelEl.textContent = 'SUBMIT VISITING APPLICATION';
+            } else if (mode === 'loan') {
+                if (headerEl) headerEl.className = 'bg-gradient-to-r from-teal-700 via-emerald-600 to-cyan-600 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white';
+                if (kickerEl) kickerEl.textContent = 'Education Loan Assistance';
+                if (titleEl) titleEl.textContent = 'GTECH EDUCATION LOAN FORM';
+                if (bannerEl) bannerEl.textContent = 'Submit your details in the Gtech Education Loan Form for tuition and hostel loan guidance.';
+                if (targetLabelEl) targetLabelEl.innerHTML = '<i class="fa-solid fa-building-columns text-emerald-600 mr-1"></i>University / Institution Name';
+                if (assistSelect) assistSelect.value = 'Education Loan Apply Now';
+                if (submitLabelEl) submitLabelEl.textContent = 'SUBMIT EDUCATION LOAN FORM';
+            } else {
+                if (headerEl) headerEl.className = 'bg-gradient-to-r from-indigo-700 via-blue-700 to-sky-600 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white';
+                if (kickerEl) kickerEl.textContent = 'Merit & Marks Scholarship Desk';
+                if (titleEl) titleEl.textContent = prefillName ? `GTECH SCHOLARSHIP FORM — ${prefillName.toUpperCase()}` : 'GTECH SCHOLARSHIP FORM';
+                if (bannerEl) bannerEl.textContent = 'Submit your marks in the Gtech Scholarship Form to check scholarship slabs, fee concessions, and admission options.';
+                if (targetLabelEl) targetLabelEl.innerHTML = '<i class="fa-solid fa-award text-indigo-600 mr-1"></i>Preferred University (Optional)';
+                if (assistSelect) assistSelect.value = 'Scholarship Based on Marks';
+                if (submitLabelEl) submitLabelEl.textContent = 'SUBMIT SCHOLARSHIP FORM';
+            }
+
+            const modal = document.getElementById('scholarship-app-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeScholarshipApplicationModal() {
+            const modal = document.getElementById('scholarship-app-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function openExpertCallbackPopup(targetName) {
+            const session = getValidStudentSession();
+            const gtechId = session?.gtech_id || getOrCreateGtechId(document.getElementById('guide-email')?.value || '');
+            const idEl = document.getElementById('expert-callback-gtech-id');
+            const targetEl = document.getElementById('expert-callback-target');
+            const subEl = document.getElementById('expert-callback-sub');
+
+            if (idEl) idEl.textContent = gtechId;
+            if (targetEl) targetEl.textContent = targetName || 'Entrance Exam Application';
+            if (subEl) {
+                subEl.textContent = `Our expert will reach you within 10 mins to help you apply for ${targetName || 'your application'}.`;
+            }
+
+            const popup = document.getElementById('expert-callback-popup');
+            if (popup) {
+                popup.classList.remove('hidden');
+                popup.classList.add('flex');
+            }
+        }
+
+        function closeExpertCallbackPopup() {
+            const popup = document.getElementById('expert-callback-popup');
+            if (popup) {
+                popup.classList.add('hidden');
+                popup.classList.remove('flex');
+            }
+        }
+
+        // Intercept form submission so Gtech ID is always consistent and HTML email is sent
+        document.addEventListener('submit', async function(e) {
+            if (e.target && e.target.id === 'guidance-inquiry-form') {
+                e.preventDefault();
+                const name = document.getElementById('guide-name')?.value.trim() || '';
+                const phone = document.getElementById('guide-phone')?.value.trim() || '';
+                const email = document.getElementById('guide-email')?.value.trim().toLowerCase() || '';
+                const course = document.getElementById('guide-course')?.value || '';
+                const target = document.getElementById('guide-uni')?.value.trim() || '';
+                const assistance = document.getElementById('guide-assistance')?.value || '';
+                const inter1st = document.getElementById('guide-inter-1st')?.value.trim() || '';
+                const inter2nd = document.getElementById('guide-inter-2nd')?.value.trim() || '';
+                const interTotal = document.getElementById('guide-inter-total')?.value.trim() || '';
+                const pcm600 = document.getElementById('guide-pcm-600')?.value.trim() || '';
+                const jee = document.getElementById('guide-jee')?.value.trim() || '';
+                const eamcet = document.getElementById('guide-eamcet')?.value.trim() || '';
+
+                const session = getValidStudentSession();
+                const gtechId = session?.gtech_id || getOrCreateGtechId(email);
+                const formTitle = document.getElementById('gtech-form-title')?.textContent.trim() || 'GTECH FORM';
+
+                const btn = document.getElementById('btn-submit-guidance');
+                if (btn) btn.disabled = true;
+
+                try {
+                    await postMailApi({
+                        action: 'send-notification',
+                        to: email || 'admin@gtechadmissions.com',
+                        adminEmail: 'admin@gtechadmissions.com',
+                        subject: `${formTitle} — ${name} (${gtechId})`,
+                        text: `Submitted ${formTitle} for ${name} (${gtechId}).`,
+                        eventType: 'form_submission',
+                        details: {
+                            form_name: formTitle,
+                            gtech_id: gtechId,
+                            student_name: name,
+                            phone,
+                            email,
+                            course,
+                            target_exam_or_university: target || 'Not Specified',
+                            request_type: assistance,
+                            inter_1st_year: inter1st || '-',
+                            inter_2nd_year: inter2nd || '-',
+                            inter_total: interTotal || '-',
+                            pcm_out_of_600: pcm600 || '-',
+                            jee_score: jee || '-',
+                            eamcet_rank: eamcet || '-'
+                        }
+                    });
+                } catch (_) {}
+
+                if (btn) btn.disabled = false;
+                closeScholarshipApplicationModal();
+                showHomePortalView();
+
+                if (currentFormMode === 'application') {
+                    openExpertCallbackPopup(target || 'Entrance Exam');
+                } else if (typeof showToast === 'function') {
+                    showToast('Submitted!', `${formTitle} received (${gtechId}). Expert will reach out shortly.`);
+                }
+            }
+        }, true);
+
+        // Keep Student Dashboard and Home Portal open without redirecting to login screen
+        const originalOpenStudentDashboardModal = window.openStudentDashboardModal;
+        window.openStudentDashboardModal = function(tabName = 'dashboard') {
+            const session = getValidStudentSession();
+            showHomePortalView();
+            if (session) {
+                syncStudentIdentityUI(session);
+            }
+            if (typeof originalOpenStudentDashboardModal === 'function') {
+                originalOpenStudentDashboardModal(tabName);
+            } else {
+                const modal = document.getElementById('student-dashboard-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+                if (typeof switchDashboardSection === 'function') {
+                    switchDashboardSection(tabName);
+                }
+            }
+        };
 
         function closeEarlyOfferPopup() {
             sessionStorage.setItem('gtech_early_offer_dismissed', '1');
@@ -1380,18 +1770,39 @@
             }
         }
 
-        function keepOnlyScholarshipOptionInCards() {
+        // Convert Entrance Exam card CTA buttons into "Apply Now" opening the Gtech Application Form
+        function enhanceEntranceExamCards() {
             const grid = document.getElementById('universities-grid');
             if (!grid) return;
+
             grid.querySelectorAll('button, a').forEach(el => {
-                const t = (el.textContent || '').toLowerCase();
-                if (
-                    t.includes('visiting') ||
-                    t.includes('expert') ||
-                    t.includes('concession') ||
-                    t.includes('call')
-                ) {
+                const text = (el.textContent || '').trim().toLowerCase();
+                if (text.includes('visiting') || text.includes('expert') || text.includes('concession')) {
                     el.remove();
+                    return;
+                }
+
+                const card = el.closest('article, .bg-white, [class*="rounded-"]');
+                const cardText = (card?.textContent || '').toLowerCase();
+                const isExamCard =
+                    cardText.includes('eamcet') ||
+                    cardText.includes('jee') ||
+                    cardText.includes('bitsat') ||
+                    cardText.includes('wbjee') ||
+                    cardText.includes('entrance exam') ||
+                    cardText.includes('application fee');
+
+                if (isExamCard && (text.includes('scholarship') || text.includes('apply') || text.includes('form'))) {
+                    const examTitle =
+                        card?.querySelector('h3, h4')?.textContent?.trim() ||
+                        card?.textContent?.split('\n').map(s => s.trim()).find(Boolean) ||
+                        'Entrance Exam';
+                    el.textContent = 'Apply Now';
+                    el.onclick = function(ev) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        openGtechFormModal({ mode: 'application', targetName: examTitle });
+                    };
                 }
             });
         }
@@ -1405,20 +1816,15 @@
                 switchFirstScreenMode('register');
             }
 
-            const existingSession = localStorage.getItem('gtech_student_session');
-            if (existingSession) {
-                try {
-                    const parsed = JSON.parse(existingSession);
-                    if (parsed && parsed.email) {
-                        goToHomePage(parsed);
-                    }
-                } catch (_) {}
+            const existingSession = getValidStudentSession();
+            if (existingSession && existingSession.email) {
+                goToHomePage(existingSession);
             }
 
             const grid = document.getElementById('universities-grid');
             if (grid) {
-                keepOnlyScholarshipOptionInCards();
-                new MutationObserver(keepOnlyScholarshipOptionInCards).observe(grid, { childList: true, subtree: true });
+                enhanceEntranceExamCards();
+                new MutationObserver(enhanceEntranceExamCards).observe(grid, { childList: true, subtree: true });
             }
         });
     </script>

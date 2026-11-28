@@ -1127,7 +1127,7 @@
     </div>
 
     <script>
-        let gtechAuthOtp = '';
+        let gtechAuthOtpToken = '';
         let gtechAuthPending = null;
         let gtechAuthTimer = null;
 
@@ -1175,22 +1175,17 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        async function triggerMailAlert(payload) {
-            try {
-                const response = await fetch('/api/mail', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        ...payload,
-                        adminEmail: 'admin@gtechadmissions.com',
-                        sentAt: new Date().toISOString()
-                    })
-                });
-                return await response.json().catch(() => ({ ok: response.ok }));
-            } catch (err) {
-                console.warn('Mail trigger warning:', err);
-                return { ok: false };
+        async function postMailApi(payload) {
+            const response = await fetch('/api/mail', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || `Request failed with status ${response.status}`);
             }
+            return data;
         }
 
         function startFirstOtpTimer(timerId, resendId) {
@@ -1241,38 +1236,57 @@
             errEl?.classList.add('hidden');
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending OTP...</span>'; }
 
-            gtechAuthOtp = String(Math.floor(100000 + Math.random() * 900000));
-            gtechAuthPending = { email, name: email.split('@')[0], gtech_id: 'GTECH' + Math.floor(6000 + Math.random() * 3999) };
+            try {
+                const res = await postMailApi({ action: 'send-otp', email, purpose: 'login' });
+                gtechAuthOtpToken = res.otpToken || '';
+                gtechAuthPending = {
+                    email,
+                    name: email.split('@')[0],
+                    gtech_id: 'GTECH' + Math.floor(6000 + Math.random() * 3999)
+                };
 
-            await triggerMailAlert({
-                type: 'LOGIN_OTP',
-                email,
-                otp: gtechAuthOtp,
-                subject: `Your Gtech Admissions Gmail Login OTP: ${gtechAuthOtp}`
-            });
-
-            document.getElementById('first-login-otp-box')?.classList.remove('hidden');
-            startFirstOtpTimer('first-login-timer', 'btn-first-login-resend');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Send Gmail OTP</span>'; }
-            if (typeof showToast === 'function') showToast('OTP Sent', `Login OTP sent to ${email}`);
+                document.getElementById('first-login-otp-box')?.classList.remove('hidden');
+                startFirstOtpTimer('first-login-timer', 'btn-first-login-resend');
+                if (typeof showToast === 'function') showToast('OTP Sent', `Login OTP sent to ${email}`);
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message || 'Failed to send OTP.'; errEl.classList.remove('hidden'); }
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Send Gmail OTP</span>'; }
+            }
         }
 
         async function handleFirstLoginVerifyOtp() {
             const code = getFirstOtpCode('fl');
             const errEl = document.getElementById('first-login-error');
-            if (code.length !== 6 || (gtechAuthOtp && code !== gtechAuthOtp)) {
-                if (errEl) { errEl.textContent = 'Please enter the valid 6-digit OTP sent to your Gmail.'; errEl.classList.remove('hidden'); }
+            if (code.length !== 6 || !gtechAuthPending?.email) {
+                if (errEl) { errEl.textContent = 'Please enter the 6-digit OTP sent to your Gmail.'; errEl.classList.remove('hidden'); }
                 return;
             }
-            errEl?.classList.add('hidden');
-            await triggerMailAlert({
-                type: 'STUDENT_LOGIN_ALERT',
-                email: gtechAuthPending.email,
-                name: gtechAuthPending.name,
-                gtechId: gtechAuthPending.gtech_id
-            });
-            if (typeof showToast === 'function') showToast('Login Successful', 'Navigating to Home Page...');
-            goToHomePage(gtechAuthPending);
+
+            try {
+                await postMailApi({
+                    action: 'verify-otp',
+                    email: gtechAuthPending.email,
+                    purpose: 'login',
+                    code,
+                    token: gtechAuthOtpToken
+                });
+                errEl?.classList.add('hidden');
+
+                await postMailApi({
+                    action: 'send-notification',
+                    to: 'admin@gtechadmissions.com',
+                    subject: `Student Login: ${gtechAuthPending.name} (${gtechAuthPending.gtech_id})`,
+                    text: `Student ${gtechAuthPending.name} (${gtechAuthPending.email}) logged in with Gtech ID ${gtechAuthPending.gtech_id}.`,
+                    eventType: 'student_login',
+                    details: gtechAuthPending
+                }).catch(() => {});
+
+                if (typeof showToast === 'function') showToast('Login Successful', 'Navigating to Home Page...');
+                goToHomePage(gtechAuthPending);
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message || 'Invalid or expired OTP code.'; errEl.classList.remove('hidden'); }
+            }
         }
 
         async function handleFirstRegisterSendOtp(e) {
@@ -1293,49 +1307,65 @@
             errEl?.classList.add('hidden');
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending OTP...</span>'; }
 
-            gtechAuthOtp = String(Math.floor(100000 + Math.random() * 900000));
-            const id = 'GTECH' + Math.floor(6000 + Math.random() * 3999);
-            gtechAuthPending = { name, phone, email, referral, gtech_id: id };
+            try {
+                const res = await postMailApi({ action: 'send-otp', email, purpose: 'register' });
+                gtechAuthOtpToken = res.otpToken || '';
+                const id = 'GTECH' + Math.floor(6000 + Math.random() * 3999);
+                gtechAuthPending = { name, phone, email, referral, gtech_id: id };
 
-            await triggerMailAlert({
-                type: 'REGISTRATION_OTP',
-                name,
-                phone,
-                email,
-                referral,
-                gtechId: id,
-                otp: gtechAuthOtp,
-                subject: `Your Gtech Admissions Gmail Registration OTP: ${gtechAuthOtp}`
-            });
-
-            document.getElementById('first-reg-otp-box')?.classList.remove('hidden');
-            startFirstOtpTimer('first-reg-timer', 'btn-first-reg-resend');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Send Gmail OTP &amp; Register</span>'; }
-            if (typeof showToast === 'function') showToast('OTP Sent', `Verification OTP sent to ${email}`);
+                document.getElementById('first-reg-otp-box')?.classList.remove('hidden');
+                startFirstOtpTimer('first-reg-timer', 'btn-first-reg-resend');
+                if (typeof showToast === 'function') showToast('OTP Sent', `Verification OTP sent to ${email}`);
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message || 'Failed to send OTP.'; errEl.classList.remove('hidden'); }
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Send Gmail OTP &amp; Register</span>'; }
+            }
         }
 
         async function handleFirstRegisterVerifyOtp() {
             const code = getFirstOtpCode('fr');
             const errEl = document.getElementById('first-reg-error');
-            if (code.length !== 6 || (gtechAuthOtp && code !== gtechAuthOtp)) {
-                if (errEl) { errEl.textContent = 'Please enter the valid 6-digit OTP sent to your Gmail.'; errEl.classList.remove('hidden'); }
+            if (code.length !== 6 || !gtechAuthPending?.email) {
+                if (errEl) { errEl.textContent = 'Please enter the 6-digit OTP sent to your Gmail.'; errEl.classList.remove('hidden'); }
                 return;
             }
-            errEl?.classList.add('hidden');
-            await triggerMailAlert({
-                type: 'NEW_REGISTRATION_ALERT',
-                name: gtechAuthPending.name,
-                phone: gtechAuthPending.phone,
-                email: gtechAuthPending.email,
-                referral: gtechAuthPending.referral || 'None',
-                gtechId: gtechAuthPending.gtech_id
-            });
-            if (typeof showToast === 'function') showToast('Registered!', `Welcome ${gtechAuthPending.name}! Navigating to Home Page...`);
-            goToHomePage(gtechAuthPending);
-            const offerModal = document.getElementById('early-offer-center-modal');
-            const idDisp = document.getElementById('offer-popup-gtech-id');
-            if (idDisp) idDisp.textContent = gtechAuthPending.gtech_id;
-            if (offerModal) { offerModal.classList.remove('hidden'); offerModal.classList.add('flex'); }
+
+            try {
+                await postMailApi({
+                    action: 'verify-otp',
+                    email: gtechAuthPending.email,
+                    purpose: 'register',
+                    code,
+                    token: gtechAuthOtpToken
+                });
+                errEl?.classList.add('hidden');
+
+                await postMailApi({
+                    action: 'send-notification',
+                    to: gtechAuthPending.email,
+                    adminEmail: 'admin@gtechadmissions.com',
+                    subject: `Welcome to Gtech Admissions — Your ID: ${gtechAuthPending.gtech_id}`,
+                    text: `Welcome ${gtechAuthPending.name}! Your Gtech ID is ${gtechAuthPending.gtech_id}.`,
+                    eventType: 'new_student_registered',
+                    details: {
+                        full_name: gtechAuthPending.name,
+                        student_id: gtechAuthPending.gtech_id,
+                        email: gtechAuthPending.email,
+                        phone: gtechAuthPending.phone,
+                        referral: gtechAuthPending.referral || 'None'
+                    }
+                }).catch(() => {});
+
+                if (typeof showToast === 'function') showToast('Registered!', `Welcome ${gtechAuthPending.name}! Navigating to Home Page...`);
+                goToHomePage(gtechAuthPending);
+                const offerModal = document.getElementById('early-offer-center-modal');
+                const idDisp = document.getElementById('offer-popup-gtech-id');
+                if (idDisp) idDisp.textContent = gtechAuthPending.gtech_id;
+                if (offerModal) { offerModal.classList.remove('hidden'); offerModal.classList.add('flex'); }
+            } catch (err) {
+                if (errEl) { errEl.textContent = err.message || 'Invalid or expired OTP code.'; errEl.classList.remove('hidden'); }
+            }
         }
 
         function closeEarlyOfferPopup() {

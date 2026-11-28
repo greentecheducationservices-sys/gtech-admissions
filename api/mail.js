@@ -1,12 +1,12 @@
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
-const OTP_SECRET = process.env.OTP_SECRET || 'gtech-admissions-otp-secret-change-me';
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.hostinger.com';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
-const SMTP_USER = process.env.SMTP_USER || 'admin@gtechadmissions.com';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@gtechadmissions.com';
+const OTP_SECRET = (process.env.OTP_SECRET || 'gtech-admissions-otp-secret-change-me').trim();
+const SMTP_HOST = (process.env.SMTP_HOST || 'smtp.hostinger.com').trim();
+const SMTP_PORT = Number((process.env.SMTP_PORT || '465').trim());
+const SMTP_USER = (process.env.SMTP_USER || 'admin@gtechadmissions.com').trim();
+const SMTP_PASS = (process.env.SMTP_PASS || '').trim();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@gtechadmissions.com').trim();
 
 function createTransporter() {
   if (!SMTP_PASS) {

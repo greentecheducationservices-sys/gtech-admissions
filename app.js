@@ -6,6 +6,8 @@ const ADMIN_EMAIL = 'admin@gtechadmissions.com';
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '/api/mail';
 const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || '/api/mail';
 const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
+const SESSION_KEY = 'gtech_student_session';
+const ID_MAP_KEY = 'gtech_id_by_email';
 
 const SCH_OPTION_LABELS = {
     inter: {
@@ -62,12 +64,101 @@ const state = {
     budgetPerYear: null
 };
 
+function readIdMap() {
+    try {
+        return JSON.parse(localStorage.getItem(ID_MAP_KEY) || '{}') || {};
+    } catch (_) {
+        return {};
+    }
+}
+
+function writeIdMap(map) {
+    try {
+        localStorage.setItem(ID_MAP_KEY, JSON.stringify(map || {}));
+    } catch (_) {}
+}
+
+function getPersistentGtechIdForEmail(email, preferredId = '') {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPref = String(preferredId || '').trim().toUpperCase();
+    const idMap = readIdMap();
+
+    if (cleanEmail && idMap[cleanEmail]) {
+        return idMap[cleanEmail];
+    }
+
+    if (cleanPref) {
+        if (cleanEmail) {
+            idMap[cleanEmail] = cleanPref;
+            writeIdMap(idMap);
+        }
+        return cleanPref;
+    }
+
+    const existing = state.currentStudent || (() => {
+        try {
+            return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+        } catch (_) {
+            return null;
+        }
+    })();
+
+    const existingId = String(existing?.student_id || existing?.gtech_id || existing?.id || '').trim().toUpperCase();
+    if (existingId && (!cleanEmail || String(existing?.email || '').trim().toLowerCase() === cleanEmail)) {
+        if (cleanEmail) {
+            idMap[cleanEmail] = existingId;
+            writeIdMap(idMap);
+        }
+        return existingId;
+    }
+
+    const generated = `GTECH${Math.floor(6000 + Math.random() * 3999)}`;
+    if (cleanEmail) {
+        idMap[cleanEmail] = generated;
+        writeIdMap(idMap);
+    }
+    return generated;
+}
+
+function normalizeStudentProfile(rawProfile) {
+    if (!rawProfile || typeof rawProfile !== 'object') return null;
+    const email = String(rawProfile.email || '').trim().toLowerCase();
+    const rawId = String(rawProfile.student_id || rawProfile.gtech_id || rawProfile.id || '').trim().toUpperCase();
+    const gtechId = getPersistentGtechIdForEmail(email, rawId);
+    const fullName = rawProfile.full_name || rawProfile.name || (email ? email.split('@')[0] : 'Gtech Student');
+    const mobile = rawProfile.mobile || rawProfile.phone || '';
+
+    return {
+        ...rawProfile,
+        id: gtechId,
+        student_id: gtechId,
+        gtech_id: gtechId,
+        referral_code: String(rawProfile.referral_code || gtechId).toUpperCase(),
+        full_name: fullName,
+        name: fullName,
+        mobile,
+        phone: mobile,
+        email,
+        loginAt: rawProfile.loginAt || Date.now()
+    };
+}
+
+function saveStudentSession(rawProfile) {
+    const normalized = normalizeStudentProfile(rawProfile);
+    if (!normalized) return null;
+    state.currentStudent = normalized;
+    try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(normalized));
+    } catch (_) {}
+    return normalized;
+}
+
 function syncPageScreenVisibility(forceShowHome = false) {
     const authScreen = document.getElementById('auth-first-screen');
     const homeContent = document.getElementById('home-page-content');
     if (!authScreen && !homeContent) return;
 
-    const hasSession = Boolean(state.currentStudent || localStorage.getItem('gtech_student_session'));
+    const hasSession = Boolean(state.currentStudent || localStorage.getItem(SESSION_KEY));
     if (forceShowHome || hasSession) {
         authScreen?.classList.add('hidden');
         homeContent?.classList.remove('hidden');
@@ -468,6 +559,9 @@ function proceedWithScholarshipApplication() {
 }
 
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
+    const emailForId = details?.email || to || state.currentStudent?.email || '';
+    const gtechId = details?.gtech_id || details?.student_id || getPersistentGtechIdForEmail(emailForId, state.currentStudent?.student_id);
+
     const payload = {
         action: 'send-notification',
         to: to || ADMIN_EMAIL,
@@ -476,7 +570,11 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
         subject,
         text,
         eventType,
-        details,
+        details: {
+            ...details,
+            gtech_id: gtechId,
+            student_id: gtechId
+        },
         timestamp: new Date().toISOString()
     };
 
@@ -590,7 +688,13 @@ function startOtpCountdown(type, seconds = 60) {
     }
 }
 
-async function generateNextGtechId() {
+async function generateNextGtechId(email = '') {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const idMap = readIdMap();
+    if (cleanEmail && idMap[cleanEmail]) {
+        return idMap[cleanEmail];
+    }
+
     let maxNumber = 6000;
     try {
         const { data } = await _supabase
@@ -621,7 +725,12 @@ async function generateNextGtechId() {
 
     const nextNum = maxNumber + 1;
     localStorage.setItem('gtech_last_seq_num', String(nextNum));
-    return `GTECH${nextNum}`;
+    const nextId = `GTECH${nextNum}`;
+    if (cleanEmail) {
+        idMap[cleanEmail] = nextId;
+        writeIdMap(idMap);
+    }
+    return nextId;
 }
 
 function detectIncomingReferralLink() {
@@ -1562,15 +1671,18 @@ function renderUniversities() {
 
 function openScholarshipModal(uniName = '', assistanceType = '') {
     if (!state.currentStudent) {
-        state.pendingPostLoginAction = {
-            type: 'scholarship_form',
-            uniName: uniName || '',
-            assistanceType: assistanceType || 'Scholarship Based on Marks'
-        };
-        const formLabel = assistanceType || 'Scholarship Based on Marks';
-        openAuthModal('login', `Please sign in or register first to access the ${formLabel} form.`);
-        showToast('Login Required', `Please login or register first to open ${formLabel}.`, 'error');
-        return;
+        const saved = restoreStudentSessionFromStorage();
+        if (!saved) {
+            state.pendingPostLoginAction = {
+                type: 'scholarship_form',
+                uniName: uniName || '',
+                assistanceType: assistanceType || 'Scholarship Based on Marks'
+            };
+            const formLabel = assistanceType || 'Scholarship Based on Marks';
+            openAuthModal('login', `Please sign in or register first to access the ${formLabel} form.`);
+            showToast('Login Required', `Please login or register first to open ${formLabel}.`, 'error');
+            return;
+        }
     }
 
     const modal = document.getElementById('scholarship-app-modal');
@@ -1618,18 +1730,20 @@ function closeScholarshipModal() {
 }
 
 function prefillGuidanceFormWithStudent() {
-    if (!state.currentStudent) return;
+    const stu = state.currentStudent || restoreStudentSessionFromStorage();
+    if (!stu) return;
     const nameEl = document.getElementById('guide-name');
     const phoneEl = document.getElementById('guide-phone');
     const emailEl = document.getElementById('guide-email');
-    if (nameEl) nameEl.value = state.currentStudent.full_name || '';
-    if (phoneEl) phoneEl.value = state.currentStudent.mobile || '';
-    if (emailEl) emailEl.value = state.currentStudent.email || '';
+    if (nameEl && !nameEl.value) nameEl.value = stu.full_name || stu.name || '';
+    if (phoneEl && !phoneEl.value) phoneEl.value = stu.mobile || stu.phone || '';
+    if (emailEl && !emailEl.value) emailEl.value = stu.email || '';
 }
 
 async function handleGuidanceSubmission(e) {
     e.preventDefault();
     const submitBtn = document.getElementById('btn-submit-guidance');
+    if (submitBtn && submitBtn.dataset.submitting === 'true') return;
 
     const name = document.getElementById('guide-name').value.trim();
     const phone = document.getElementById('guide-phone').value.replace(/\D+/g, '').trim();
@@ -1657,6 +1771,8 @@ async function handleGuidanceSubmission(e) {
         return;
     }
 
+    const gtechId = getPersistentGtechIdForEmail(email, state.currentStudent?.student_id);
+
     const marksSummary = [
         inter1st ? `Inter 1st Year: ${inter1st}` : '',
         inter2nd ? `Inter 2nd Year: ${inter2nd}` : '',
@@ -1668,6 +1784,7 @@ async function handleGuidanceSubmission(e) {
 
     const payload = {
         id: Date.now(),
+        gtech_id: gtechId,
         name,
         phone,
         email,
@@ -1686,8 +1803,10 @@ async function handleGuidanceSubmission(e) {
 
     try {
         if (submitBtn) {
+            submitBtn.dataset.submitting = 'true';
             submitBtn.disabled = true;
-            submitBtn.querySelector('span').textContent = 'Submitting...';
+            const span = submitBtn.querySelector('span');
+            if (span) span.textContent = 'Submitting...';
         }
 
         let { error } = await _supabase.from('inquiries').insert([payload]);
@@ -1700,7 +1819,7 @@ async function handleGuidanceSubmission(e) {
                 email: payload.email,
                 branch: payload.branch,
                 uni: payload.uni,
-                jee_score: `${assistanceType}${marksSummary ? ' • ' + marksSummary : ''}`,
+                jee_score: `${assistanceType}${marksSummary ? ' • ' + marksSummary : ''} • Gtech ID: ${gtechId}`,
                 referral_code: payload.referral_code,
                 status: 'Pending Callback'
             };
@@ -1719,7 +1838,7 @@ async function handleGuidanceSubmission(e) {
             to: email,
             ccAdmin: true,
             eventType: 'application_submitted',
-            subject: `Gtech Admissions: ${assistanceType} Submitted (${name})`,
+            subject: `Gtech Admissions (${gtechId}): ${assistanceType} Submitted (${name})`,
             text: [
                 `Hello ${name},`,
                 ``,
@@ -1727,6 +1846,7 @@ async function handleGuidanceSubmission(e) {
                 `Our expert will reach you within 10 mins.`,
                 ``,
                 `Application Details:`,
+                `• Gtech ID: ${gtechId}`,
                 `• Name: ${name}`,
                 `• Phone: ${phone}`,
                 `• Email: ${email}`,
@@ -1742,7 +1862,7 @@ async function handleGuidanceSubmission(e) {
 
         showToast(
             'Application Submitted',
-            'Application submitted! Update sent to your mail and our expert will reach you within 10 mins.',
+            `Submitted under ${gtechId}! Update sent to your mail and our expert will reach you within 10 mins.`,
             'success'
         );
         e.target.reset();
@@ -1752,8 +1872,10 @@ async function handleGuidanceSubmission(e) {
         closeScholarshipApplicationModal();
     } finally {
         if (submitBtn) {
+            submitBtn.dataset.submitting = 'false';
             submitBtn.disabled = false;
-            submitBtn.querySelector('span').textContent = 'SUBMIT APPLICATION';
+            const span = submitBtn.querySelector('span');
+            if (span) span.textContent = 'SUBMIT APPLICATION';
         }
     }
 }
@@ -1859,6 +1981,7 @@ async function requestEmailOtp(email, purpose, extra = {}) {
         throw new Error('Email address is required to send OTP.');
     }
 
+    const gtechId = getPersistentGtechIdForEmail(cleanEmail, extra.gtechId || '');
     const endpoint = OTP_BACKEND_URL || '/api/mail';
     const res = await fetch(endpoint, {
         method: 'POST',
@@ -1867,6 +1990,7 @@ async function requestEmailOtp(email, purpose, extra = {}) {
             action: 'send-otp',
             email: cleanEmail,
             purpose: cleanPurpose,
+            gtechId,
             ...extra
         })
     });
@@ -1944,10 +2068,12 @@ async function handleSendRegistrationOtp(e) {
             return;
         }
 
+        const gtechId = await generateNextGtechId(email);
         state.pendingRegistration = {
             full_name: fullName,
             mobile: phone,
             email,
+            gtech_id: gtechId,
             referred_by_code: referralCode || state.incomingReferralCode || null
         };
         localStorage.setItem('gtech_pending_reg', JSON.stringify(state.pendingRegistration));
@@ -1955,6 +2081,7 @@ async function handleSendRegistrationOtp(e) {
         await requestEmailOtp(email, 'register', {
             name: fullName,
             phone,
+            gtechId,
             referral: referralCode || state.incomingReferralCode || ''
         });
         clearOtpBoxes('reg-otp-box');
@@ -2005,7 +2132,7 @@ async function handleVerifyRegistrationOtp() {
 
         await verifyEmailOtpCode(regData.email, code, 'register');
 
-        const gtechId = await generateNextGtechId();
+        const gtechId = await generateNextGtechId(regData.email);
         const earlyOfferQualified = isBeforeMarch16_2027();
         const earlyOfferText = earlyOfferQualified
             ? '₹2,000 OFF Unlocked (₹1,000 Admission Fee + ₹1,000 College Fee before March 16, 2027)'
@@ -2055,17 +2182,18 @@ async function handleVerifyRegistrationOtp() {
             throw new Error(error.message);
         }
 
-        const profile = { ...newStudent, ...(inserted || {}) };
-        profile.student_id = profile.student_id || profile.id || gtechId;
+        const profile = saveStudentSession({
+            ...newStudent,
+            ...(inserted || {}),
+            student_id: inserted?.student_id || inserted?.id || gtechId
+        });
         if (typeof profile.early_offer_eligible !== 'boolean') {
             profile.early_offer_eligible = earlyOfferQualified;
         }
 
-        state.currentStudent = profile;
         state.pendingRegistration = null;
         state.otpTokens.register = '';
         localStorage.removeItem('gtech_pending_reg');
-        localStorage.setItem('gtech_student_session', JSON.stringify(profile));
 
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
@@ -2146,10 +2274,11 @@ async function handleSendLoginOtp(e) {
             return;
         }
 
+        const gtechId = getPersistentGtechIdForEmail(email, profile.student_id || profile.id || '');
         state.pendingLoginEmail = email;
         await requestEmailOtp(email, 'login', {
             name: profile.full_name || 'Student',
-            gtechId: profile.student_id || profile.id || ''
+            gtechId
         });
         clearOtpBoxes('login-otp-box');
         document.getElementById('login-otp-panel')?.classList.remove('hidden');
@@ -2204,15 +2333,13 @@ async function handleVerifyLoginOtp() {
 
         await verifyEmailOtpCode(email, code, 'login');
 
-        profile.student_id = profile.student_id || profile.id || 'GTECH6001';
-        state.currentStudent = profile;
+        const savedProfile = saveStudentSession(profile);
         state.otpTokens.login = '';
-        localStorage.setItem('gtech_student_session', JSON.stringify(profile));
 
-        updateHeaderForLoggedInStudent(profile);
+        updateHeaderForLoggedInStudent(savedProfile);
         prefillGuidanceFormWithStudent();
         syncPageScreenVisibility(true);
-        showToast('Welcome Back', `Signed in as ${profile.full_name}.`, 'success');
+        showToast('Welcome Back', `Signed in as ${savedProfile.full_name} (${savedProfile.student_id}).`, 'success');
         continueAfterAuth();
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
@@ -2242,13 +2369,14 @@ function resetHeaderToLoggedOut() {
 }
 
 function updateHeaderForLoggedInStudent(profile) {
+    const norm = normalizeStudentProfile(profile);
     const dashBtn = document.getElementById('header-dashboard-btn');
     const loginBtn = document.getElementById('header-login-btn');
     const nameSpan = document.getElementById('header-student-name');
-    if (dashBtn && loginBtn && nameSpan) {
+    if (dashBtn && loginBtn && nameSpan && norm) {
         dashBtn.classList.remove('hidden');
         loginBtn.classList.add('hidden');
-        nameSpan.textContent = profile.full_name || 'Student Portal';
+        nameSpan.textContent = `${norm.full_name} (${norm.student_id})`;
     }
 }
 
@@ -2266,10 +2394,8 @@ function listenToAuthChanges() {
                 .maybeSingle();
 
             if (profile) {
-                profile.student_id = profile.student_id || profile.id || 'GTECH6001';
-                state.currentStudent = profile;
-                localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-                updateHeaderForLoggedInStudent(profile);
+                const saved = saveStudentSession(profile);
+                updateHeaderForLoggedInStudent(saved);
                 prefillGuidanceFormWithStudent();
                 syncPageScreenVisibility(true);
             }
@@ -2277,30 +2403,34 @@ function listenToAuthChanges() {
             state.authUser = null;
             state.currentStudent = null;
             state.financeRecord = null;
-            localStorage.removeItem('gtech_student_session');
+            localStorage.removeItem(SESSION_KEY);
             resetHeaderToLoggedOut();
             syncPageScreenVisibility(false);
         }
     });
 }
 
-async function restoreStudentSession() {
-    const saved = localStorage.getItem('gtech_student_session');
-    if (saved) {
-        try {
-            const profile = JSON.parse(saved);
-            if (profile && (profile.email || profile.full_name || profile.gtech_id || profile.student_id)) {
-                profile.full_name = profile.full_name || profile.name || 'Gtech Student';
-                profile.student_id = profile.student_id || profile.id || profile.gtech_id || 'GTECH6001';
-                state.currentStudent = profile;
-                updateHeaderForLoggedInStudent(profile);
-                prefillGuidanceFormWithStudent();
-                syncPageScreenVisibility(true);
-                return;
-            }
-        } catch (_) {
-            localStorage.removeItem('gtech_student_session');
+function restoreStudentSessionFromStorage() {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (!saved) return null;
+    try {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.email || parsed.full_name || parsed.name || parsed.gtech_id || parsed.student_id)) {
+            return saveStudentSession(parsed);
         }
+    } catch (_) {
+        localStorage.removeItem(SESSION_KEY);
+    }
+    return null;
+}
+
+async function restoreStudentSession() {
+    const profile = restoreStudentSessionFromStorage();
+    if (profile) {
+        updateHeaderForLoggedInStudent(profile);
+        prefillGuidanceFormWithStudent();
+        syncPageScreenVisibility(true);
+        return;
     }
 
     syncPageScreenVisibility(false);
@@ -2308,6 +2438,7 @@ async function restoreStudentSession() {
 
 function closeStudentDashboardModal() {
     const modal = document.getElementById('student-dashboard-modal');
+    if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
@@ -2317,7 +2448,7 @@ async function handleStudentLogout() {
     state.authUser = null;
     state.currentStudent = null;
     state.financeRecord = null;
-    localStorage.removeItem('gtech_student_session');
+    localStorage.removeItem(SESSION_KEY);
     resetHeaderToLoggedOut();
     closeStudentDashboardModal();
     syncPageScreenVisibility(false);
@@ -2541,11 +2672,11 @@ function closeUniversityStatusModal() {
 }
 
 function renderStudentDashboard() {
-    const stu = state.currentStudent;
+    const stu = state.currentStudent || restoreStudentSessionFromStorage();
     if (!stu) return;
 
-    const gtechCode = (stu.student_id || stu.id || 'GTECH6001').toUpperCase();
-    const myRefCode = (stu.referral_code || gtechCode).toUpperCase();
+    const gtechCode = getPersistentGtechIdForEmail(stu.email, stu.student_id || stu.id || '');
+    const myRefCode = String(stu.referral_code || gtechCode).toUpperCase();
 
     document.getElementById('dash-topbar-name').textContent = stu.full_name || 'Student Portal';
     document.getElementById('dash-topbar-id').textContent = `Gtech ID: ${gtechCode}`;
@@ -2654,20 +2785,23 @@ function renderStudentDashboard() {
 }
 
 async function openStudentDashboardModal(defaultTab = 'dashboard') {
-    if (!state.currentStudent) {
+    const stu = state.currentStudent || restoreStudentSessionFromStorage();
+    if (!stu) {
         openAuthModal('login');
         return;
     }
 
-    const myCode = (state.currentStudent.referral_code || state.currentStudent.student_id || state.currentStudent.id || 'GTECH6001').toUpperCase();
+    const myCode = getPersistentGtechIdForEmail(stu.email, stu.referral_code || stu.student_id || stu.id || '');
 
     await fetchInquiriesFromSupabase();
-    state.financeRecord = await fetchStudentFinancialDetails(state.currentStudent);
+    state.financeRecord = await fetchStudentFinancialDetails(stu);
     state.referredStudents = await fetchReferredStudents(myCode);
 
     const modal = document.getElementById('student-dashboard-modal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
 
     switchDashboardSection(defaultTab);
     renderStudentDashboard();
@@ -2842,7 +2976,6 @@ window.copyMyReferralLink = copyMyReferralLink;
 window.shareReferralWhatsApp = shareReferralWhatsApp;
 window.shareReferralInstagram = shareReferralInstagram;
 window.setStateFilter = setStateFilter;
-window.handleGuidanceSubmission = handleGuidanceSubmission;
 window.updateCardScoreAndRefresh = updateCardScoreAndRefresh;
 window.nextSlide = nextSlide;
 window.prevSlide = prevSlide;

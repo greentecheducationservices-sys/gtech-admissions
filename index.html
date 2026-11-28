@@ -35,230 +35,231 @@
 <body class="bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 text-slate-800 font-sans selection:bg-sky-600 selection:text-white overflow-x-hidden">
 
     <!-- ===================================================================== -->
-    <!-- 1. FIRST-SCREEN LOGIN & REGISTER PAGE (NAVIGATES TO HOME ON LOGIN)   -->
+    <!-- 1. FIRST-SCREEN LOGIN & REGISTER PAGE (APP VIEW, NO PAGE SCROLL)     -->
     <!-- ===================================================================== -->
-    <section id="auth-first-screen" class="min-h-screen w-full bg-gradient-to-br from-[#e7f2fe] via-[#f4f9ff] to-[#e6f7ef] flex flex-col justify-between relative overflow-hidden">
+    <section id="auth-first-screen" class="h-dvh w-full overflow-hidden lg:min-h-screen lg:overflow-x-hidden bg-gradient-to-br from-[#e7f2fe] via-[#f4f9ff] to-[#e6f7ef] flex flex-col justify-between relative">
         <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-sky-300/20 blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-emerald-300/20 blur-3xl pointer-events-none"></div>
 
         <!-- Top Bar on Login / Register Page -->
-        <div class="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-8 pt-4 sm:pt-6 flex items-center justify-between gap-3">
-            <a href="#" onclick="event.preventDefault(); switchFirstScreenMode('login');" class="flex items-center space-x-2.5 shrink-0">
-                <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-10 sm:h-12 w-auto rounded-xl bg-white border border-sky-200 p-1 object-contain shadow-xs">
+        <div class="relative z-20 max-w-7xl w-full mx-auto px-3.5 sm:px-8 pt-2.5 sm:pt-6 flex items-center justify-between gap-2 shrink-0">
+            <a href="#" onclick="event.preventDefault(); switchFirstScreenMode('login');" class="flex items-center space-x-2 shrink-0">
+                <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-8 sm:h-12 w-auto rounded-xl bg-white border border-sky-200 p-1 object-contain shadow-xs">
                 <div>
-                    <span class="font-black text-base sm:text-xl tracking-tight text-[#0c2d57] block leading-none">GTECH</span>
-                    <span class="font-bold text-xs sm:text-sm text-[#16a34a] block leading-tight">Admissions</span>
+                    <span class="font-black text-sm sm:text-xl tracking-tight text-[#0c2d57] block leading-none">GTECH</span>
+                    <span class="font-bold text-[11px] sm:text-sm text-[#16a34a] block leading-tight">Admissions</span>
                 </div>
             </a>
 
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-2">
                 <span id="first-screen-switch-label" class="text-xs font-bold text-slate-700 hidden sm:inline">New User?</span>
-                <button type="button" id="first-screen-switch-btn" onclick="switchFirstScreenMode('register')" class="px-4 py-2 rounded-full bg-white hover:bg-emerald-50 text-[#16a34a] border-2 border-[#16a34a] font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <button type="button" id="first-screen-switch-btn" onclick="switchFirstScreenMode('register')" class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white hover:bg-emerald-50 text-[#16a34a] border-2 border-[#16a34a] font-extrabold text-[11px] sm:text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                     <span>Register Now</span>
-                    <i class="fa-solid fa-arrow-right text-[11px]"></i>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Main Two-Column Auth Layout (No Photos; Only Requested Highlights; Gmail Login/Register) -->
-        <div class="relative z-10 max-w-6xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-10 my-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+        <!-- Main App-Like Auth Container (Fits in Mobile Viewport Without Scrolling) -->
+        <div class="relative z-10 max-w-6xl w-full mx-auto px-3.5 sm:px-8 py-2 sm:py-8 my-auto flex-1 lg:flex-initial flex items-center min-h-0">
+            <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-10 items-center">
 
-                <!-- LEFT SHOWCASE: ATTRACTIVE GTECH ADMISSIONS HEADING & ONLY 5 HIGHLIGHTS -->
-                <div class="lg:col-span-6 space-y-5 text-center lg:text-left">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-sky-200 shadow-xs text-[11px] font-black uppercase tracking-wider text-[#0c2d57]">
-                        <span class="w-2 h-2 rounded-full bg-[#16a34a]"></span>
+                <!-- TOP/LEFT SHOWCASE: ATTRACTIVE GTECH ADMISSIONS HEADING & ONLY 5 HIGHLIGHTS -->
+                <div class="lg:col-span-6 space-y-2 sm:space-y-5 text-center lg:text-left shrink-0">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 border border-sky-200 shadow-xs text-[9px] sm:text-[11px] font-black uppercase tracking-wider text-[#0c2d57]">
+                        <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#16a34a]"></span>
                         <span>Admissions &amp; Guidance Portal</span>
                     </div>
 
-                    <div class="space-y-2">
-                        <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-[1.05]">
+                    <div class="space-y-0.5 sm:space-y-2">
+                        <h1 class="text-2xl sm:text-6xl font-black tracking-tight leading-[1.03]">
                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0c2d57] via-[#0d6efd] to-[#16a34a] block">
                                 GTECH ADMISSIONS
                             </span>
                         </h1>
-                        <p class="text-xs sm:text-sm font-bold text-slate-600 max-w-lg mx-auto lg:mx-0">
+                        <p class="hidden sm:block text-xs sm:text-sm font-bold text-slate-600 max-w-lg mx-auto lg:mx-0">
                             Trusted guidance for engineering admissions, medical admissions, and education loans.
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto lg:mx-0 text-left">
-                        <div class="p-3.5 rounded-2xl bg-white/90 border border-sky-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-sky-100 text-[#0c2d57] flex items-center justify-center text-base shrink-0">
+                    <!-- Compact App-Style Pills on Mobile, Cards on Desktop -->
+                    <div class="flex flex-wrap justify-center lg:grid lg:grid-cols-2 gap-1.5 sm:gap-3 max-w-xl mx-auto lg:mx-0 text-left">
+                        <div class="px-2.5 py-1.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/90 border border-sky-200/80 shadow-xs flex items-center gap-2 sm:gap-3">
+                            <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-sky-100 text-[#0c2d57] flex items-center justify-center text-[11px] sm:text-base shrink-0">
                                 <i class="fa-solid fa-shield-halved"></i>
                             </div>
-                            <span class="font-black text-xs sm:text-sm text-[#0c2d57]">5 Years Trust</span>
+                            <span class="font-black text-[10px] sm:text-sm text-[#0c2d57] whitespace-nowrap">5 Years Trust</span>
                         </div>
 
-                        <div class="p-3.5 rounded-2xl bg-white/90 border border-emerald-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-[#16a34a] flex items-center justify-center text-base shrink-0">
+                        <div class="px-2.5 py-1.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/90 border border-emerald-200/80 shadow-xs flex items-center gap-2 sm:gap-3">
+                            <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 text-[#16a34a] flex items-center justify-center text-[11px] sm:text-base shrink-0">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
-                            <span class="font-black text-xs sm:text-sm text-[#0c2d57]">1000+ Admissions</span>
+                            <span class="font-black text-[10px] sm:text-sm text-[#0c2d57] whitespace-nowrap">1000+ Admissions</span>
                         </div>
 
-                        <div class="p-3.5 rounded-2xl bg-white/90 border border-sky-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-base shrink-0">
+                        <div class="px-2.5 py-1.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/90 border border-sky-200/80 shadow-xs flex items-center gap-2 sm:gap-3">
+                            <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-[11px] sm:text-base shrink-0">
                                 <i class="fa-solid fa-compass-drafting"></i>
                             </div>
-                            <span class="font-black text-xs sm:text-sm text-[#0c2d57]">Engineering Admissions</span>
+                            <span class="font-black text-[10px] sm:text-sm text-[#0c2d57] whitespace-nowrap">Engineering Admissions</span>
                         </div>
 
-                        <div class="p-3.5 rounded-2xl bg-white/90 border border-emerald-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-base shrink-0">
+                        <div class="px-2.5 py-1.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/90 border border-emerald-200/80 shadow-xs flex items-center gap-2 sm:gap-3">
+                            <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-[11px] sm:text-base shrink-0">
                                 <i class="fa-solid fa-stethoscope"></i>
                             </div>
-                            <span class="font-black text-xs sm:text-sm text-[#0c2d57]">Medical Admissions</span>
+                            <span class="font-black text-[10px] sm:text-sm text-[#0c2d57] whitespace-nowrap">Medical Admissions</span>
                         </div>
 
-                        <div class="sm:col-span-2 p-3.5 rounded-2xl bg-gradient-to-r from-sky-50 to-emerald-50 border border-sky-200 shadow-xs flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-base shrink-0">
+                        <div class="px-2.5 py-1.5 sm:p-3.5 lg:col-span-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-sky-50 to-emerald-50 border border-sky-200 shadow-xs flex items-center gap-2 sm:gap-3">
+                            <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-[11px] sm:text-base shrink-0">
                                 <i class="fa-solid fa-building-columns"></i>
                             </div>
-                            <span class="font-black text-xs sm:text-sm text-[#0c2d57]">Easily Education Loan</span>
+                            <span class="font-black text-[10px] sm:text-sm text-[#0c2d57] whitespace-nowrap">Easily Education Loan</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- RIGHT FORM CARD: LOGIN WITH GMAIL & REGISTER (NO GOOGLE SIGN-UP ON REGISTER) -->
-                <div class="lg:col-span-6 flex justify-center">
-                    <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-[2rem] border border-sky-100 shadow-2xl p-6 sm:p-8 space-y-5">
+                <!-- RIGHT FORM CARD: LOGIN WITH GMAIL OTP & REGISTER WITH GMAIL OTP + REFERRAL CODE -->
+                <div class="lg:col-span-6 flex justify-center w-full min-h-0">
+                    <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl sm:rounded-[2rem] border border-sky-100 shadow-xl sm:shadow-2xl p-4 sm:p-8 max-h-full overflow-y-auto">
 
                         <!-- LOGIN FORM VIEW (LOGIN WITH GMAIL OTP) -->
-                        <div id="first-screen-login-box" class="space-y-4">
-                            <div class="text-center space-y-1.5">
-                                <div class="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-[#0c2d57] flex items-center justify-center text-2xl shadow-xs">
+                        <div id="first-screen-login-box" class="space-y-2.5 sm:space-y-4">
+                            <div class="text-center space-y-0.5 sm:space-y-1.5">
+                                <div class="w-10 h-10 sm:w-14 sm:h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-[#0c2d57] flex items-center justify-center text-lg sm:text-2xl shadow-xs">
                                     <i class="fa-solid fa-envelope-open-text"></i>
                                 </div>
-                                <h2 class="text-2xl sm:text-3xl font-black text-[#0c2d57]">Login</h2>
-                                <p class="text-xs text-slate-500 font-semibold">Login with your Gmail address</p>
+                                <h2 class="text-xl sm:text-3xl font-black text-[#0c2d57]">Login</h2>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">Login with your Gmail OTP</p>
                             </div>
 
-                            <form id="first-login-form" onsubmit="handleFirstLoginSendOtp(event)" class="space-y-3.5">
+                            <form id="first-login-form" onsubmit="handleFirstLoginSendOtp(event)" class="space-y-2.5 sm:space-y-3.5">
                                 <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs sm:text-sm">
                                         <i class="fa-solid fa-envelope"></i>
                                     </span>
-                                    <input type="email" id="first-login-email" required placeholder="Enter your Gmail (name@gmail.com)" class="w-full bg-slate-50/70 border border-slate-200 rounded-2xl pl-11 pr-4 py-3.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
+                                    <input type="email" id="first-login-email" required placeholder="Enter your Gmail (name@gmail.com)" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl sm:rounded-2xl pl-10 pr-3.5 py-2.5 sm:py-3.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
                                 </div>
 
-                                <div class="flex items-center justify-between text-xs px-1">
-                                    <label class="inline-flex items-center gap-2 text-slate-600 font-semibold cursor-pointer">
+                                <div class="flex items-center justify-between text-[11px] sm:text-xs px-1">
+                                    <label class="inline-flex items-center gap-1.5 text-slate-600 font-semibold cursor-pointer">
                                         <input type="checkbox" checked class="rounded text-sky-600 focus:ring-0">
                                         <span>Remember Me</span>
                                     </label>
-                                    <span class="text-[11px] font-bold text-[#16a34a]">Login with Gmail</span>
+                                    <span class="text-[10px] sm:text-[11px] font-bold text-[#16a34a]">Gmail OTP</span>
                                 </div>
 
-                                <p id="first-login-error" class="hidden text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2"></p>
+                                <p id="first-login-error" class="hidden text-[11px] sm:text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-1.5"></p>
 
-                                <button type="submit" id="btn-first-login-send-otp" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#083d77] via-[#0d6efd] to-[#16a34a] hover:opacity-95 text-white font-black text-sm shadow-lg shadow-sky-700/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                                <button type="submit" id="btn-first-login-send-otp" class="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#083d77] via-[#0d6efd] to-[#16a34a] hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-sky-700/20 transition flex items-center justify-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-envelope"></i>
-                                    <span>Login with Gmail</span>
+                                    <span>Send Gmail OTP</span>
                                 </button>
                             </form>
 
-                            <div id="first-login-otp-box" class="hidden pt-3 border-t border-slate-200 space-y-3">
-                                <div class="flex items-center justify-between text-[11px]">
+                            <div id="first-login-otp-box" class="hidden pt-2.5 border-t border-slate-200 space-y-2.5">
+                                <div class="flex items-center justify-between text-[10px] sm:text-[11px]">
                                     <span class="font-bold text-emerald-700">Enter 6-Digit Gmail OTP</span>
                                     <span id="first-login-timer" class="font-mono font-bold text-sky-700">Resend in 60s</span>
                                 </div>
-                                <div class="grid grid-cols-6 gap-2">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 0)" onkeydown="handleFirstOtpKeydown(event, 'fl', 0)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 1)" onkeydown="handleFirstOtpKeydown(event, 'fl', 1)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 2)" onkeydown="handleFirstOtpKeydown(event, 'fl', 2)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 3)" onkeydown="handleFirstOtpKeydown(event, 'fl', 3)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 4)" onkeydown="handleFirstOtpKeydown(event, 'fl', 4)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 5)" onkeydown="handleFirstOtpKeydown(event, 'fl', 5)">
+                                <div class="grid grid-cols-6 gap-1.5 sm:gap-2">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 0)" onkeydown="handleFirstOtpKeydown(event, 'fl', 0)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 1)" onkeydown="handleFirstOtpKeydown(event, 'fl', 1)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 2)" onkeydown="handleFirstOtpKeydown(event, 'fl', 2)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 3)" onkeydown="handleFirstOtpKeydown(event, 'fl', 3)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 4)" onkeydown="handleFirstOtpKeydown(event, 'fl', 4)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fl-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fl', 5)" onkeydown="handleFirstOtpKeydown(event, 'fl', 5)">
                                 </div>
                                 <div class="flex gap-2">
-                                    <button type="button" id="btn-first-login-verify" onclick="handleFirstLoginVerifyOtp()" class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition cursor-pointer">
+                                    <button type="button" id="btn-first-login-verify" onclick="handleFirstLoginVerifyOtp()" class="flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition cursor-pointer">
                                         Verify &amp; Go to Home
                                     </button>
-                                    <button type="button" id="btn-first-login-resend" disabled onclick="handleFirstLoginSendOtp()" class="px-3.5 py-3 rounded-2xl bg-slate-100 text-slate-700 disabled:opacity-45 font-bold text-xs cursor-pointer">
+                                    <button type="button" id="btn-first-login-resend" disabled onclick="handleFirstLoginSendOtp()" class="px-3 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-700 disabled:opacity-45 font-bold text-xs cursor-pointer">
                                         Resend
                                     </button>
                                 </div>
                             </div>
 
-                            <p class="text-center text-xs text-slate-600 font-semibold pt-1">
+                            <p class="text-center text-[11px] sm:text-xs text-slate-600 font-semibold pt-0.5">
                                 Don't have an account?
                                 <button type="button" onclick="switchFirstScreenMode('register')" class="text-[#16a34a] font-black hover:underline ml-1 cursor-pointer">Register Now</button>
                             </p>
                         </div>
 
-                        <!-- REGISTER FORM VIEW (ONLY GMAIL REGISTER — NO GOOGLE SIGN-UP) -->
-                        <div id="first-screen-register-box" class="hidden space-y-3.5">
-                            <div class="text-center space-y-1">
-                                <div class="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-[#0c2d57] flex items-center justify-center text-2xl shadow-xs">
+                        <!-- REGISTER FORM VIEW (GMAIL OTP + REFERRAL CODE — NO GOOGLE SIGN-UP) -->
+                        <div id="first-screen-register-box" class="hidden space-y-2 sm:space-y-3.5">
+                            <div class="text-center space-y-0.5">
+                                <div class="w-9 h-9 sm:w-14 sm:h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-[#0c2d57] flex items-center justify-center text-base sm:text-2xl shadow-xs">
                                     <i class="fa-solid fa-user-plus"></i>
                                 </div>
-                                <h2 class="text-2xl sm:text-3xl font-black text-[#0c2d57]">Register</h2>
-                                <p class="text-xs text-slate-500 font-semibold">Register with your Gmail address • Before March 16, 2027: ₹2,000 OFF</p>
+                                <h2 class="text-lg sm:text-3xl font-black text-[#0c2d57]">Register</h2>
+                                <p class="text-[10px] sm:text-xs text-slate-500 font-semibold">Gmail OTP Register • Before March 16, 2027: ₹2,000 OFF</p>
                             </div>
 
-                            <form id="first-register-form" onsubmit="handleFirstRegisterSendOtp(event)" class="space-y-3">
+                            <form id="first-register-form" onsubmit="handleFirstRegisterSendOtp(event)" class="space-y-2 sm:space-y-3">
                                 <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
                                         <i class="fa-solid fa-user"></i>
                                     </span>
-                                    <input type="text" id="first-reg-name" required placeholder="Student Name" class="w-full bg-slate-50/70 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
+                                    <input type="text" id="first-reg-name" required placeholder="Student Name" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl sm:rounded-2xl pl-9 pr-3.5 py-2 sm:py-3 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
                                 </div>
 
                                 <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
                                         <i class="fa-solid fa-mobile-screen-button"></i>
                                     </span>
-                                    <input type="tel" id="first-reg-phone" inputMode="numeric" required placeholder="Mobile Number" oninput="sanitizeNumericInput(this, 15)" class="w-full bg-slate-50/70 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
+                                    <input type="tel" id="first-reg-phone" inputMode="numeric" required placeholder="Mobile Number" oninput="sanitizeNumericInput(this, 15)" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl sm:rounded-2xl pl-9 pr-3.5 py-2 sm:py-3 text-xs sm:text-sm font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
                                 </div>
 
                                 <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
                                         <i class="fa-solid fa-envelope"></i>
                                     </span>
-                                    <input type="email" id="first-reg-email" required placeholder="Gmail Address (name@gmail.com)" class="w-full bg-slate-50/70 border border-slate-200 rounded-2xl pl-10 pr-4 py-3 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
+                                    <input type="email" id="first-reg-email" required placeholder="Gmail Address (name@gmail.com)" class="w-full bg-slate-50/70 border border-slate-200 rounded-xl sm:rounded-2xl pl-9 pr-3.5 py-2 sm:py-3 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-sky-600 transition">
                                 </div>
 
                                 <div class="relative">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 text-xs">
+                                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-amber-500 text-xs">
                                         <i class="fa-solid fa-gift"></i>
                                     </span>
-                                    <input type="text" id="first-reg-referral" placeholder="Referral Code" class="w-full bg-amber-50/30 border border-slate-200 rounded-2xl pl-10 pr-20 py-3 text-xs sm:text-sm font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-amber-500 transition">
-                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700">Optional</span>
+                                    <input type="text" id="first-reg-referral" placeholder="Referral Code (Optional)" class="w-full bg-amber-50/30 border border-slate-200 rounded-xl sm:rounded-2xl pl-9 pr-20 py-2 sm:py-3 text-xs sm:text-sm font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-amber-500 transition">
+                                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[9px] sm:text-[10px] font-bold text-emerald-700">Referral</span>
                                 </div>
 
-                                <p id="first-reg-error" class="hidden text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2"></p>
+                                <p id="first-reg-error" class="hidden text-[11px] sm:text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-1.5"></p>
 
-                                <button type="submit" id="btn-first-reg-send-otp" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#083d77] via-[#0d6efd] to-[#16a34a] hover:opacity-95 text-white font-black text-sm shadow-lg shadow-sky-700/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                                <button type="submit" id="btn-first-reg-send-otp" class="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#083d77] via-[#0d6efd] to-[#16a34a] hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-sky-700/20 transition flex items-center justify-center gap-2 cursor-pointer">
                                     <i class="fa-solid fa-envelope"></i>
-                                    <span>Register with Gmail</span>
+                                    <span>Send Gmail OTP &amp; Register</span>
                                 </button>
                             </form>
 
-                            <div id="first-reg-otp-box" class="hidden pt-3 border-t border-slate-200 space-y-3">
-                                <div class="flex items-center justify-between text-[11px]">
+                            <div id="first-reg-otp-box" class="hidden pt-2 border-t border-slate-200 space-y-2">
+                                <div class="flex items-center justify-between text-[10px] sm:text-[11px]">
                                     <span class="font-bold text-emerald-700">Enter 6-Digit Gmail OTP</span>
                                     <span id="first-reg-timer" class="font-mono font-bold text-sky-700">Resend in 60s</span>
                                 </div>
-                                <div class="grid grid-cols-6 gap-2">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 0)" onkeydown="handleFirstOtpKeydown(event, 'fr', 0)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 1)" onkeydown="handleFirstOtpKeydown(event, 'fr', 1)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 2)" onkeydown="handleFirstOtpKeydown(event, 'fr', 2)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 3)" onkeydown="handleFirstOtpKeydown(event, 'fr', 3)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 4)" onkeydown="handleFirstOtpKeydown(event, 'fr', 4)">
-                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-11 text-center text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 5)" onkeydown="handleFirstOtpKeydown(event, 'fr', 5)">
+                                <div class="grid grid-cols-6 gap-1.5 sm:gap-2">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 0)" onkeydown="handleFirstOtpKeydown(event, 'fr', 0)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 1)" onkeydown="handleFirstOtpKeydown(event, 'fr', 1)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 2)" onkeydown="handleFirstOtpKeydown(event, 'fr', 2)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 3)" onkeydown="handleFirstOtpKeydown(event, 'fr', 3)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 4)" onkeydown="handleFirstOtpKeydown(event, 'fr', 4)">
+                                    <input type="text" inputMode="numeric" maxlength="1" class="fr-otp h-9 sm:h-11 text-center text-sm sm:text-base font-mono font-black rounded-xl bg-sky-50/60 border border-sky-300 text-slate-900 focus:outline-none focus:border-emerald-600" oninput="handleFirstOtpInput(this, 'fr', 5)" onkeydown="handleFirstOtpKeydown(event, 'fr', 5)">
                                 </div>
                                 <div class="flex gap-2">
-                                    <button type="button" id="btn-first-reg-verify" onclick="handleFirstRegisterVerifyOtp()" class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition cursor-pointer">
+                                    <button type="button" id="btn-first-reg-verify" onclick="handleFirstRegisterVerifyOtp()" class="flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition cursor-pointer">
                                         Verify &amp; Go to Home
                                     </button>
-                                    <button type="button" id="btn-first-reg-resend" disabled onclick="handleFirstRegisterSendOtp()" class="px-3.5 py-3 rounded-2xl bg-slate-100 text-slate-700 disabled:opacity-45 font-bold text-xs cursor-pointer">
+                                    <button type="button" id="btn-first-reg-resend" disabled onclick="handleFirstRegisterSendOtp()" class="px-3 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-slate-100 text-slate-700 disabled:opacity-45 font-bold text-xs cursor-pointer">
                                         Resend
                                     </button>
                                 </div>
                             </div>
 
-                            <p class="text-center text-xs text-slate-600 font-semibold pt-1">
+                            <p class="text-center text-[11px] sm:text-xs text-slate-600 font-semibold pt-0.5">
                                 Already have an account?
                                 <button type="button" onclick="switchFirstScreenMode('login')" class="text-[#16a34a] font-black hover:underline ml-1 cursor-pointer">Login Now</button>
                             </p>
@@ -269,7 +270,7 @@
             </div>
         </div>
 
-        <div class="relative z-20 py-3 px-4 text-center text-[11px] text-slate-500 font-semibold">
+        <div class="relative z-20 py-2 sm:py-3 px-4 text-center text-[10px] sm:text-[11px] text-slate-500 font-semibold shrink-0">
             Gtech Admissions under GreenTech Education Consultancy and Services.
         </div>
     </section>
@@ -1140,11 +1141,11 @@
             if (label && btn) {
                 if (isRegister) {
                     label.textContent = 'Already Registered?';
-                    btn.innerHTML = '<span>Login</span> <i class="fa-solid fa-arrow-right text-[11px]"></i>';
+                    btn.innerHTML = '<span>Login</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>';
                     btn.setAttribute('onclick', "switchFirstScreenMode('login')");
                 } else {
                     label.textContent = 'New User?';
-                    btn.innerHTML = '<span>Register Now</span> <i class="fa-solid fa-arrow-right text-[11px]"></i>';
+                    btn.innerHTML = '<span>Register Now</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>';
                     btn.setAttribute('onclick', "switchFirstScreenMode('register')");
                 }
             }
@@ -1252,7 +1253,7 @@
 
             document.getElementById('first-login-otp-box')?.classList.remove('hidden');
             startFirstOtpTimer('first-login-timer', 'btn-first-login-resend');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Login with Gmail</span>'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Send Gmail OTP</span>'; }
             if (typeof showToast === 'function') showToast('OTP Sent', `Login OTP sent to ${email}`);
         }
 
@@ -1309,7 +1310,7 @@
 
             document.getElementById('first-reg-otp-box')?.classList.remove('hidden');
             startFirstOtpTimer('first-reg-timer', 'btn-first-reg-resend');
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Register with Gmail</span>'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-envelope"></i> <span>Send Gmail OTP &amp; Register</span>'; }
             if (typeof showToast === 'function') showToast('OTP Sent', `Verification OTP sent to ${email}`);
         }
 

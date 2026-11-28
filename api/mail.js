@@ -27,6 +27,14 @@ function generateSixDigitOtp() {
   return String(crypto.randomInt(100000, 999999));
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function signOtpPayload({ email, purpose, code, expiresAt }) {
   const payloadObj = {
     email: String(email).trim().toLowerCase(),
@@ -88,6 +96,57 @@ function verifyOtpToken({ token, email, purpose, code }) {
   return { valid: true };
 }
 
+function buildStyledNotificationHtml({ subject, text, details }) {
+  const rows = details && typeof details === 'object'
+    ? Object.entries(details)
+        .map(
+          ([k, v]) => `
+            <tr>
+              <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #334155; font-size: 13px; text-transform: capitalize;">
+                ${escapeHtml(String(k).replace(/_/g, ' '))}
+              </td>
+              <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 13px; font-weight: 600;">
+                ${escapeHtml(v)}
+              </td>
+            </tr>`
+        )
+        .join('')
+    : '';
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; background: #f8fafc; padding: 24px;">
+      <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);">
+        <div style="background: linear-gradient(135deg, #0c2d57 0%, #0d6efd 55%, #16a34a 100%); padding: 20px 24px; color: #ffffff;">
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9;">
+            Gtech Admissions • GreenTech Education Consultancy
+          </div>
+          <h2 style="margin: 6px 0 0; font-size: 19px; font-weight: 800;">
+            ${escapeHtml(subject)}
+          </h2>
+        </div>
+
+        <div style="padding: 22px 24px;">
+          <p style="margin: 0 0 16px; color: #334155; font-size: 14px; line-height: 1.55;">
+            ${escapeHtml(text)}
+          </p>
+
+          ${
+            rows
+              ? `<table style="width: 100%; border-collapse: collapse; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+                  <tbody>${rows}</tbody>
+                </table>`
+              : ''
+          }
+
+          <p style="margin: 18px 0 0; font-size: 12px; color: #64748b;">
+            Sent automatically by Gtech Admissions Portal.
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -100,13 +159,14 @@ export default async function handler(req, res) {
     if (action === 'send-otp') {
       const email = String(body.email || '').trim().toLowerCase();
       const purpose = String(body.purpose || 'login').trim().toLowerCase();
+      const gtechId = String(body.gtechId || '').trim();
 
       if (!email || !email.includes('@')) {
         return res.status(400).json({ message: 'Please enter a valid email address.' });
       }
 
       const code = generateSixDigitOtp();
-      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+      const expiresAt = Date.now() + 10 * 60 * 1000;
       const otpToken = signOtpPayload({ email, purpose, code, expiresAt });
 
       const transporter = createTransporter();
@@ -115,20 +175,38 @@ export default async function handler(req, res) {
       await transporter.sendMail({
         from: `"Gtech Admissions" <${SMTP_USER}>`,
         to: email,
-        subject: `Your Gtech Admissions ${purposeLabel} OTP: ${code}`,
+        subject: `Your Gtech Admissions ${purposeLabel} OTP: ${code}${gtechId ? ` (${gtechId})` : ''}`,
         text: `Your OTP for Gtech Admissions ${purposeLabel} is ${code}. It is valid for 10 minutes.`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h2 style="margin: 0 0 8px; color: #0c2d57;">Gtech Admissions</h2>
-            <p style="margin: 0 0 16px; color: #475569; font-size: 14px;">
-              Use the 6-digit OTP below to complete your <strong>${purposeLabel}</strong>:
-            </p>
-            <div style="font-size: 28px; font-weight: 800; letter-spacing: 6px; text-align: center; padding: 14px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; color: #0369a1;">
-              ${code}
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #f8fafc; padding: 24px;">
+            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);">
+              <div style="background: linear-gradient(135deg, #0c2d57 0%, #0d6efd 55%, #16a34a 100%); padding: 20px 24px; color: #ffffff;">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9;">
+                  Gtech Admissions
+                </div>
+                <h2 style="margin: 6px 0 0; font-size: 20px; font-weight: 800;">
+                  ${escapeHtml(purposeLabel)} Verification OTP
+                </h2>
+              </div>
+              <div style="padding: 24px;">
+                <p style="margin: 0 0 14px; color: #334155; font-size: 14px;">
+                  Use the 6-digit OTP below to complete your <strong>${escapeHtml(purposeLabel)}</strong>:
+                </p>
+                <div style="font-size: 30px; font-weight: 800; letter-spacing: 8px; text-align: center; padding: 16px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; color: #0369a1;">
+                  ${escapeHtml(code)}
+                </div>
+                ${
+                  gtechId
+                    ? `<p style="margin: 14px 0 0; font-size: 13px; color: #0f172a;">
+                        <strong>Your Gtech ID:</strong> <span style="font-family: monospace; color: #4f46e5; font-weight: 800;">${escapeHtml(gtechId)}</span>
+                      </p>`
+                    : ''
+                }
+                <p style="margin: 14px 0 0; color: #64748b; font-size: 12px;">
+                  This OTP is valid for 10 minutes. If you did not request this, please ignore this email.
+                </p>
+              </div>
             </div>
-            <p style="margin: 16px 0 0; color: #64748b; font-size: 12px;">
-              This OTP is valid for 10 minutes. If you did not request this, please ignore this email.
-            </p>
           </div>
         `,
       });
@@ -178,6 +256,7 @@ export default async function handler(req, res) {
         to,
         subject,
         text: `${text}${detailsLines}`.trim(),
+        html: buildStyledNotificationHtml({ subject, text, details }),
       };
 
       if (adminEmail && adminEmail.toLowerCase() !== to.toLowerCase()) {

@@ -467,6 +467,7 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
     const payload = {
         to: to || ADMIN_EMAIL,
         adminEmail: ccAdmin ? ADMIN_EMAIL : null,
+        ccAdmin: Boolean(ccAdmin),
         subject,
         text,
         eventType,
@@ -481,10 +482,12 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) {
-                console.warn('Mail endpoint returned non-OK status:', res.status);
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || body.ok === false) {
+                console.warn('Mail endpoint warning:', body.message || res.status);
+                return false;
             }
-            return res.ok;
+            return true;
         } catch (err) {
             console.warn('Mail notification request warning:', err.message);
             return false;

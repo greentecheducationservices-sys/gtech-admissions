@@ -2013,6 +2013,10 @@ function switchStudentAuthMode(mode) {
     document.getElementById('reg-error-msg')?.classList.add('hidden');
     document.getElementById('login-error-msg')?.classList.add('hidden');
 
+    if (typeof window.syncAuthShowcase === 'function') {
+        window.syncAuthShowcase(mode);
+    }
+
     if (mode === 'register') {
         loginView?.classList.add('hidden');
         regView?.classList.remove('hidden');

@@ -31,64 +31,59 @@
         <i class="fa-solid fa-gift mr-1"></i> Referral Code <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Complete registration to link your referral.
     </div>
 
-    <!-- PROTECTED APPLICATION WRAPPER -->
-    <div id="home-page">
-        <!-- Responsive Student Navigation Header -->
-        <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-sky-100 shadow-sm">
-            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
-                <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
-                    <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-9 sm:h-11 w-auto rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-100 p-1 object-contain shadow-sm group-hover:scale-105 transition shrink-0">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-1.5">
-                            <span class="font-black text-sm sm:text-lg tracking-tight text-slate-900 truncate">Gtech Admissions</span>
-                            <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">5 Years Trust • 2026–27</span>
-                        </div>
-                        <p class="text-[10px] sm:text-[11px] text-sky-700 font-bold leading-tight truncate">Admissions and Guidance Portal</p>
+    <!-- Responsive Student Navigation Header -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-sky-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
+            <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
+                <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-9 sm:h-11 w-auto rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-100 p-1 object-contain shadow-sm group-hover:scale-105 transition shrink-0">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-black text-sm sm:text-lg tracking-tight text-slate-900 truncate">Gtech Admissions</span>
+                        <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">2026–27</span>
                     </div>
-                </a>
-
-                <nav class="hidden md:flex items-center space-x-1 bg-sky-50/90 p-1.5 rounded-2xl border border-sky-100 text-xs font-bold text-slate-700">
-                    <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">About</a>
-                    <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">Universities</a>
-                    <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-award text-[11px]"></i> Scholarship Based on Marks
-                    </button>
-                    <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-route text-[11px]"></i> Visiting Application
-                    </button>
-                </nav>
-
-                <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-                    <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none">
-                        <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
-                        <span id="header-student-name" class="truncate">Student Portal</span>
-                    </button>
-
-                    <button id="header-logout-btn" type="button" onclick="handleStudentLogout()" class="hidden px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl sm:rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
-                        <span>Logout</span>
-                    </button>
-
-                    <button id="header-login-btn" type="button" onclick="openAuthModal('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
-                        <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
-                        <span>Login</span>
-                    </button>
-
-                    <button id="header-register-btn" type="button" onclick="openAuthModal('register')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-700 to-emerald-600 hover:opacity-95 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-blue-700/20">
-                        <i class="fa-solid fa-user-plus text-[11px]"></i>
-                        <span>Register</span>
-                    </button>
+                    <p class="text-[10px] sm:text-[11px] text-sky-700 font-bold leading-tight truncate">Admissions and Guidance Portal</p>
                 </div>
-            </div>
+            </a>
 
-            <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-sky-100 bg-white px-3 py-2 text-[11px] font-bold scrollbar-none">
-                <a href="#about" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">About</a>
-                <a href="#universities" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">Universities</a>
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 whitespace-nowrap shrink-0">Scholarship Based on Marks</button>
-                <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 whitespace-nowrap shrink-0">Visiting Application</button>
-            </div>
-        </header>
+            <nav class="hidden md:flex items-center space-x-1 bg-sky-50/90 p-1.5 rounded-2xl border border-sky-100 text-xs font-bold text-slate-700">
+                <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">About</a>
+                <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">Universities</a>
+                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-award text-[11px]"></i> Scholarship Based on Marks
+                </button>
+                <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-route text-[11px]"></i> Visiting Application
+                </button>
+            </nav>
 
+            <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+                <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none">
+                    <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
+                    <span id="header-student-name" class="truncate">Student Portal</span>
+                </button>
+
+                <button id="header-login-btn" type="button" onclick="openAuthModal('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+                    <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
+                    <span>Login</span>
+                </button>
+
+                <button id="header-register-btn" type="button" onclick="openAuthModal('register')" class="hidden px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-sky-600/20">
+                    <i class="fa-solid fa-user-plus text-[11px]"></i>
+                    <span>Register</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-sky-100 bg-white px-3 py-2 text-[11px] font-bold scrollbar-none">
+            <a href="#about" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">About</a>
+            <a href="#universities" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">Universities</a>
+            <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 whitespace-nowrap shrink-0">Scholarship Based on Marks</button>
+            <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 whitespace-nowrap shrink-0">Visiting Application</button>
+        </div>
+    </header>
+
+    <!-- Protected Home Content Wrapper -->
+    <div id="home-page">
         <!-- Hero Section -->
         <section class="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-sky-100 bg-gradient-to-b from-sky-100/70 via-white to-emerald-50/50">
             <div class="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
@@ -96,7 +91,7 @@
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600">GTECH ADMISSIONS</span>
                 </h1>
                 <p class="text-xs sm:text-base font-extrabold text-sky-800 uppercase tracking-wider">
-                    Admissions and Guidance Portal • 5 Years of Trust
+                    Admissions and Guidance Portal
                 </p>
                 <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
                     Explore universities and entrance exams across India, and enter marks directly on each university card to see scholarship slabs, branch-wise concessions, tuition per year, and 4 years fee.
@@ -335,12 +330,12 @@
         </section>
 
         <!-- Universities Grid Container -->
-        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
+        <main id="main-content" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
             <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </main>
 
         <!-- SCHOLARSHIP BASED ON MARKS & VISITING APPLICATION CTA BANNER -->
-        <section id="apply" class="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 border-t border-sky-100">
+        <section id="apply" class="py-12 sm:py-16 bg-gradient-to-r from-indigo-5 via-sky-50 to-emerald-50 border-t border-sky-100">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="bg-white border border-indigo-100 rounded-3xl p-6 sm:p-10 shadow-xl text-center space-y-4">
                     <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -369,7 +364,7 @@
         <!-- Footer -->
         <footer class="bg-white border-t border-sky-100 py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p class="font-semibold text-slate-700">Gtech Admissions under GreenTech Education Consultancy and Services (5 Years of Trust). All rights reserved.</p>
+                <p class="font-semibold text-slate-700">Gtech Admissions under GreenTech Education Consultancy and Services. All rights reserved.</p>
                 <div class="flex items-center gap-4">
                     <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="hover:text-indigo-600 transition font-bold text-indigo-600">Scholarship Form</button>
                     <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="hover:text-emerald-600 transition font-bold text-emerald-700">Visiting Application</button>
@@ -387,8 +382,8 @@
                     <i class="fa-solid fa-sparkles"></i>
                 </span>
                 <div>
-                    <span class="text-[9px] font-black uppercase tracking-wider text-amber-300 block">Before March 16, 2027 Offer • 5 Years Trust</span>
-                    <h4 class="text-xs sm:text-sm font-black leading-tight text-white">Welcome to the Gtech Family</h4>
+                    <span class="text-[9px] font-black uppercase tracking-wider text-amber-300 block">Before March 16, 2027 Offer</span>
+                    <h4 class="text-xs sm:text-sm font-black leading-tight text-white">Congrats! Welcome to the Gtech Family</h4>
                 </div>
             </div>
             <button type="button" onclick="closeEarlyOfferPopup()" aria-label="Close offer pop-up" class="w-6 h-6 rounded-lg bg-white/10 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center shrink-0 transition">
@@ -429,10 +424,10 @@
                     <i class="fa-solid fa-gift"></i>
                 </div>
                 <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest mb-1.5">
-                    Welcome to the Gtech Family • 5 Years of Trust
+                    Welcome to Gtech Family
                 </span>
-                <h3 class="text-2xl font-black tracking-tight">WELCOME TO THE GTECH FAMILY!</h3>
-                <p class="text-xs text-amber-50 font-semibold mt-1">₹2,000/- Early Registration Bonus (Valid Before March 16, 2027)</p>
+                <h3 class="text-2xl font-black tracking-tight">₹2,000/- FEE DISCOUNT UNLOCKED!</h3>
+                <p class="text-xs text-amber-50 font-semibold mt-1">Early Registration Bonus (Valid Before March 16, 2027)</p>
             </div>
 
             <div class="p-6 space-y-4 text-center">
@@ -456,11 +451,11 @@
 
                 <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-900">
                     <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i>
-                    Welcome to the Gtech Family! Your ₹2,000/- offer is now available in your Student Dashboard!
+                    ₹2,000/- offer is now available in your Student Dashboard!
                 </div>
 
                 <button type="button" onclick="closeEarlyOfferModal()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-sky-600 to-emerald-600 hover:opacity-95 text-white font-black text-xs sm:text-sm shadow-lg transition">
-                    OPEN MY STUDENT DASHBOARD →
+                    GO TO GTECH HOME PAGE →
                 </button>
             </div>
         </div>
@@ -674,62 +669,19 @@
         </div>
     </div>
 
-    <!-- STUDENT REGISTRATION & EMAIL-ONLY LOGIN GATEWAY MODAL -->
-    <div id="student-auth-modal" class="fixed inset-0 z-[85] bg-gradient-to-br from-sky-900/80 via-slate-900/85 to-indigo-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
-        <div class="relative bg-white border border-sky-200 rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden my-auto gtech-pop-in grid grid-cols-1 md:grid-cols-12">
-            <!-- Left Student Showcase (Male student on Login, Female student on Register) -->
-            <div class="md:col-span-5 bg-gradient-to-b from-sky-600 via-blue-700 to-indigo-800 text-white p-5 sm:p-7 flex flex-col justify-between relative">
-                <div>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[10px] font-black uppercase tracking-wider">
-                        Gtech Admissions • 5 Years Trust
-                    </span>
-                    <h2 id="auth-showcase-title" class="text-xl sm:text-2xl font-black mt-3 leading-tight">
-                        Welcome Back to Gtech!
-                    </h2>
-                    <p id="auth-showcase-subtitle" class="text-xs text-sky-100 mt-1.5 leading-relaxed">
-                        Sign in with your email OTP to view universities, check scholarships, and track admissions.
-                    </p>
-                </div>
+    <!-- STUDENT REGISTRATION & EMAIL-ONLY LOGIN MODAL -->
+    <div id="student-auth-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="relative bg-white border border-sky-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden my-auto gtech-pop-in">
+            <div class="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1400&auto=format&fit=crop');"></div>
+            <div class="relative z-10 p-5 sm:p-8 bg-gradient-to-b from-sky-50/90 via-white/95 to-emerald-50/80">
+                <button type="button" id="auth-modal-close-btn" onclick="closeAuthModal()" aria-label="Close modal" class="hidden w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-600 items-center justify-center text-xs font-bold transition absolute top-4 right-4">✕</button>
 
-                <!-- Male Student Visual (Login) -->
-                <div id="auth-male-student-card" class="my-4 rounded-2xl overflow-hidden border-2 border-white/25 shadow-lg bg-slate-950/30">
-                    <img
-                        src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=900&auto=format&fit=crop"
-                        alt="Gtech Student Login"
-                        class="w-full h-52 sm:h-60 object-cover object-top"
-                    >
-                    <div class="p-3 bg-slate-950/65 text-[11px]">
-                        <strong class="block font-extrabold text-white">Student Login</strong>
-                        <span class="text-sky-200">Access your Gtech ID, scholarships &amp; referral hub</span>
-                    </div>
-                </div>
-
-                <!-- Female Student Visual (Register) -->
-                <div id="auth-female-student-card" class="hidden my-4 rounded-2xl overflow-hidden border-2 border-white/25 shadow-lg bg-slate-950/30">
-                    <img
-                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=900&auto=format&fit=crop"
-                        alt="Gtech New Student Registration"
-                        class="w-full h-52 sm:h-60 object-cover object-top"
-                    >
-                    <div class="p-3 bg-slate-950/65 text-[11px]">
-                        <strong class="block font-extrabold text-white">New Student Registration</strong>
-                        <span class="text-emerald-200">Get your Gtech ID &amp; unlock ₹2,000/- early offer</span>
-                    </div>
-                </div>
-
-                <p class="text-[11px] text-sky-100/90 font-semibold">
-                    Passwordless Email OTP • Direct Admissions &amp; Counselling
-                </p>
-            </div>
-
-            <!-- Right Auth Form Panel -->
-            <div class="md:col-span-7 relative z-10 p-5 sm:p-8 bg-gradient-to-b from-sky-50/90 via-white/95 to-emerald-50/80 flex flex-col justify-center">
                 <div id="auth-redirect-notice" class="hidden mb-4 px-3.5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-800 flex items-center gap-2">
                     <i class="fa-solid fa-lock text-indigo-600 shrink-0"></i>
-                    <span id="auth-redirect-notice-text">Please sign in or register first to continue to Gtech Admissions.</span>
+                    <span id="auth-redirect-notice-text">Please login or register first to access the Gtech Admissions home page.</span>
                 </div>
 
-                <div class="flex rounded-2xl bg-sky-100/80 p-1 mb-6 border border-sky-200 text-xs font-bold max-w-[280px]">
+                <div class="flex rounded-2xl bg-sky-100/80 p-1 mb-6 border border-sky-200 text-xs font-bold max-w-[260px]">
                     <button type="button" id="mode-tab-login" onclick="switchStudentAuthMode('login')" class="flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition">Login</button>
                     <button type="button" id="mode-tab-register" onclick="switchStudentAuthMode('register')" class="flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition">Register</button>
                 </div>
@@ -738,9 +690,9 @@
                 <div id="register-view" class="hidden space-y-4">
                     <div class="space-y-1">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">
-                            <i class="fa-solid fa-user-plus"></i> Welcome to the Gtech Family • 5 Years of Trust
+                            <i class="fa-solid fa-user-plus"></i> Student Onboarding • Before March 16, 2027: ₹2,000 OFF
                         </span>
-                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">WELCOME TO THE GTECH FAMILY</h3>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">JOIN THE GTECH FAMILY</h3>
                         <p class="text-xs text-slate-600">₹1,000 off Admission Fee + ₹1,000 off College Fee when you register before March 16, 2027.</p>
                     </div>
 
@@ -819,7 +771,7 @@
                             <span id="generated-student-id-display" class="text-base sm:text-lg font-mono font-black text-emerald-700 tracking-wider">GTECH6001</span>
                         </div>
                         <button type="button" onclick="continueAfterAuth()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition">
-                            Continue
+                            Continue to Home Page
                         </button>
                     </div>
                 </div>
@@ -828,10 +780,10 @@
                 <div id="login-view" class="space-y-4">
                     <div class="space-y-1">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                            <i class="fa-solid fa-shield-halved"></i> Passwordless Email OTP • 5 Years of Trust
+                            <i class="fa-solid fa-shield-halved"></i> Passwordless Email OTP
                         </span>
-                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">WELCOME BACK TO THE GTECH FAMILY!</h3>
-                        <p class="text-xs text-slate-600">Your Future, Your Opportunities, Your Success.</p>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">WELCOME BACK TO GTECH FAMILY!</h3>
+                        <p class="text-xs text-slate-600">Sign in with your registered email to enter the home page.</p>
                     </div>
 
                     <form id="student-login-form" onsubmit="handleSendLoginOtp(event)" class="space-y-3.5">
@@ -867,7 +819,7 @@
 
                         <div class="flex items-center gap-2.5">
                             <button type="button" id="btn-verify-login-otp" onclick="handleVerifyLoginOtp()" class="flex-1 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 transition">
-                                Verify &amp; Continue
+                                Verify &amp; Enter Home Page
                             </button>
                             <button type="button" id="btn-resend-login-otp" disabled onclick="handleSendLoginOtp()" class="px-4 py-3 rounded-2xl bg-white border border-sky-200 text-sky-700 disabled:opacity-45 hover:bg-sky-50 font-bold text-xs transition">
                                 Resend OTP
@@ -879,7 +831,7 @@
         </div>
     </div>
 
-    <!-- AUTHENTICATED STUDENT PORTAL MODAL (APP-STYLE TOP BAR + LOWER CONTENT SPACING) -->
+    <!-- AUTHENTICATED STUDENT PORTAL MODAL -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
         <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 border border-indigo-200/80 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="px-3 py-2.5 sm:px-5 sm:py-3.5 bg-white border-b border-slate-200/90 flex items-center justify-between gap-2">
@@ -917,10 +869,10 @@
                     <div class="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/90 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="space-y-1">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
-                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal • 5 Years of Trust
+                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal
                             </span>
                             <h4 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
-                                WELCOME TO THE GTECH FAMILY!
+                                WELCOME TO GTECH FAMILY!
                             </h4>
                             <p class="text-sm sm:text-base font-extrabold text-indigo-700" id="student-welcome-name">
                                 Hello, Student!
@@ -1093,31 +1045,6 @@
     </div>
 
     <script>
-        const GTECH_ALERT_RECIPIENTS = [
-            'greentecheducationservices@gmail.com',
-            'admin@gtechadmissions.com',
-            'gtechabhisri@gmail.com'
-        ];
-
-        function syncAuthShowcase(mode) {
-            const maleCard = document.getElementById('auth-male-student-card');
-            const femaleCard = document.getElementById('auth-female-student-card');
-            const titleEl = document.getElementById('auth-showcase-title');
-            const subEl = document.getElementById('auth-showcase-subtitle');
-
-            if (mode === 'register') {
-                maleCard?.classList.add('hidden');
-                femaleCard?.classList.remove('hidden');
-                if (titleEl) titleEl.textContent = 'Start Your Journey with Gtech!';
-                if (subEl) subEl.textContent = 'Register to get your Gtech ID, compare colleges, and unlock ₹2,000/- early benefits.';
-            } else {
-                femaleCard?.classList.add('hidden');
-                maleCard?.classList.remove('hidden');
-                if (titleEl) titleEl.textContent = 'Welcome Back to Gtech!';
-                if (subEl) subEl.textContent = 'Sign in with your email OTP to view universities, check scholarships, and track admissions.';
-            }
-        }
-
         function closeEarlyOfferPopup() {
             sessionStorage.setItem('gtech_early_offer_dismissed', '1');
             document.getElementById('early-offer-popup')?.classList.add('hidden');
@@ -1128,65 +1055,9 @@
                 document.getElementById('early-offer-popup')?.classList.remove('hidden');
             }
         }
-        async function triggerDirectEmail(payload) {
-            try {
-                await fetch('/api/mail', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'direct_notification',
-                        alertRecipients: GTECH_ALERT_RECIPIENTS,
-                        sentAt: new Date().toISOString(),
-                        ...payload
-                    })
-                });
-            } catch (e) {
-                console.error('Direct mail alert error:', e);
-            }
-        }
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('state-filter-bar')?.classList.remove('hidden');
             setTimeout(showEarlyOfferPopupIfEligible, 900);
-
-            document.getElementById('mode-tab-login')?.addEventListener('click', () => syncAuthShowcase('login'));
-            document.getElementById('mode-tab-register')?.addEventListener('click', () => syncAuthShowcase('register'));
-            document.getElementById('header-login-btn')?.addEventListener('click', () => syncAuthShowcase('login'));
-            document.getElementById('header-register-btn')?.addEventListener('click', () => syncAuthShowcase('register'));
-
-            document.getElementById('guidance-inquiry-form')?.addEventListener('submit', () => {
-                triggerDirectEmail({
-                    eventType: 'APPLICATION_SUBMITTED',
-                    applicationType: document.getElementById('guide-assistance')?.value || 'Scholarship Based on Marks',
-                    studentName: document.getElementById('guide-name')?.value?.trim() || '',
-                    studentPhone: document.getElementById('guide-phone')?.value?.trim() || '',
-                    studentEmail: document.getElementById('guide-email')?.value?.trim() || '',
-                    interestedCourse: document.getElementById('guide-course')?.value || '',
-                    preferredUniversity: document.getElementById('guide-uni')?.value?.trim() || 'Any',
-                    preferredCampus: document.getElementById('guide-campus')?.value || '',
-                    inter1stYear: document.getElementById('guide-inter-1st')?.value || '',
-                    inter2ndYear: document.getElementById('guide-inter-2nd')?.value || '',
-                    interTotal: document.getElementById('guide-inter-total')?.value || '',
-                    pcm600: document.getElementById('guide-pcm-600')?.value || '',
-                    jeeScore: document.getElementById('guide-jee')?.value || '',
-                    eamcetRank: document.getElementById('guide-eamcet')?.value || ''
-                });
-            }, true);
-
-            document.getElementById('btn-verify-reg-otp')?.addEventListener('click', () => {
-                const name = document.getElementById('reg-name')?.value?.trim() || '';
-                const phone = document.getElementById('reg-phone')?.value?.trim() || '';
-                const email = document.getElementById('reg-email')?.value?.trim() || '';
-                if (!email) return;
-
-                triggerDirectEmail({
-                    eventType: 'WELCOME_TO_THE_GTECH_FAMILY',
-                    applicationType: 'New Student Registration',
-                    studentName: name,
-                    studentPhone: phone,
-                    studentEmail: email,
-                    referralCode: document.getElementById('reg-referral')?.value?.trim() || ''
-                });
-            }, true);
         });
     </script>
     <script src="./app.js"></script>

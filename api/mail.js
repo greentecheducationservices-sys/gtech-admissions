@@ -4,7 +4,7 @@ import crypto from 'crypto';
 const OTP_SECRET = process.env.OTP_SECRET || 'gtech-admissions-2026-secret-key';
 
 function getMailConfig() {
-    const host = process.env.SMTP_HOST || 'smtp.hostinger.com';
+    const host = (process.env.SMTP_HOST || 'smtp.hostinger.com').trim();
     const port = Number(process.env.SMTP_PORT || 465);
     const user = (process.env.SMTP_USER || 'admin@gtechadmissions.com').trim();
     const pass = process.env.SMTP_PASS || '';

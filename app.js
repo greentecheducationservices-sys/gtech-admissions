@@ -3,8 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 var _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_EMAIL = 'admin@gtechadmissions.com';
-const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
-const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/send-notification` : '/api/mail');
+const OTP_BACKEND_URL = window.GTECH_OTP_API || '/api/mail';
+const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || '/api/mail';
 const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
 
 const SCH_OPTION_LABELS = {
@@ -47,6 +47,10 @@ const state = {
     financeRecord: null,
     pendingRegistration: null,
     pendingLoginEmail: '',
+    otpTokens: {
+        register: '',
+        login: ''
+    },
     pendingPostLoginAction: null,
     currentSlide: 0,
     incomingReferralCode: '',
@@ -465,6 +469,7 @@ function proceedWithScholarshipApplication() {
 
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
     const payload = {
+        action: 'send-notification',
         to: to || ADMIN_EMAIL,
         adminEmail: ccAdmin ? ADMIN_EMAIL : null,
         ccAdmin: Boolean(ccAdmin),
@@ -494,7 +499,6 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
         }
     }
 
-    console.info('[Gtech Student Mail Notification]', payload);
     return false;
 }
 
@@ -1848,52 +1852,47 @@ async function isEmailAlreadyRegistered(email) {
     return Boolean(data && data.email);
 }
 
-async function requestEmailOtp(email, purpose) {
-    if (OTP_BACKEND_URL) {
-        const res = await fetch(`${OTP_BACKEND_URL}/send-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, purpose })
-        });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            throw new Error(body.message || 'Unable to send OTP right now.');
-        }
-        return { viaBackend: true };
-    }
-
-    const { error } = await _supabase.auth.signInWithOtp({
-        email,
-        options: {
-            shouldCreateUser: true,
-            emailRedirectTo: window.location.origin + window.location.pathname
-        }
+async function requestEmailOtp(email, purpose, extra = {}) {
+    const endpoint = OTP_BACKEND_URL || '/api/mail';
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'send-otp',
+            email,
+            purpose,
+            ...extra
+        })
     });
-    if (error) throw new Error(error.message);
-    return { viaBackend: false };
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.ok === false || body.sent === false) {
+        throw new Error(body.message || body.error || `Unable to send OTP (${res.status}).`);
+    }
+    if (body.otpToken) {
+        state.otpTokens[purpose] = body.otpToken;
+    }
+    return body;
 }
 
 async function verifyEmailOtpCode(email, code, purpose) {
-    if (OTP_BACKEND_URL) {
-        const res = await fetch(`${OTP_BACKEND_URL}/verify-otp`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, code, purpose })
-        });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok || !body.verified) {
-            throw new Error(body.message || 'Invalid or expired OTP code.');
-        }
-        return body;
-    }
-
-    const { data, error } = await _supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: 'email'
+    const endpoint = OTP_BACKEND_URL || '/api/mail';
+    const token = state.otpTokens[purpose] || '';
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'verify-otp',
+            email,
+            code,
+            purpose,
+            token
+        })
     });
-    if (error) throw new Error(error.message);
-    return { verified: true, user: data?.user || null };
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || body.verified === false || body.ok === false) {
+        throw new Error(body.message || body.error || 'Invalid or expired OTP code.');
+    }
+    return body;
 }
 
 async function handleSendRegistrationOtp(e) {
@@ -1918,8 +1917,10 @@ async function handleSendRegistrationOtp(e) {
     }
 
     try {
-        sendBtn.disabled = true;
-        sendBtn.querySelector('span').textContent = 'Checking & Sending...';
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.querySelector('span').textContent = 'Checking & Sending...';
+        }
 
         const exists = await isEmailAlreadyRegistered(email);
         if (exists) {
@@ -1935,17 +1936,24 @@ async function handleSendRegistrationOtp(e) {
         };
         localStorage.setItem('gtech_pending_reg', JSON.stringify(state.pendingRegistration));
 
-        await requestEmailOtp(email, 'register');
+        await requestEmailOtp(email, 'register', {
+            name: fullName,
+            phone,
+            referral: referralCode || state.incomingReferralCode || ''
+        });
         clearOtpBoxes('reg-otp-box');
-        document.getElementById('reg-otp-panel').classList.remove('hidden');
+        document.getElementById('reg-otp-panel')?.classList.remove('hidden');
         document.querySelector('.reg-otp-box')?.focus();
         startOtpCountdown('reg', 60);
         showToast('OTP Sent', `A 6-digit verification OTP has been sent to ${email}.`, 'success');
     } catch (err) {
         showInlineError(errId, err.message || 'Failed to send verification OTP.');
+        showToast('OTP Error', err.message || 'Failed to send verification OTP.', 'error');
     } finally {
-        sendBtn.disabled = false;
-        sendBtn.querySelector('span').textContent = 'SEND OTP';
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.querySelector('span').textContent = 'SEND OTP';
+        }
     }
 }
 
@@ -1968,8 +1976,10 @@ async function handleVerifyRegistrationOtp() {
     }
 
     try {
-        verifyBtn.disabled = true;
-        verifyBtn.textContent = 'Verifying...';
+        if (verifyBtn) {
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+        }
 
         const alreadyExists = await isEmailAlreadyRegistered(regData.email);
         if (alreadyExists) {
@@ -2037,6 +2047,7 @@ async function handleVerifyRegistrationOtp() {
 
         state.currentStudent = profile;
         state.pendingRegistration = null;
+        state.otpTokens.register = '';
         localStorage.removeItem('gtech_pending_reg');
         localStorage.setItem('gtech_student_session', JSON.stringify(profile));
 
@@ -2082,8 +2093,10 @@ async function handleVerifyRegistrationOtp() {
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verify & Complete Registration';
+        if (verifyBtn) {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify & Complete Registration';
+        }
     }
 }
 
@@ -2101,8 +2114,10 @@ async function handleSendLoginOtp(e) {
     }
 
     try {
-        sendBtn.disabled = true;
-        sendBtn.querySelector('span').textContent = 'Checking Email...';
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.querySelector('span').textContent = 'Checking Email...';
+        }
 
         const { data: profile, error } = await _supabase
             .from('student_profiles')
@@ -2116,17 +2131,23 @@ async function handleSendLoginOtp(e) {
         }
 
         state.pendingLoginEmail = email;
-        await requestEmailOtp(email, 'login');
+        await requestEmailOtp(email, 'login', {
+            name: profile.full_name || 'Student',
+            gtechId: profile.student_id || profile.id || ''
+        });
         clearOtpBoxes('login-otp-box');
-        document.getElementById('login-otp-panel').classList.remove('hidden');
+        document.getElementById('login-otp-panel')?.classList.remove('hidden');
         document.querySelector('.login-otp-box')?.focus();
         startOtpCountdown('login', 60);
         showToast('Login OTP Sent', `A 6-digit login OTP has been sent to ${email}.`, 'success');
     } catch (err) {
         showInlineError(errId, err.message || 'Could not send login OTP.');
+        showToast('OTP Error', err.message || 'Could not send login OTP.', 'error');
     } finally {
-        sendBtn.disabled = false;
-        sendBtn.querySelector('span').textContent = 'SEND LOGIN OTP';
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.querySelector('span').textContent = 'SEND LOGIN OTP';
+        }
     }
 }
 
@@ -2149,8 +2170,10 @@ async function handleVerifyLoginOtp() {
     }
 
     try {
-        verifyBtn.disabled = true;
-        verifyBtn.textContent = 'Verifying...';
+        if (verifyBtn) {
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying...';
+        }
 
         const { data: profile, error } = await _supabase
             .from('student_profiles')
@@ -2167,6 +2190,7 @@ async function handleVerifyLoginOtp() {
 
         profile.student_id = profile.student_id || profile.id || 'GTECH6001';
         state.currentStudent = profile;
+        state.otpTokens.login = '';
         localStorage.setItem('gtech_student_session', JSON.stringify(profile));
 
         updateHeaderForLoggedInStudent(profile);
@@ -2177,8 +2201,10 @@ async function handleVerifyLoginOtp() {
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = 'Verify & Continue';
+        if (verifyBtn) {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify & Continue';
+        }
     }
 }
 
@@ -2235,25 +2261,6 @@ function listenToAuthChanges() {
 }
 
 async function restoreStudentSession() {
-    const { data } = await _supabase.auth.getSession();
-    if (data?.session?.user?.email) {
-        const email = data.session.user.email.trim().toLowerCase();
-        const { data: profile } = await _supabase
-            .from('student_profiles')
-            .select('*')
-            .eq('email', email)
-            .maybeSingle();
-        if (profile) {
-            profile.student_id = profile.student_id || profile.id || 'GTECH6001';
-            state.currentStudent = profile;
-            localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-            updateHeaderForLoggedInStudent(profile);
-            prefillGuidanceFormWithStudent();
-            syncPageScreenVisibility(true);
-            return;
-        }
-    }
-
     const saved = localStorage.getItem('gtech_student_session');
     if (saved) {
         try {

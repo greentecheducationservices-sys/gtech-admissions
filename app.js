@@ -1853,14 +1853,20 @@ async function isEmailAlreadyRegistered(email) {
 }
 
 async function requestEmailOtp(email, purpose, extra = {}) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPurpose = purpose === 'login' ? 'login' : 'register';
+    if (!cleanEmail) {
+        throw new Error('Email address is required to send OTP.');
+    }
+
     const endpoint = OTP_BACKEND_URL || '/api/mail';
     const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             action: 'send-otp',
-            email,
-            purpose,
+            email: cleanEmail,
+            purpose: cleanPurpose,
             ...extra
         })
     });
@@ -1868,29 +1874,39 @@ async function requestEmailOtp(email, purpose, extra = {}) {
     if (!res.ok || body.ok === false || body.sent === false) {
         throw new Error(body.message || body.error || `Unable to send OTP (${res.status}).`);
     }
-    if (body.otpToken) {
-        state.otpTokens[purpose] = body.otpToken;
+
+    const returnedToken = body.otpToken || body.token || '';
+    if (returnedToken) {
+        state.otpTokens[cleanPurpose] = returnedToken;
     }
     return body;
 }
 
 async function verifyEmailOtpCode(email, code, purpose) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanCode = String(code || '').replace(/\D/g, '').trim();
+    const cleanPurpose = purpose === 'login' ? 'login' : 'register';
+    const token = state.otpTokens[cleanPurpose] || '';
+
+    if (!cleanEmail || !/^\d{6}$/.test(cleanCode)) {
+        throw new Error('Please enter a valid 6-digit OTP code.');
+    }
+
     const endpoint = OTP_BACKEND_URL || '/api/mail';
-    const token = state.otpTokens[purpose] || '';
     const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             action: 'verify-otp',
-            email,
-            code,
-            purpose,
+            email: cleanEmail,
+            code: cleanCode,
+            purpose: cleanPurpose,
             token
         })
     });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok || body.verified === false || body.ok === false) {
-        throw new Error(body.message || body.error || 'Invalid or expired OTP code.');
+    if (!res.ok || body.verified !== true || body.ok === false) {
+        throw new Error(body.message || body.error || `Invalid or expired OTP code (${res.status}).`);
     }
     return body;
 }
@@ -2205,6 +2221,14 @@ async function handleVerifyLoginOtp() {
             verifyBtn.disabled = false;
             verifyBtn.textContent = 'Verify & Continue';
         }
+    }
+}
+
+async function resendOtp(type) {
+    if (type === 'register') {
+        await handleSendRegistrationOtp(null);
+    } else {
+        await handleSendLoginOtp(null);
     }
 }
 
@@ -2806,6 +2830,7 @@ window.handleSendRegistrationOtp = handleSendRegistrationOtp;
 window.handleVerifyRegistrationOtp = handleVerifyRegistrationOtp;
 window.handleSendLoginOtp = handleSendLoginOtp;
 window.handleVerifyLoginOtp = handleVerifyLoginOtp;
+window.resendOtp = resendOtp;
 window.handleStudentLogout = handleStudentLogout;
 window.openStudentDashboardModal = openStudentDashboardModal;
 window.closeStudentDashboardModal = closeStudentDashboardModal;

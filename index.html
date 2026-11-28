@@ -31,345 +31,353 @@
         <i class="fa-solid fa-gift mr-1"></i> Referral Code <span id="banner-ref-code" class="font-mono underline px-1"></span> Applied! Complete registration to link your referral.
     </div>
 
-    <!-- Responsive Student Navigation Header -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-sky-100 shadow-sm">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
-            <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
-                <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-9 sm:h-11 w-auto rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-100 p-1 object-contain shadow-sm group-hover:scale-105 transition shrink-0">
-                <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                        <span class="font-black text-sm sm:text-lg tracking-tight text-slate-900 truncate">Gtech Admissions</span>
-                        <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">5 Years Trust • 2026–27</span>
+    <!-- PROTECTED APPLICATION WRAPPER -->
+    <div id="home-page">
+        <!-- Responsive Student Navigation Header -->
+        <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-sky-100 shadow-sm">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:h-20 flex flex-wrap items-center justify-between gap-2">
+                <a href="#" class="flex items-center space-x-2.5 shrink-0 group min-w-0">
+                    <img src="/logo-gtech-full.png" alt="Gtech Admissions Logo" class="h-9 sm:h-11 w-auto rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-100 p-1 object-contain shadow-sm group-hover:scale-105 transition shrink-0">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-black text-sm sm:text-lg tracking-tight text-slate-900 truncate">Gtech Admissions</span>
+                            <span class="hidden lg:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">5 Years Trust • 2026–27</span>
+                        </div>
+                        <p class="text-[10px] sm:text-[11px] text-sky-700 font-bold leading-tight truncate">Admissions and Guidance Portal</p>
                     </div>
-                    <p class="text-[10px] sm:text-[11px] text-sky-700 font-bold leading-tight truncate">Admissions and Guidance Portal</p>
-                </div>
-            </a>
-
-            <nav class="hidden md:flex items-center space-x-1 bg-sky-50/90 p-1.5 rounded-2xl border border-sky-100 text-xs font-bold text-slate-700">
-                <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">About</a>
-                <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">Universities</a>
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-award text-[11px]"></i> Scholarship Based on Marks
-                </button>
-                <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-route text-[11px]"></i> Visiting Application
-                </button>
-            </nav>
-
-            <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-                <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none">
-                    <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
-                    <span id="header-student-name" class="truncate">Student Portal</span>
-                </button>
-
-                <button id="header-login-btn" type="button" onclick="openAuthModal('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
-                    <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
-                    <span>Login</span>
-                </button>
-
-                <button id="header-register-btn" type="button" onclick="openAuthModal('register')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-700 to-emerald-600 hover:opacity-95 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-blue-700/20">
-                    <i class="fa-solid fa-user-plus text-[11px]"></i>
-                    <span>Register</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-sky-100 bg-white px-3 py-2 text-[11px] font-bold scrollbar-none">
-            <a href="#about" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">About</a>
-            <a href="#universities" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">Universities</a>
-            <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 whitespace-nowrap shrink-0">Scholarship Based on Marks</button>
-            <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 whitespace-nowrap shrink-0">Visiting Application</button>
-        </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-sky-100 bg-gradient-to-b from-sky-100/70 via-white to-emerald-50/50">
-        <div class="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
-            <h1 class="text-2xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600">GTECH ADMISSIONS</span>
-            </h1>
-            <p class="text-xs sm:text-base font-extrabold text-sky-800 uppercase tracking-wider">
-                Admissions and Guidance Portal • 5 Years of Trust
-            </p>
-            <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
-                Explore universities and entrance exams across India, and enter marks directly on each university card to see scholarship slabs, branch-wise concessions, tuition per year, and 4 years fee.
-            </p>
-            <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
-                    <i class="fa-solid fa-graduation-cap"></i> Scholarship Based on Marks
-                </button>
-                <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition flex items-center gap-2">
-                    <i class="fa-solid fa-route"></i> Visiting Application
-                </button>
-                <a href="#universities" class="px-5 py-3 rounded-2xl bg-white hover:bg-sky-50 text-sky-800 border border-sky-200 font-extrabold text-xs sm:text-sm shadow-xs transition">
-                    Explore Universities
                 </a>
-            </div>
-        </div>
-    </section>
 
-    <!-- ABOUT GTECH WITH CLEAN CAROUSEL -->
-    <section id="about" class="py-10 sm:py-14 bg-white border-b border-sky-100">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
-                <span class="text-xs font-bold uppercase tracking-widest text-emerald-600">Why Choose Gtech</span>
-                <h2 class="text-xl sm:text-3xl font-black text-slate-900">TRUSTED BY PARENTS AND STUDENTS FROM 5 YEARS</h2>
-                <p class="text-xs sm:text-sm text-slate-600">
-                    Structured admission guidance, scholarship evaluation based on marks, and free campus visiting before finalizing admissions.
+                <nav class="hidden md:flex items-center space-x-1 bg-sky-50/90 p-1.5 rounded-2xl border border-sky-100 text-xs font-bold text-slate-700">
+                    <a href="#about" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">About</a>
+                    <a href="#universities" class="px-3.5 py-2 rounded-xl hover:bg-white hover:text-sky-700 transition">Universities</a>
+                    <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-award text-[11px]"></i> Scholarship Based on Marks
+                    </button>
+                    <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-route text-[11px]"></i> Visiting Application
+                    </button>
+                </nav>
+
+                <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+                    <button id="header-dashboard-btn" type="button" onclick="openStudentDashboardModal('dashboard')" class="hidden px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 max-w-[165px] sm:max-w-none">
+                        <i class="fa-solid fa-user-graduate text-[11px] shrink-0"></i>
+                        <span id="header-student-name" class="truncate">Student Portal</span>
+                    </button>
+
+                    <button id="header-logout-btn" type="button" onclick="handleStudentLogout()" class="hidden px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl sm:rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
+                        <span>Logout</span>
+                    </button>
+
+                    <button id="header-login-btn" type="button" onclick="openAuthModal('login')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20">
+                        <i class="fa-solid fa-right-to-bracket text-[11px]"></i>
+                        <span>Login</span>
+                    </button>
+
+                    <button id="header-register-btn" type="button" onclick="openAuthModal('register')" class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-700 to-emerald-600 hover:opacity-95 text-white text-[11px] sm:text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-blue-700/20">
+                        <i class="fa-solid fa-user-plus text-[11px]"></i>
+                        <span>Register</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex md:hidden items-center gap-1.5 overflow-x-auto border-t border-sky-100 bg-white px-3 py-2 text-[11px] font-bold scrollbar-none">
+                <a href="#about" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">About</a>
+                <a href="#universities" class="px-3 py-1.5 rounded-xl bg-sky-50 border border-sky-100 text-slate-700 whitespace-nowrap shrink-0">Universities</a>
+                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 whitespace-nowrap shrink-0">Scholarship Based on Marks</button>
+                <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 whitespace-nowrap shrink-0">Visiting Application</button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden py-10 sm:py-16 px-4 sm:px-6 lg:px-8 border-b border-sky-100 bg-gradient-to-b from-sky-100/70 via-white to-emerald-50/50">
+            <div class="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
+                <h1 class="text-2xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600">GTECH ADMISSIONS</span>
+                </h1>
+                <p class="text-xs sm:text-base font-extrabold text-sky-800 uppercase tracking-wider">
+                    Admissions and Guidance Portal • 5 Years of Trust
                 </p>
-            </div>
-
-            <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-sky-100 bg-sky-50 mb-8 sm:mb-12 shadow-lg">
-                <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700 bg-sky-100">
-                    <div class="w-full h-full shrink-0 bg-sky-100 animate-pulse"></div>
+                <p class="text-slate-600 text-xs sm:text-sm max-w-2xl mx-auto font-medium">
+                    Explore universities and entrance exams across India, and enter marks directly on each university card to see scholarship slabs, branch-wise concessions, tuition per year, and 4 years fee.
+                </p>
+                <div class="pt-2 flex flex-wrap items-center justify-center gap-2.5">
+                    <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap"></i> Scholarship Based on Marks
+                    </button>
+                    <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 transition flex items-center gap-2">
+                        <i class="fa-solid fa-route"></i> Visiting Application
+                    </button>
+                    <a href="#universities" class="px-5 py-3 rounded-2xl bg-white hover:bg-sky-50 text-sky-800 border border-sky-200 font-extrabold text-xs sm:text-sm shadow-xs transition">
+                        Explore Universities
+                    </a>
                 </div>
-                <button type="button" onclick="prevSlide()" aria-label="Previous slide" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❮</button>
-                <button type="button" onclick="nextSlide()" aria-label="Next slide" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❯</button>
             </div>
+        </section>
 
-            <!-- 4-Card Service Suite -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-                <div onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-sky-50/90 to-white border border-sky-100 hover:border-sky-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
-                                <i class="fa-solid fa-award"></i>
+        <!-- ABOUT GTECH WITH CLEAN CAROUSEL -->
+        <section id="about" class="py-10 sm:py-14 bg-white border-b border-sky-100">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
+                    <span class="text-xs font-bold uppercase tracking-widest text-emerald-600">Why Choose Gtech</span>
+                    <h2 class="text-xl sm:text-3xl font-black text-slate-900">TRUSTED BY PARENTS AND STUDENTS FROM 5 YEARS</h2>
+                    <p class="text-xs sm:text-sm text-slate-600">
+                        Structured admission guidance, scholarship evaluation based on marks, and free campus visiting before finalizing admissions.
+                    </p>
+                </div>
+
+                <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-sky-100 bg-sky-50 mb-8 sm:mb-12 shadow-lg">
+                    <div id="about-carousel" class="relative aspect-[5/2] sm:aspect-auto sm:h-96 w-full flex transition-transform duration-700 bg-sky-100">
+                        <div class="w-full h-full shrink-0 bg-sky-100 animate-pulse"></div>
+                    </div>
+                    <button type="button" onclick="prevSlide()" aria-label="Previous slide" class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❮</button>
+                    <button type="button" onclick="nextSlide()" aria-label="Next slide" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❯</button>
+                </div>
+
+                <!-- 4-Card Service Suite -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                    <div onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-sky-50/90 to-white border border-sky-100 hover:border-sky-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                    <i class="fa-solid fa-award"></i>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Marks Based</span>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">Marks Based</span>
+                            <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Scholarship Based on Marks</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">Enter your percentage or score to see instant scholarship eligibility &amp; fee concession.</p>
                         </div>
-                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Scholarship Based on Marks</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Enter your percentage or score to see instant scholarship eligibility &amp; fee concession.</p>
+                        <div class="pt-4 mt-4 border-t border-sky-100 flex items-center justify-between text-[11px] font-bold text-sky-700">
+                            <span>Apply for Scholarship</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </div>
                     </div>
-                    <div class="pt-4 mt-4 border-t border-sky-100 flex items-center justify-between text-[11px] font-bold text-sky-700">
-                        <span>Apply for Scholarship</span>
-                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </div>
-                </div>
 
-                <div onclick="openScholarshipModal('', 'Visiting Application')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-emerald-50/90 to-white border border-emerald-100 hover:border-emerald-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
-                                <i class="fa-solid fa-route"></i>
+                    <div onclick="openScholarshipModal('', 'Visiting Application')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-emerald-50/90 to-white border border-emerald-100 hover:border-emerald-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                    <i class="fa-solid fa-route"></i>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Visiting Form</span>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Visiting Form</span>
+                            <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Visiting Application</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">Book a free campus visit first so you can inspect labs, hostels, and classrooms before admissions.</p>
                         </div>
-                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Visiting Application</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Book a free campus visit first so you can inspect labs, hostels, and classrooms before admissions.</p>
+                        <div class="pt-4 mt-4 border-t border-emerald-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
+                            <span>Submit Visiting Application</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </div>
                     </div>
-                    <div class="pt-4 mt-4 border-t border-emerald-100 flex items-center justify-between text-[11px] font-bold text-emerald-700">
-                        <span>Submit Visiting Application</span>
-                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </div>
-                </div>
 
-                <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-amber-50/80 to-white border border-amber-100 hover:border-amber-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
-                                <i class="fa-solid fa-university"></i>
+                    <div onclick="document.getElementById('universities').scrollIntoView({behavior:'smooth'})" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-amber-50/80 to-white border border-amber-100 hover:border-amber-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                    <i class="fa-solid fa-university"></i>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">100+ Institutions</span>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">100+ Institutions</span>
+                            <h3 class="font-extrabold text-slate-900 text-sm leading-snug">100+ Universities &amp; Colleges</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">State Universities, Deemed Universities, Autonomous Colleges &amp; Engineering Colleges.</p>
                         </div>
-                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">100+ Universities &amp; Colleges</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">State Universities, Deemed Universities, Autonomous Colleges &amp; Engineering Colleges.</p>
+                        <div class="pt-4 mt-4 border-t border-amber-100 flex items-center justify-between text-[11px] font-bold text-amber-700">
+                            <span>Explore Institutions</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </div>
                     </div>
-                    <div class="pt-4 mt-4 border-t border-amber-100 flex items-center justify-between text-[11px] font-bold text-amber-700">
-                        <span>Explore Institutions</span>
-                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </div>
-                </div>
 
-                <div onclick="openScholarshipModal('', 'Education Loan Guidance')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-indigo-50/80 to-white border border-indigo-100 hover:border-indigo-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
-                                <i class="fa-solid fa-building-columns"></i>
+                    <div onclick="openScholarshipModal('', 'Education Loan Guidance')" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-indigo-50/80 to-white border border-indigo-100 hover:border-indigo-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg group-hover:scale-105 transition">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Loan Support</span>
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">Loan Support</span>
+                            <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Streamlined Education Loan Process</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">Guidance and documentation support for education loans covering tuition and campus hostel charges.</p>
                         </div>
-                        <h3 class="font-extrabold text-slate-900 text-sm leading-snug">Streamlined Education Loan Process</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed">Guidance and documentation support for education loans covering tuition and campus hostel charges.</p>
-                    </div>
-                    <div class="pt-4 mt-4 border-t border-indigo-100 flex items-center justify-between text-[11px] font-bold text-indigo-700">
-                        <span>Apply for Loan Guidance</span>
-                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        <div class="pt-4 mt-4 border-t border-indigo-100 flex items-center justify-between text-[11px] font-bold text-indigo-700">
+                            <span>Apply for Loan Guidance</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Region Selector & Universities Section -->
-    <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-6">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
-            <div>
-                <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
-                <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
-                <p class="text-xs text-slate-600 mt-0.5">Entrance exams are sorted by application fee (low to high) and universities by tuition fee (low to high). Enter marks inside each card's Scholarship &amp; Fee Filter box.</p>
+        <!-- Region Selector & Universities Section -->
+        <section id="universities" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-5">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-sky-700">Institutional Database</span>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Universities &amp; Branch Fee Matrix</h2>
+                    <p class="text-xs text-slate-600 mt-0.5">Entrance exams are sorted by application fee (low to high) and universities by tuition fee (low to high). Enter marks inside each card's Scholarship &amp; Fee Filter box.</p>
+                </div>
+                <div class="w-full md:w-72">
+                    <input type="text" id="uni-search" autocomplete="off" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
+                </div>
             </div>
-            <div class="w-full md:w-72">
-                <input type="text" id="uni-search" autocomplete="off" oninput="renderUniversities()" placeholder="Search university, campus, city, or branch..." class="w-full bg-white border border-sky-200 rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-500 shadow-xs">
-            </div>
-        </div>
 
-        <div id="state-filter-bar" class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
-            <button type="button" onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50 transition whitespace-nowrap shrink-0">
-                <i class="fa-solid fa-file-pen mr-1"></i>Entrance Exams
-            </button>
-            <button type="button" onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0">All Regions</button>
-            <button type="button" onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
-            <button type="button" onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Telangana</button>
-            <button type="button" onclick="setStateFilter('Chennai / Tamil Nadu')" data-state="Chennai / Tamil Nadu" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Chennai / Tamil Nadu</button>
-            <button type="button" onclick="setStateFilter('Karnataka / Bangalore')" data-state="Karnataka / Bangalore" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Karnataka / Bangalore</button>
-            <button type="button" onclick="setStateFilter('Uttar Pradesh')" data-state="Uttar Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Uttar Pradesh</button>
-            <button type="button" onclick="setStateFilter('Madhya Pradesh')" data-state="Madhya Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Madhya Pradesh</button>
-            <button type="button" onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Maharashtra</button>
-            <button type="button" onclick="setStateFilter('Gujarat')" data-state="Gujarat" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Gujarat</button>
-        </div>
-
-        <!-- Visible Budget Range Filter Bar -->
-        <div id="active-budget-filter-bar" class="mt-3 p-3.5 rounded-2xl bg-white border border-sky-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-2.5">
-                <label for="active-budget-input" class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                    <i class="fa-solid fa-indian-rupee-sign text-emerald-600"></i>
-                    <span>Max Yearly Fee Budget (₹):</span>
-                </label>
-                <input
-                    type="number"
-                    min="0"
-                    step="5000"
-                    id="active-budget-input"
-                    placeholder="e.g. 150000"
-                    oninput="handleGlobalBudgetChange(this.value)"
-                    class="w-40 sm:w-48 bg-sky-50/60 border border-sky-200 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-500"
-                >
-                <button
-                    type="button"
-                    onclick="const inp = document.getElementById('active-budget-input'); if (inp) inp.value = ''; clearGlobalMarksFilter();"
-                    class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
-                >
-                    Reset Budget
+            <div id="state-filter-bar" class="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
+                <button type="button" onclick="setStateFilter('Entrance Exams')" data-state="Entrance Exams" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50 transition whitespace-nowrap shrink-0">
+                    <i class="fa-solid fa-file-pen mr-1"></i>Entrance Exams
                 </button>
-            </div>
-            <span class="text-[11px] text-slate-500 font-medium">
-                Filters universities by effective yearly tuition fee within your budget.
-            </span>
-        </div>
-
-        <!-- Andhra Pradesh Quota Info Strip -->
-        <div id="ap-quota-filter-bar" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
-            <div class="flex items-center gap-2 font-bold">
-                <i class="fa-solid fa-landmark text-emerald-700"></i>
-                <span>Andhra Pradesh Quota View: Quota availability and EAMCET requirement are controlled by Admin per university.</span>
-            </div>
-            <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
-        </div>
-
-        <!-- Hidden Legacy Filter Bar (kept hidden so all cards remain visible by default) -->
-        <div id="instant-scholarship-checker" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                    <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Home Cards Filter</span>
-                    <h3 class="text-sm sm:text-base font-black text-slate-900">Filter Cards by Marks &amp; Budget</h3>
-                </div>
-                <span id="sch-branch-fee-badge" class="px-3 py-1 rounded-xl bg-white border border-sky-200 text-xs font-extrabold text-sky-900">
-                    Sorted: Low to High Tuition Fee
-                </span>
+                <button type="button" onclick="setStateFilter('ALL')" data-state="ALL" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0">All Regions</button>
+                <button type="button" onclick="setStateFilter('Andhra Pradesh')" data-state="Andhra Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Andhra Pradesh</button>
+                <button type="button" onclick="setStateFilter('Telangana')" data-state="Telangana" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Telangana</button>
+                <button type="button" onclick="setStateFilter('Chennai / Tamil Nadu')" data-state="Chennai / Tamil Nadu" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Chennai / Tamil Nadu</button>
+                <button type="button" onclick="setStateFilter('Karnataka / Bangalore')" data-state="Karnataka / Bangalore" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Karnataka / Bangalore</button>
+                <button type="button" onclick="setStateFilter('Uttar Pradesh')" data-state="Uttar Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Uttar Pradesh</button>
+                <button type="button" onclick="setStateFilter('Madhya Pradesh')" data-state="Madhya Pradesh" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Madhya Pradesh</button>
+                <button type="button" onclick="setStateFilter('Maharashtra')" data-state="Maharashtra" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Maharashtra</button>
+                <button type="button" onclick="setStateFilter('Gujarat')" data-state="Gujarat" class="state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0">Gujarat</button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-                <div>
-                    <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Select Marks Type
+            <!-- Visible Budget Range Filter Bar -->
+            <div id="active-budget-filter-bar" class="mt-3 p-3.5 rounded-2xl bg-white border border-sky-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <label for="active-budget-input" class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-indian-rupee-sign text-emerald-600"></i>
+                        <span>Max Yearly Fee Budget (₹):</span>
                     </label>
-                    <select id="sch-option-select" onchange="handleScholarshipOptionChange(); applyGlobalMarksFilter();" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-600">
-                        <option value="inter">Inter Marks (%)</option>
-                        <option value="pcm">PCM Marks (%)</option>
-                        <option value="mains">JEE Marks / Percentile (%)</option>
-                        <option value="eamcet">AP EAMCET Rank</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Enter Inter Marks (%)
-                    </label>
-                    <input type="number" step="any" id="sch-score-input" placeholder="e.g. 95" oninput="applyGlobalMarksFilter()" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
-                </div>
-
-                <div>
-                    <label for="sch-budget-input" class="block text-[11px] font-bold text-slate-700 mb-1">
-                        Your Budget Per Year (₹)
-                    </label>
-                    <input type="number" min="0" step="5000" id="sch-budget-input" placeholder="e.g. 120000" oninput="handleGlobalBudgetChange(this.value)" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
-                </div>
-
-                <div class="flex gap-2">
-                    <button type="button" onclick="checkStudentScholarship()" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-black text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-filter"></i>
-                        <span>Apply Filter</span>
-                    </button>
-                    <button type="button" onclick="clearGlobalMarksFilter()" class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
-                        Reset
+                    <input
+                        type="number"
+                        min="0"
+                        step="5000"
+                        id="active-budget-input"
+                        placeholder="e.g. 150000"
+                        oninput="handleGlobalBudgetChange(this.value)"
+                        class="w-40 sm:w-48 bg-sky-50/60 border border-sky-200 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-500"
+                    >
+                    <button
+                        type="button"
+                        onclick="const inp = document.getElementById('active-budget-input'); if (inp) inp.value = ''; clearGlobalMarksFilter();"
+                        class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+                    >
+                        Reset Budget
                     </button>
                 </div>
-            </div>
-
-            <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                <span>
-                    Use each card's <strong>Scholarship &amp; Fee Filter</strong> box to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong>.
-                </span>
-                <span id="sch-allowed-criteria-hint" class="text-[11px] font-bold text-indigo-700">
-                    Criteria follow Admin rules per university
+                <span class="text-[11px] text-slate-500 font-medium">
+                    Filters universities by effective yearly tuition fee within your budget.
                 </span>
             </div>
-        </div>
-    </section>
 
-    <!-- Universities Grid Container -->
-    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
-        <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-    </main>
+            <!-- Andhra Pradesh Quota Info Strip -->
+            <div id="ap-quota-filter-bar" class="hidden mt-3 p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
+                <div class="flex items-center gap-2 font-bold">
+                    <i class="fa-solid fa-landmark text-emerald-700"></i>
+                    <span>Andhra Pradesh Quota View: Quota availability and EAMCET requirement are controlled by Admin per university.</span>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full bg-white border border-emerald-200 text-[10px] font-extrabold text-emerald-800">AP Quota Rules</span>
+            </div>
 
-    <!-- SCHOLARSHIP BASED ON MARKS & VISITING APPLICATION CTA BANNER -->
-    <section id="apply" class="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 border-t border-sky-100">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white border border-indigo-100 rounded-3xl p-6 sm:p-10 shadow-xl text-center space-y-4">
-                <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    <i class="fa-solid fa-award"></i> Scholarship Based on Marks • Visiting Application
-                </span>
-                <h2 class="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                    SCHOLARSHIP &amp; VISITING APPLICATION FORM
-                </h2>
-                <p class="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
-                    Submit your Intermediate 1st &amp; 2nd year marks, PCM marks (out of 600 with practicals), optional JEE marks, and optional EAMCET rank or submit a Visiting Application for a free campus visit first. Once submitted, our expert will reach you within 10 mins.
-                </p>
-                <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
-                    <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-indigo-600/25 transition inline-flex items-center gap-2">
-                        <i class="fa-solid fa-award"></i>
-                        <span>SCHOLARSHIP BASED ON MARKS</span>
-                    </button>
-                    <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-emerald-600/25 transition inline-flex items-center gap-2">
-                        <i class="fa-solid fa-route"></i>
-                        <span>VISITING APPLICATION</span>
-                    </button>
+            <!-- Hidden Legacy Filter Bar -->
+            <div id="instant-scholarship-checker" class="hidden mt-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-sky-50 via-white to-emerald-50/70 border border-sky-200 shadow-xs space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-sky-700 block">Home Cards Filter</span>
+                        <h3 class="text-sm sm:text-base font-black text-slate-900">Filter Cards by Marks &amp; Budget</h3>
+                    </div>
+                    <span id="sch-branch-fee-badge" class="px-3 py-1 rounded-xl bg-white border border-sky-200 text-xs font-extrabold text-sky-900">
+                        Sorted: Low to High Tuition Fee
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label for="sch-option-select" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            Select Marks Type
+                        </label>
+                        <select id="sch-option-select" onchange="handleScholarshipOptionChange(); applyGlobalMarksFilter();" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                            <option value="inter">Inter Marks (%)</option>
+                            <option value="pcm">PCM Marks (%)</option>
+                            <option value="mains">JEE Marks / Percentile (%)</option>
+                            <option value="eamcet">AP EAMCET Rank</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label id="sch-value-label" for="sch-score-input" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            Enter Inter Marks (%)
+                        </label>
+                        <input type="number" step="any" id="sch-score-input" placeholder="e.g. 95" oninput="applyGlobalMarksFilter()" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                    </div>
+
+                    <div>
+                        <label for="sch-budget-input" class="block text-[11px] font-bold text-slate-700 mb-1">
+                            Your Budget Per Year (₹)
+                        </label>
+                        <input type="number" min="0" step="5000" id="sch-budget-input" placeholder="e.g. 120000" oninput="handleGlobalBudgetChange(this.value)" class="w-full bg-white border border-sky-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-600">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="button" onclick="checkStudentScholarship()" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white font-black text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-filter"></i>
+                            <span>Apply Filter</span>
+                        </button>
+                        <button type="button" onclick="clearGlobalMarksFilter()" class="py-2.5 px-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div id="sch-inline-summary" class="p-3 rounded-xl bg-white border border-sky-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                        Use each card's <strong>Scholarship &amp; Fee Filter</strong> box to see <strong>You Got Scholarship</strong>, <strong>Tuition Per Year</strong>, and <strong>4 Years Fee</strong>.
+                    </span>
+                    <span id="sch-allowed-criteria-hint" class="text-[11px] font-bold text-indigo-700">
+                        Criteria follow Admin rules per university
+                    </span>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-sky-100 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p class="font-semibold text-slate-700">Gtech Admissions under GreenTech Education Consultancy and Services (5 Years of Trust). All rights reserved.</p>
-            <div class="flex items-center gap-4">
-                <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="hover:text-indigo-600 transition font-bold text-indigo-600">Scholarship Form</button>
-                <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="hover:text-emerald-600 transition font-bold text-emerald-700">Visiting Application</button>
-                <button type="button" onclick="openAuthModal('login')" class="hover:text-sky-600 transition font-bold text-sky-700">Student Login</button>
+        <!-- Universities Grid Container -->
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pb-14">
+            <div id="universities-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </main>
+
+        <!-- SCHOLARSHIP BASED ON MARKS & VISITING APPLICATION CTA BANNER -->
+        <section id="apply" class="py-12 sm:py-16 bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 border-t border-sky-100">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white border border-indigo-100 rounded-3xl p-6 sm:p-10 shadow-xl text-center space-y-4">
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        <i class="fa-solid fa-award"></i> Scholarship Based on Marks • Visiting Application
+                    </span>
+                    <h2 class="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                        SCHOLARSHIP &amp; VISITING APPLICATION FORM
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
+                        Submit your Intermediate 1st &amp; 2nd year marks, PCM marks (out of 600 with practicals), optional JEE marks, and optional EAMCET rank or submit a Visiting Application for a free campus visit first. Once submitted, our expert will reach you within 10 mins.
+                    </p>
+                    <div class="pt-2 flex flex-wrap items-center justify-center gap-3">
+                        <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-indigo-600/25 transition inline-flex items-center gap-2">
+                            <i class="fa-solid fa-award"></i>
+                            <span>SCHOLARSHIP BASED ON MARKS</span>
+                        </button>
+                        <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-emerald-600/25 transition inline-flex items-center gap-2">
+                            <i class="fa-solid fa-route"></i>
+                            <span>VISITING APPLICATION</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </footer>
+        </section>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-sky-100 py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="font-semibold text-slate-700">Gtech Admissions under GreenTech Education Consultancy and Services (5 Years of Trust). All rights reserved.</p>
+                <div class="flex items-center gap-4">
+                    <button type="button" onclick="openScholarshipModal('', 'Scholarship Based on Marks')" class="hover:text-indigo-600 transition font-bold text-indigo-600">Scholarship Form</button>
+                    <button type="button" onclick="openScholarshipModal('', 'Visiting Application')" class="hover:text-emerald-600 transition font-bold text-emerald-700">Visiting Application</button>
+                    <button type="button" onclick="openAuthModal('login')" class="hover:text-sky-600 transition font-bold text-sky-700">Student Login</button>
+                </div>
+            </div>
+        </footer>
+    </div>
 
     <!-- QUARTER-PAGE (1/4th) CONGRATULATIONS & EARLY REGISTRATION OFFER POP-UP (BEFORE MARCH 16, 2027) -->
     <div id="early-offer-popup" class="fixed bottom-4 right-4 z-[70] hidden w-[92vw] sm:w-96 max-w-md max-h-[36vh] overflow-y-auto rounded-2xl bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 text-white border-2 border-amber-300/80 shadow-2xl p-3.5 sm:p-4 gtech-pop-in">
@@ -666,19 +674,62 @@
         </div>
     </div>
 
-    <!-- STUDENT REGISTRATION & EMAIL-ONLY LOGIN MODAL -->
-    <div id="student-auth-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="relative bg-white border border-sky-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden my-auto gtech-pop-in">
-            <div class="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none" style="background-image: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1400&auto=format&fit=crop');"></div>
-            <div class="relative z-10 p-5 sm:p-8 bg-gradient-to-b from-sky-50/90 via-white/95 to-emerald-50/80">
-                <button type="button" onclick="closeAuthModal()" aria-label="Close modal" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-xs font-bold transition">✕</button>
-
-                <div id="auth-redirect-notice" class="hidden mb-4 px-3.5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-800 flex items-center gap-2">
-                    <i class="fa-solid fa-lock text-indigo-600 shrink-0"></i>
-                    <span id="auth-redirect-notice-text">Please sign in or register first to open your application form.</span>
+    <!-- STUDENT REGISTRATION & EMAIL-ONLY LOGIN GATEWAY MODAL -->
+    <div id="student-auth-modal" class="fixed inset-0 z-[85] bg-gradient-to-br from-sky-900/80 via-slate-900/85 to-indigo-950/90 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div class="relative bg-white border border-sky-200 rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden my-auto gtech-pop-in grid grid-cols-1 md:grid-cols-12">
+            <!-- Left Student Showcase (Male student on Login, Female student on Register) -->
+            <div class="md:col-span-5 bg-gradient-to-b from-sky-600 via-blue-700 to-indigo-800 text-white p-5 sm:p-7 flex flex-col justify-between relative">
+                <div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[10px] font-black uppercase tracking-wider">
+                        Gtech Admissions • 5 Years Trust
+                    </span>
+                    <h2 id="auth-showcase-title" class="text-xl sm:text-2xl font-black mt-3 leading-tight">
+                        Welcome Back to Gtech!
+                    </h2>
+                    <p id="auth-showcase-subtitle" class="text-xs text-sky-100 mt-1.5 leading-relaxed">
+                        Sign in with your email OTP to view universities, check scholarships, and track admissions.
+                    </p>
                 </div>
 
-                <div class="flex rounded-2xl bg-sky-100/80 p-1 mb-6 border border-sky-200 text-xs font-bold max-w-[260px]">
+                <!-- Male Student Visual (Login) -->
+                <div id="auth-male-student-card" class="my-4 rounded-2xl overflow-hidden border-2 border-white/25 shadow-lg bg-slate-950/30">
+                    <img
+                        src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=900&auto=format&fit=crop"
+                        alt="Gtech Student Login"
+                        class="w-full h-52 sm:h-60 object-cover object-top"
+                    >
+                    <div class="p-3 bg-slate-950/65 text-[11px]">
+                        <strong class="block font-extrabold text-white">Student Login</strong>
+                        <span class="text-sky-200">Access your Gtech ID, scholarships &amp; referral hub</span>
+                    </div>
+                </div>
+
+                <!-- Female Student Visual (Register) -->
+                <div id="auth-female-student-card" class="hidden my-4 rounded-2xl overflow-hidden border-2 border-white/25 shadow-lg bg-slate-950/30">
+                    <img
+                        src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=900&auto=format&fit=crop"
+                        alt="Gtech New Student Registration"
+                        class="w-full h-52 sm:h-60 object-cover object-top"
+                    >
+                    <div class="p-3 bg-slate-950/65 text-[11px]">
+                        <strong class="block font-extrabold text-white">New Student Registration</strong>
+                        <span class="text-emerald-200">Get your Gtech ID &amp; unlock ₹2,000/- early offer</span>
+                    </div>
+                </div>
+
+                <p class="text-[11px] text-sky-100/90 font-semibold">
+                    Passwordless Email OTP • Direct Admissions &amp; Counselling
+                </p>
+            </div>
+
+            <!-- Right Auth Form Panel -->
+            <div class="md:col-span-7 relative z-10 p-5 sm:p-8 bg-gradient-to-b from-sky-50/90 via-white/95 to-emerald-50/80 flex flex-col justify-center">
+                <div id="auth-redirect-notice" class="hidden mb-4 px-3.5 py-2.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-800 flex items-center gap-2">
+                    <i class="fa-solid fa-lock text-indigo-600 shrink-0"></i>
+                    <span id="auth-redirect-notice-text">Please sign in or register first to continue to Gtech Admissions.</span>
+                </div>
+
+                <div class="flex rounded-2xl bg-sky-100/80 p-1 mb-6 border border-sky-200 text-xs font-bold max-w-[280px]">
                     <button type="button" id="mode-tab-login" onclick="switchStudentAuthMode('login')" class="flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition">Login</button>
                     <button type="button" id="mode-tab-register" onclick="switchStudentAuthMode('register')" class="flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition">Register</button>
                 </div>
@@ -831,7 +882,6 @@
     <!-- AUTHENTICATED STUDENT PORTAL MODAL (APP-STYLE TOP BAR + LOWER CONTENT SPACING) -->
     <div id="student-dashboard-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center p-2.5 sm:p-4 overflow-x-hidden">
         <div class="bg-gradient-to-b from-sky-50 via-white to-indigo-50/40 border border-indigo-200/80 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <!-- Clean App-Style Top Bar -->
             <div class="px-3 py-2.5 sm:px-5 sm:py-3.5 bg-white border-b border-slate-200/90 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0">
@@ -862,7 +912,6 @@
                 </div>
             </div>
 
-            <!-- Extra top padding (pt-7 on mobile, sm:pt-8 on desktop) pushes dashboard cards cleanly downward -->
             <div class="px-3.5 pt-7 pb-5 sm:px-6 sm:pt-8 sm:pb-7 overflow-y-auto overflow-x-hidden flex-1 space-y-5 sm:space-y-6">
                 <div id="dash-section-dashboard" class="space-y-5">
                     <div class="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/90 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1050,6 +1099,25 @@
             'gtechabhisri@gmail.com'
         ];
 
+        function syncAuthShowcase(mode) {
+            const maleCard = document.getElementById('auth-male-student-card');
+            const femaleCard = document.getElementById('auth-female-student-card');
+            const titleEl = document.getElementById('auth-showcase-title');
+            const subEl = document.getElementById('auth-showcase-subtitle');
+
+            if (mode === 'register') {
+                maleCard?.classList.add('hidden');
+                femaleCard?.classList.remove('hidden');
+                if (titleEl) titleEl.textContent = 'Start Your Journey with Gtech!';
+                if (subEl) subEl.textContent = 'Register to get your Gtech ID, compare colleges, and unlock ₹2,000/- early benefits.';
+            } else {
+                femaleCard?.classList.add('hidden');
+                maleCard?.classList.remove('hidden');
+                if (titleEl) titleEl.textContent = 'Welcome Back to Gtech!';
+                if (subEl) subEl.textContent = 'Sign in with your email OTP to view universities, check scholarships, and track admissions.';
+            }
+        }
+
         function closeEarlyOfferPopup() {
             sessionStorage.setItem('gtech_early_offer_dismissed', '1');
             document.getElementById('early-offer-popup')?.classList.add('hidden');
@@ -1079,6 +1147,11 @@
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('state-filter-bar')?.classList.remove('hidden');
             setTimeout(showEarlyOfferPopupIfEligible, 900);
+
+            document.getElementById('mode-tab-login')?.addEventListener('click', () => syncAuthShowcase('login'));
+            document.getElementById('mode-tab-register')?.addEventListener('click', () => syncAuthShowcase('register'));
+            document.getElementById('header-login-btn')?.addEventListener('click', () => syncAuthShowcase('login'));
+            document.getElementById('header-register-btn')?.addEventListener('click', () => syncAuthShowcase('register'));
 
             document.getElementById('guidance-inquiry-form')?.addEventListener('submit', () => {
                 triggerDirectEmail({

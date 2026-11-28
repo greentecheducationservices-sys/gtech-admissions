@@ -3,13 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 var _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_EMAIL = 'admin@gtechadmissions.com';
-const GTECH_ALERT_RECIPIENTS = [
-    'greentecheducationservices@gmail.com',
-    'admin@gtechadmissions.com',
-    'gtechabhisri@gmail.com'
-];
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
-const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/api/mail` : '/api/mail');
+const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/send-notification` : '/api/mail');
 const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
 
 const SCH_OPTION_LABELS = {
@@ -49,7 +44,6 @@ const state = {
     referredStudents: [],
     currentStudent: null,
     authUser: null,
-    authChecked: false,
     financeRecord: null,
     pendingRegistration: null,
     pendingLoginEmail: '',
@@ -64,82 +58,18 @@ const state = {
     budgetPerYear: null
 };
 
-function isUserAuthenticated() {
-    return Boolean(state.currentStudent || state.authUser);
-}
+function syncPageScreenVisibility(forceShowHome = false) {
+    const authScreen = document.getElementById('auth-first-screen');
+    const homeContent = document.getElementById('home-page-content');
+    if (!authScreen && !homeContent) return;
 
-function ensureAuthGateElements() {
-    let loader = document.getElementById('gtech-auth-loading-gate');
-    if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'gtech-auth-loading-gate';
-        loader.className = 'fixed inset-0 z-[90] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4';
-        loader.innerHTML = `
-            <div class="bg-white rounded-3xl px-6 py-5 shadow-2xl border border-sky-100 flex items-center gap-3 text-slate-800 text-xs font-extrabold">
-                <span class="w-5 h-5 rounded-full border-2 border-sky-600 border-t-transparent animate-spin inline-block"></span>
-                <span>Checking your Gtech session...</span>
-            </div>
-        `;
-        document.body.appendChild(loader);
-    }
-
-    let backdrop = document.getElementById('gtech-auth-lock-backdrop');
-    if (!backdrop) {
-        backdrop = document.createElement('div');
-        backdrop.id = 'gtech-auth-lock-backdrop';
-        backdrop.className = 'fixed inset-0 z-[80] bg-slate-950/75 backdrop-blur-sm hidden';
-        document.body.appendChild(backdrop);
-    }
-}
-
-function setAuthLoadingState(isLoading) {
-    ensureAuthGateElements();
-    const loader = document.getElementById('gtech-auth-loading-gate');
-    if (!loader) return;
-    if (isLoading) {
-        loader.classList.remove('hidden');
-        loader.classList.add('flex');
+    const hasSession = Boolean(state.currentStudent || localStorage.getItem('gtech_student_session'));
+    if (forceShowHome || hasSession) {
+        authScreen?.classList.add('hidden');
+        homeContent?.classList.remove('hidden');
     } else {
-        loader.classList.add('hidden');
-        loader.classList.remove('flex');
-    }
-}
-
-function applyProtectedPageAccess() {
-    ensureAuthGateElements();
-    const authed = isUserAuthenticated();
-    const backdrop = document.getElementById('gtech-auth-lock-backdrop');
-    const authModal = document.getElementById('student-auth-modal');
-
-    const protectedSections = [
-        document.getElementById('home-page'),
-        document.getElementById('main-content'),
-        document.getElementById('universities-section'),
-        document.querySelector('main')
-    ].filter(Boolean);
-
-    if (authed) {
-        if (backdrop) backdrop.classList.add('hidden');
-        protectedSections.forEach(el => {
-            el.classList.remove('hidden', 'pointer-events-none', 'select-none', 'blur-xs');
-            el.removeAttribute('aria-hidden');
-        });
-        if (authModal) {
-            authModal.classList.add('hidden');
-            authModal.classList.remove('flex');
-        }
-    } else {
-        if (backdrop) backdrop.classList.remove('hidden');
-        protectedSections.forEach(el => {
-            el.classList.add('pointer-events-none', 'select-none');
-            el.setAttribute('aria-hidden', 'true');
-        });
-        if (authModal) {
-            authModal.style.zIndex = '85';
-            authModal.classList.remove('hidden');
-            authModal.classList.add('flex');
-            switchStudentAuthMode(state.pendingRegistration ? 'register' : 'login');
-        }
+        authScreen?.classList.remove('hidden');
+        homeContent?.classList.add('hidden');
     }
 }
 
@@ -149,7 +79,7 @@ function hideAddedMarksBudgetFilterBar() {
         stateBar.classList.remove('hidden');
         stateBar.style.display = 'flex';
         let parent = stateBar.parentElement;
-        while (parent && parent !== document.body) {
+        while (parent && parent !== document.body && parent.id !== 'home-page-content') {
             parent.classList.remove('hidden');
             parent = parent.parentElement;
         }
@@ -179,18 +109,6 @@ function reorderFilterButtonsEntranceFirst() {
     if (entranceBtn && allBtn && entranceBtn.parentNode === allBtn.parentNode) {
         allBtn.parentNode.insertBefore(entranceBtn, allBtn);
     }
-}
-
-function bindRegionFilterButtons() {
-    document.querySelectorAll('.state-btn').forEach(btn => {
-        if (btn.dataset.gtechBound === '1') return;
-        btn.dataset.gtechBound = '1';
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const stateVal = btn.getAttribute('data-state') || btn.dataset.state || 'ALL';
-            setStateFilter(stateVal);
-        });
-    });
 }
 
 function isBeforeMarch16_2027(dateObj = new Date()) {
@@ -546,22 +464,8 @@ function proceedWithScholarshipApplication() {
 }
 
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
-    const recipients = Array.from(
-        new Set(
-            [
-                to,
-                ...(ccAdmin ? [ADMIN_EMAIL, ...GTECH_ALERT_RECIPIENTS] : [])
-            ]
-                .map(e => String(e || '').trim().toLowerCase())
-                .filter(Boolean)
-        )
-    );
-
     const payload = {
-        action: 'direct_notification',
-        to: recipients[0] || ADMIN_EMAIL,
-        recipients,
-        alertRecipients: GTECH_ALERT_RECIPIENTS,
+        to: to || ADMIN_EMAIL,
         adminEmail: ccAdmin ? ADMIN_EMAIL : null,
         subject,
         text,
@@ -570,29 +474,20 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
         timestamp: new Date().toISOString()
     };
 
-    const endpoints = Array.from(
-        new Set(
-            [
-                MAIL_NOTIFY_URL,
-                OTP_BACKEND_URL ? `${OTP_BACKEND_URL.replace(/\/+$/, '')}/send-notification` : '',
-                OTP_BACKEND_URL ? `${OTP_BACKEND_URL.replace(/\/+$/, '')}/api/mail` : ''
-            ].filter(Boolean)
-        )
-    );
-
-    for (const url of endpoints) {
+    if (MAIL_NOTIFY_URL) {
         try {
-            const res = await fetch(url, {
+            const res = await fetch(MAIL_NOTIFY_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (res.ok) {
-                return true;
+            if (!res.ok) {
+                console.warn('Mail endpoint returned non-OK status:', res.status);
             }
-            console.warn('Mail endpoint returned non-OK status:', url, res.status);
+            return res.ok;
         } catch (err) {
-            console.warn('Mail notification request warning:', url, err.message);
+            console.warn('Mail notification request warning:', err.message);
+            return false;
         }
     }
 
@@ -745,6 +640,10 @@ function detectIncomingReferralLink() {
         if (regRefInput && !regRefInput.value) {
             regRefInput.value = state.incomingReferralCode;
         }
+        const firstRegRefInput = document.getElementById('first-reg-referral');
+        if (firstRegRefInput && !firstRegRefInput.value) {
+            firstRegRefInput.value = state.incomingReferralCode;
+        }
     }
 }
 
@@ -824,26 +723,10 @@ async function loadActiveCarousel() {
     const carousel = document.getElementById('about-carousel');
     if (!carousel) return;
 
-    const carouselWrapper = carousel.parentElement;
-    if (carouselWrapper) {
-        carouselWrapper.classList.remove('hidden');
-        if (!carouselWrapper.style.minHeight && !carouselWrapper.className.includes('h-')) {
-            carouselWrapper.style.minHeight = '220px';
-        }
-    }
-
-    let data = null;
-    let error = null;
-    try {
-        const res = await _supabase
-            .from('carousel_images')
-            .select('*')
-            .order('id', { ascending: true });
-        data = res.data;
-        error = res.error;
-    } catch (err) {
-        error = err;
-    }
+    const { data, error } = await _supabase
+        .from('carousel_images')
+        .select('*')
+        .order('id', { ascending: true });
 
     const defaultSlides = [
         {
@@ -860,12 +743,12 @@ async function loadActiveCarousel() {
 
     const validAdminSlides = (!error && Array.isArray(data))
         ? data
-            .filter(row => row && row.is_active !== false)
+            .filter(row => row.is_active !== false)
             .map(row => ({
                 ...row,
                 resolvedUrl: row.image_url || row.url || row.image || ''
             }))
-            .filter(row => Boolean(row.resolvedUrl))
+            .filter(row => row.resolvedUrl)
         : [];
 
     let slides = validAdminSlides.length > 0
@@ -877,19 +760,10 @@ async function loadActiveCarousel() {
     }
 
     state.currentSlide = 0;
-    carousel.style.display = 'flex';
-    carousel.style.width = '100%';
-    carousel.style.transition = 'transform 0.45s ease';
     carousel.style.transform = 'translateX(0%)';
-
     carousel.innerHTML = slides.map(slide => `
-        <div class="w-full h-full min-w-full shrink-0 relative bg-sky-50">
-            <img
-                src="${slide.resolvedUrl}"
-                class="w-full h-full object-cover object-center block"
-                alt="${slide.title || 'Gtech Banner'}"
-                onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop';"
-            >
+        <div class="w-full h-full shrink-0 relative">
+            <img src="${slide.resolvedUrl}" class="w-full h-full object-cover object-center" alt="${slide.title || 'Gtech Banner'}">
         </div>
     `).join('');
 }
@@ -970,14 +844,14 @@ function matchesStateFilter(uni, selectedFilter) {
         return mode.toLowerCase().includes('entrance exam') || states.includes('entrance exams');
     }
 
-    const target = String(selectedFilter).toLowerCase().trim();
+    const target = String(selectedFilter).toLowerCase();
 
     if (states.includes(target)) return true;
     if (target.includes('chennai') || target.includes('tamil nadu')) {
-        return states.some(s => s.includes('chennai') || s.includes('tamil nadu') || s.includes('tn'));
+        return states.some(s => s.includes('chennai') || s.includes('tamil nadu'));
     }
-    if (target.includes('karnataka') || target.includes('bangalore') || target.includes('bengaluru')) {
-        return states.some(s => s.includes('karnataka') || s.includes('bangalore') || s.includes('bengaluru'));
+    if (target.includes('karnataka') || target.includes('bangalore')) {
+        return states.some(s => s.includes('karnataka') || s.includes('bangalore'));
     }
     if (target === 'uttar pradesh' || target === 'up') {
         return states.some(s => s === 'up' || s.includes('uttar pradesh'));
@@ -985,7 +859,7 @@ function matchesStateFilter(uni, selectedFilter) {
     if (target === 'madhya pradesh' || target === 'mp') {
         return states.some(s => s === 'mp' || s.includes('madhya pradesh'));
     }
-    return states.some(s => s.includes(target) || target.includes(s));
+    return false;
 }
 
 function matchesBudgetFilter(uni, fallbackIdx = 0) {
@@ -1274,28 +1148,6 @@ function refreshSingleUniversityCalcUI(uniKey) {
     `;
 }
 
-function openExpertConcessionCall(uniName, uniKey) {
-    const uni = state.universities.find((u, idx) => getUniKey(u, idx) === uniKey);
-    const rules = parseScholarshipRules(uni) || {};
-    const scoreState = state.cardScores[uniKey] || {};
-    const summaryBits = [
-        scoreState.branch ? `Chosen Branch: ${scoreState.branch}` : '',
-        scoreState.inter ? `Inter: ${scoreState.inter}%` : '',
-        scoreState.pcm ? `PCM: ${scoreState.pcm}%` : '',
-        scoreState.mains ? `JEE Mains: ${scoreState.mains}` : '',
-        scoreState.eamcet ? `EAMCET Rank: ${scoreState.eamcet}` : ''
-    ].filter(Boolean).join(', ');
-
-    if (rules.expert_phone) {
-        showToast(
-            'Expert Desk & Concession Request',
-            `Call ${rules.expert_phone} for ${uniName} extra fee concession${summaryBits ? ` (${summaryBits})` : ''}.`,
-            'success'
-        );
-    }
-    openScholarshipModal(uniName, 'Scholarship Based on Marks');
-}
-
 async function fetchUniversitiesFromSupabase() {
     const { data, error } = await _supabase.from('universities').select('*');
     if (error) {
@@ -1312,14 +1164,12 @@ async function fetchInquiriesFromSupabase() {
 }
 
 function setStateFilter(stateName) {
-    bindRegionFilterButtons();
     reorderFilterButtonsEntranceFirst();
-    state.stateFilter = stateName || 'ALL';
+    state.stateFilter = stateName;
     document.querySelectorAll('.state-btn').forEach(btn => {
-        const btnState = btn.getAttribute('data-state') || btn.dataset.state || 'ALL';
-        if (btnState === state.stateFilter) {
+        if (btn.getAttribute('data-state') === stateName) {
             btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-600 text-white shadow-sm transition whitespace-nowrap shrink-0';
-        } else if (btnState === 'Entrance Exams') {
+        } else if (btn.getAttribute('data-state') === 'Entrance Exams') {
             btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-indigo-200 text-indigo-800 hover:bg-indigo-50 transition whitespace-nowrap shrink-0';
         } else {
             btn.className = 'state-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-sky-50 transition whitespace-nowrap shrink-0';
@@ -1328,7 +1178,7 @@ function setStateFilter(stateName) {
 
     const apBar = document.getElementById('ap-quota-filter-bar');
     if (apBar) {
-        apBar.classList.toggle('hidden', state.stateFilter !== 'Andhra Pradesh');
+        apBar.classList.toggle('hidden', stateName !== 'Andhra Pradesh');
     }
 
     renderUniversities();
@@ -1337,7 +1187,6 @@ function setStateFilter(stateName) {
 function renderUniversities() {
     hideAddedMarksBudgetFilterBar();
     reorderFilterButtonsEntranceFirst();
-    bindRegionFilterButtons();
 
     const grid = document.getElementById('universities-grid');
     const searchInput = document.getElementById('uni-search');
@@ -1413,11 +1262,9 @@ function renderUniversities() {
         const statesDisplay = statesList.join(' • ') || uni.state || 'India';
         const campusesList = getUniversityCampuses(uni);
         const isAP = statesList.some(s => s.toLowerCase() === 'andhra pradesh');
-        const rawMode = String(uni.admission_type || '').trim();
+        const mode = String(uni.admission_type || 'Direct Admission Only');
         const isExamOnly = isEntranceExamOnlyMode(uni);
-        const isEntranceAndDirect = rawMode === 'Entrance Exam & Direct Admission';
-        const isDirectAdmission = !isExamOnly && !isEntranceAndDirect;
-        const modeBadgeText = isDirectAdmission ? '' : rawMode;
+        const isEntranceAndDirect = mode === 'Entrance Exam & Direct Admission';
 
         const safeUniName = String(uni.name || '').replace(/'/g, "\\'");
         const safeUniKey = String(uniKey).replace(/'/g, "\\'");
@@ -1469,8 +1316,8 @@ function renderUniversities() {
                     </div>
 
                     <div class="p-4 sm:p-5 pt-0">
-                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                            <i class="fa-solid fa-headset"></i> Get Expert Application Help
+                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-award"></i> Scholarship Form
                         </button>
                     </div>
                 </div>
@@ -1566,11 +1413,6 @@ function renderUniversities() {
                         </div>
                     `}
                 </div>
-
-                <button type="button" onclick="openExpertConcessionCall('${safeUniName}', '${safeUniKey}')" class="w-full py-2 px-3 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 font-extrabold text-[11px] flex items-center justify-center gap-1.5 transition">
-                    <i class="fa-solid fa-phone-volume"></i>
-                    <span>Call to Expert for Extra Fee Concession</span>
-                </button>
             </div>
         ` : '';
 
@@ -1644,34 +1486,10 @@ function renderUniversities() {
                         </div>
                     </div>
 
-                    <div class="p-4 sm:p-5 pt-0 space-y-2">
-                        ${eamcetAvailable && mgmtAvailable ? `
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <button type="button" onclick="openScholarshipModal('${safeUniName}', 'EAMCET Counselling Help')" class="w-full py-2.5 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                    <i class="fa-solid fa-compass"></i> EAMCET Counselling Help
-                                </button>
-                                <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Apply Management Quota')" class="w-full py-2.5 px-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                    <i class="fa-solid fa-file-signature"></i> Apply Management Quota
-                                </button>
-                            </div>
-                        ` : eamcetAvailable ? `
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'EAMCET Counselling Help')" class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-compass"></i> EAMCET Counselling Help
-                            </button>
-                        ` : mgmtAvailable ? `
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Apply Management Quota')" class="w-full py-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-file-signature"></i> Apply Management Quota
-                            </button>
-                        ` : ''}
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-award"></i> Scholarship Form
-                            </button>
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Visiting Application')" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-route"></i> Visiting Application
-                            </button>
-                        </div>
+                    <div class="p-4 sm:p-5 pt-0">
+                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-award"></i> Scholarship Form
+                        </button>
                     </div>
                 </div>
             `;
@@ -1690,7 +1508,7 @@ function renderUniversities() {
                         <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/95 text-sky-800 border border-sky-100 shadow-xs">${statesDisplay}</span>
                         <div class="absolute top-2.5 right-2.5 flex flex-wrap justify-end gap-1">
                             ${uni.nirf ? `<span class="text-[10px] font-mono font-bold text-slate-900 bg-white/95 px-2 py-0.5 rounded-lg border border-slate-200">NIRF #${uni.nirf}</span>` : ''}
-                            ${modeBadgeText ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${modeBadgeText}</span>` : ''}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg border ${badgeClass}">${mode}</span>
                         </div>
                     </div>
 
@@ -1725,26 +1543,10 @@ function renderUniversities() {
                     </div>
                 </div>
 
-                <div class="p-4 sm:p-5 pt-0 space-y-2">
-                    ${isEntranceAndDirect ? `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-2.5 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-headset"></i> Get Expert Application Help
-                            </button>
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-2.5 px-3 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-award"></i> Scholarship Form
-                            </button>
-                        </div>
-                    ` : `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-award"></i> Scholarship Form
-                            </button>
-                            <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Visiting Application')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                                <i class="fa-solid fa-route"></i> Visiting Application
-                            </button>
-                        </div>
-                    `}
+                <div class="p-4 sm:p-5 pt-0">
+                    <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                        <i class="fa-solid fa-award"></i> Scholarship Form
+                    </button>
                 </div>
             </div>
         `;
@@ -1752,13 +1554,13 @@ function renderUniversities() {
 }
 
 function openScholarshipModal(uniName = '', assistanceType = '') {
-    if (!isUserAuthenticated()) {
+    if (!state.currentStudent) {
         state.pendingPostLoginAction = {
             type: 'scholarship_form',
             uniName: uniName || '',
             assistanceType: assistanceType || 'Scholarship Based on Marks'
         };
-        const formLabel = assistanceType || 'Scholarship / Visiting Application';
+        const formLabel = assistanceType || 'Scholarship Based on Marks';
         openAuthModal('login', `Please sign in or register first to access the ${formLabel} form.`);
         showToast('Login Required', `Please login or register first to open ${formLabel}.`, 'error');
         return;
@@ -1878,8 +1680,7 @@ async function handleGuidanceSubmission(e) {
     try {
         if (submitBtn) {
             submitBtn.disabled = true;
-            const span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'Submitting...';
+            submitBtn.querySelector('span').textContent = 'Submitting...';
         }
 
         let { error } = await _supabase.from('inquiries').insert([payload]);
@@ -1927,7 +1728,7 @@ async function handleGuidanceSubmission(e) {
                 `• Marks Summary: ${marksSummary || 'Not Provided'}`,
                 `• Status: Pending Callback`,
                 ``,
-                `— Gtech Admissions`
+                `— Gtech Admissions (Admissions and Guidance Portal)`
             ].join('\n'),
             details: payload
         });
@@ -1938,33 +1739,32 @@ async function handleGuidanceSubmission(e) {
             'success'
         );
         e.target.reset();
-        const totalEl = document.getElementById('guide-inter-total');
-        if (totalEl) totalEl.value = '';
+        document.getElementById('guide-inter-total').value = '';
         document.getElementById('guide-campus-wrap')?.classList.add('hidden');
         prefillGuidanceFormWithStudent();
         closeScholarshipApplicationModal();
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            const span = submitBtn.querySelector('span');
-            if (span) span.textContent = 'SUBMIT APPLICATION';
+            submitBtn.querySelector('span').textContent = 'SUBMIT APPLICATION';
         }
     }
 }
 
 function openAuthModal(mode = 'login', noticeText = '') {
-    if (isUserAuthenticated()) {
-        applyProtectedPageAccess();
+    const authScreen = document.getElementById('auth-first-screen');
+    if (authScreen) {
+        if (typeof window.openFirstScreen === 'function') {
+            window.openFirstScreen(mode);
+        } else if (typeof window.switchFirstScreenMode === 'function') {
+            syncPageScreenVisibility(false);
+            window.switchFirstScreenMode(mode);
+        }
         return;
     }
 
     const modal = document.getElementById('student-auth-modal');
-    if (!modal) {
-        const target = mode === 'register' ? './auth.html?mode=register' : './auth.html';
-        window.location.href = target;
-        return;
-    }
-
+    if (!modal) return;
     const noticeBox = document.getElementById('auth-redirect-notice');
     const noticeMsg = document.getElementById('auth-redirect-notice-text');
 
@@ -1977,18 +1777,12 @@ function openAuthModal(mode = 'login', noticeText = '') {
         }
     }
 
-    applyProtectedPageAccess();
-    modal.style.zIndex = '85';
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     switchStudentAuthMode(mode);
 }
 
 function closeAuthModal() {
-    if (!isUserAuthenticated()) {
-        applyProtectedPageAccess();
-        return;
-    }
     const modal = document.getElementById('student-auth-modal');
     if (!modal) return;
     modal.classList.add('hidden');
@@ -1996,11 +1790,14 @@ function closeAuthModal() {
 }
 
 function continueAfterAuth() {
-    applyProtectedPageAccess();
+    closeAuthModal();
+    syncPageScreenVisibility(true);
     if (state.pendingPostLoginAction && state.pendingPostLoginAction.type === 'scholarship_form') {
         const pending = state.pendingPostLoginAction;
         state.pendingPostLoginAction = null;
         openScholarshipModal(pending.uniName, pending.assistanceType);
+    } else {
+        openStudentDashboardModal('dashboard');
     }
 }
 
@@ -2009,17 +1806,14 @@ function switchStudentAuthMode(mode) {
     const loginView = document.getElementById('login-view');
     const regTab = document.getElementById('mode-tab-register');
     const loginTab = document.getElementById('mode-tab-login');
+    if (!regView || !loginView) return;
 
     document.getElementById('reg-error-msg')?.classList.add('hidden');
     document.getElementById('login-error-msg')?.classList.add('hidden');
 
-    if (typeof window.syncAuthShowcase === 'function') {
-        window.syncAuthShowcase(mode);
-    }
-
     if (mode === 'register') {
-        loginView?.classList.add('hidden');
-        regView?.classList.remove('hidden');
+        loginView.classList.add('hidden');
+        regView.classList.remove('hidden');
         if (regTab) regTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
         if (loginTab) loginTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
         if (state.incomingReferralCode) {
@@ -2027,8 +1821,8 @@ function switchStudentAuthMode(mode) {
             if (refInput && !refInput.value) refInput.value = state.incomingReferralCode;
         }
     } else {
-        regView?.classList.add('hidden');
-        loginView?.classList.remove('hidden');
+        regView.classList.add('hidden');
+        loginView.classList.remove('hidden');
         if (loginTab) loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
         if (regTab) regTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
     }
@@ -2121,11 +1915,8 @@ async function handleSendRegistrationOtp(e) {
     }
 
     try {
-        if (sendBtn) {
-            sendBtn.disabled = true;
-            const span = sendBtn.querySelector('span');
-            if (span) span.textContent = 'Checking & Sending...';
-        }
+        sendBtn.disabled = true;
+        sendBtn.querySelector('span').textContent = 'Checking & Sending...';
 
         const exists = await isEmailAlreadyRegistered(email);
         if (exists) {
@@ -2143,18 +1934,15 @@ async function handleSendRegistrationOtp(e) {
 
         await requestEmailOtp(email, 'register');
         clearOtpBoxes('reg-otp-box');
-        document.getElementById('reg-otp-panel')?.classList.remove('hidden');
+        document.getElementById('reg-otp-panel').classList.remove('hidden');
         document.querySelector('.reg-otp-box')?.focus();
         startOtpCountdown('reg', 60);
         showToast('OTP Sent', `A 6-digit verification OTP has been sent to ${email}.`, 'success');
     } catch (err) {
         showInlineError(errId, err.message || 'Failed to send verification OTP.');
     } finally {
-        if (sendBtn) {
-            sendBtn.disabled = false;
-            const span = sendBtn.querySelector('span');
-            if (span) span.textContent = 'SEND OTP';
-        }
+        sendBtn.disabled = false;
+        sendBtn.querySelector('span').textContent = 'SEND OTP';
     }
 }
 
@@ -2177,10 +1965,8 @@ async function handleVerifyRegistrationOtp() {
     }
 
     try {
-        if (verifyBtn) {
-            verifyBtn.disabled = true;
-            verifyBtn.textContent = 'Verifying...';
-        }
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = 'Verifying...';
 
         const alreadyExists = await isEmailAlreadyRegistered(regData.email);
         if (alreadyExists) {
@@ -2253,15 +2039,15 @@ async function handleVerifyRegistrationOtp() {
 
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
-        applyProtectedPageAccess();
+        syncPageScreenVisibility(true);
 
         await sendMailNotification({
             to: profile.email,
             ccAdmin: true,
-            eventType: 'WELCOME_TO_THE_GTECH_FAMILY',
-            subject: `Welcome to the Gtech Family — Gtech ID: ${profile.student_id}`,
+            eventType: 'new_student_registered',
+            subject: `Congrats! Welcome to Gtech Family — Gtech ID: ${profile.student_id}`,
             text: [
-                `Welcome to the Gtech Family, ${profile.full_name}!`,
+                `Congrats ${profile.full_name}, Welcome to the Gtech Family!`,
                 ``,
                 `Your Gtech ID is: ${profile.student_id}`,
                 `Your Referral Code is: ${profile.student_id}`,
@@ -2270,24 +2056,31 @@ async function handleVerifyRegistrationOtp() {
                     : ``,
                 `Refer friends and earn up to ₹30,000/- referral benefit—added to tuition after your friend's admission is done.`,
                 ``,
-                `— Gtech Admissions`
+                `— Gtech Admissions (Admissions and Guidance Portal)`
             ].filter(Boolean).join('\n'),
             details: profile
         });
 
         showToast(
-            'Welcome to the Gtech Family',
-            `Gtech ID ${profile.student_id} created! Redirecting to Home page...`,
+            'Congrats! Welcome to Gtech Family',
+            earlyOfferQualified
+                ? `Gtech ID ${profile.student_id} created! ₹1,000 admission + ₹1,000 college fee discount unlocked.`
+                : `Gtech ID ${profile.student_id} generated!`,
             'success'
         );
-        continueAfterAuth();
+
+        if (earlyOfferQualified) {
+            setTimeout(() => {
+                openEarlyOfferModal(profile.student_id);
+            }, 400);
+        } else {
+            continueAfterAuth();
+        }
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
-        if (verifyBtn) {
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = 'Verify & Complete Registration';
-        }
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = 'Verify & Complete Registration';
     }
 }
 
@@ -2305,11 +2098,8 @@ async function handleSendLoginOtp(e) {
     }
 
     try {
-        if (sendBtn) {
-            sendBtn.disabled = true;
-            const span = sendBtn.querySelector('span');
-            if (span) span.textContent = 'Checking Email...';
-        }
+        sendBtn.disabled = true;
+        sendBtn.querySelector('span').textContent = 'Checking Email...';
 
         const { data: profile, error } = await _supabase
             .from('student_profiles')
@@ -2325,18 +2115,15 @@ async function handleSendLoginOtp(e) {
         state.pendingLoginEmail = email;
         await requestEmailOtp(email, 'login');
         clearOtpBoxes('login-otp-box');
-        document.getElementById('login-otp-panel')?.classList.remove('hidden');
+        document.getElementById('login-otp-panel').classList.remove('hidden');
         document.querySelector('.login-otp-box')?.focus();
         startOtpCountdown('login', 60);
         showToast('Login OTP Sent', `A 6-digit login OTP has been sent to ${email}.`, 'success');
     } catch (err) {
         showInlineError(errId, err.message || 'Could not send login OTP.');
     } finally {
-        if (sendBtn) {
-            sendBtn.disabled = false;
-            const span = sendBtn.querySelector('span');
-            if (span) span.textContent = 'SEND LOGIN OTP';
-        }
+        sendBtn.disabled = false;
+        sendBtn.querySelector('span').textContent = 'SEND LOGIN OTP';
     }
 }
 
@@ -2359,10 +2146,8 @@ async function handleVerifyLoginOtp() {
     }
 
     try {
-        if (verifyBtn) {
-            verifyBtn.disabled = true;
-            verifyBtn.textContent = 'Verifying...';
-        }
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = 'Verifying...';
 
         const { data: profile, error } = await _supabase
             .from('student_profiles')
@@ -2383,127 +2168,112 @@ async function handleVerifyLoginOtp() {
 
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
-        applyProtectedPageAccess();
-        showToast('Welcome Back to the Gtech Family', `Signed in as ${profile.full_name}.`, 'success');
+        syncPageScreenVisibility(true);
+        showToast('Welcome Back', `Signed in as ${profile.full_name}.`, 'success');
         continueAfterAuth();
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
     } finally {
-        if (verifyBtn) {
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = 'Verify & Continue';
-        }
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = 'Verify & Continue';
     }
 }
 
 function resetHeaderToLoggedOut() {
     const dashBtn = document.getElementById('header-dashboard-btn');
     const loginBtn = document.getElementById('header-login-btn');
-    const logoutBtn = document.getElementById('header-logout-btn');
-    if (dashBtn) dashBtn.classList.add('hidden');
-    if (logoutBtn) logoutBtn.classList.add('hidden');
-    if (loginBtn) loginBtn.classList.remove('hidden');
+    if (dashBtn && loginBtn) {
+        dashBtn.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+    }
 }
 
 function updateHeaderForLoggedInStudent(profile) {
     const dashBtn = document.getElementById('header-dashboard-btn');
     const loginBtn = document.getElementById('header-login-btn');
-    const logoutBtn = document.getElementById('header-logout-btn');
     const nameSpan = document.getElementById('header-student-name');
-    if (dashBtn) dashBtn.classList.remove('hidden');
-    if (logoutBtn) logoutBtn.classList.remove('hidden');
-    if (loginBtn) loginBtn.classList.add('hidden');
-    if (nameSpan && profile?.full_name) {
-        nameSpan.textContent = profile.full_name;
+    if (dashBtn && loginBtn && nameSpan) {
+        dashBtn.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+        nameSpan.textContent = profile.full_name || 'Student Portal';
     }
 }
 
 function listenToAuthChanges() {
     _supabase.auth.onAuthStateChange(async (event, session) => {
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user) {
+        if (event === 'SIGNED_IN' && session?.user) {
             state.authUser = session.user;
             const email = (session.user.email || '').trim().toLowerCase();
-            if (email) {
-                const { data: profile } = await _supabase
-                    .from('student_profiles')
-                    .select('*')
-                    .eq('email', email)
-                    .maybeSingle();
+            if (!email) return;
 
-                if (profile) {
-                    profile.student_id = profile.student_id || profile.id || 'GTECH6001';
-                    state.currentStudent = profile;
-                    localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-                    updateHeaderForLoggedInStudent(profile);
-                    prefillGuidanceFormWithStudent();
-                } else if (!state.currentStudent) {
-                    state.currentStudent = {
-                        id: session.user.id,
-                        student_id: session.user.id,
-                        full_name: session.user.user_metadata?.full_name || email.split('@')[0],
-                        email
-                    };
-                    updateHeaderForLoggedInStudent(state.currentStudent);
-                }
+            const { data: profile } = await _supabase
+                .from('student_profiles')
+                .select('*')
+                .eq('email', email)
+                .maybeSingle();
+
+            if (profile) {
+                profile.student_id = profile.student_id || profile.id || 'GTECH6001';
+                state.currentStudent = profile;
+                localStorage.setItem('gtech_student_session', JSON.stringify(profile));
+                updateHeaderForLoggedInStudent(profile);
+                prefillGuidanceFormWithStudent();
+                syncPageScreenVisibility(true);
             }
-            applyProtectedPageAccess();
         } else if (event === 'SIGNED_OUT') {
             state.authUser = null;
             state.currentStudent = null;
             state.financeRecord = null;
             localStorage.removeItem('gtech_student_session');
             resetHeaderToLoggedOut();
-            applyProtectedPageAccess();
+            syncPageScreenVisibility(false);
         }
     });
 }
 
 async function restoreStudentSession() {
-    try {
-        const { data } = await _supabase.auth.getSession();
-        if (data?.session?.user) {
-            state.authUser = data.session.user;
-            const email = (data.session.user.email || '').trim().toLowerCase();
-            if (email) {
-                const { data: profile } = await _supabase
-                    .from('student_profiles')
-                    .select('*')
-                    .eq('email', email)
-                    .maybeSingle();
-                if (profile) {
-                    profile.student_id = profile.student_id || profile.id || 'GTECH6001';
-                    state.currentStudent = profile;
-                    localStorage.setItem('gtech_student_session', JSON.stringify(profile));
-                    updateHeaderForLoggedInStudent(profile);
-                    prefillGuidanceFormWithStudent();
-                    return;
-                }
-            }
+    const { data } = await _supabase.auth.getSession();
+    if (data?.session?.user?.email) {
+        const email = data.session.user.email.trim().toLowerCase();
+        const { data: profile } = await _supabase
+            .from('student_profiles')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+        if (profile) {
+            profile.student_id = profile.student_id || profile.id || 'GTECH6001';
+            state.currentStudent = profile;
+            localStorage.setItem('gtech_student_session', JSON.stringify(profile));
+            updateHeaderForLoggedInStudent(profile);
+            prefillGuidanceFormWithStudent();
+            syncPageScreenVisibility(true);
+            return;
         }
-    } catch (err) {
-        console.warn('Supabase session check note:', err.message);
     }
 
     const saved = localStorage.getItem('gtech_student_session');
     if (saved) {
         try {
             const profile = JSON.parse(saved);
-            if (profile && (profile.email || profile.id || profile.student_id)) {
+            if (profile && (profile.email || profile.full_name || profile.gtech_id || profile.student_id)) {
+                profile.full_name = profile.full_name || profile.name || 'Gtech Student';
+                profile.student_id = profile.student_id || profile.id || profile.gtech_id || 'GTECH6001';
                 state.currentStudent = profile;
                 updateHeaderForLoggedInStudent(profile);
                 prefillGuidanceFormWithStudent();
-            } else {
-                localStorage.removeItem('gtech_student_session');
+                syncPageScreenVisibility(true);
+                return;
             }
         } catch (_) {
             localStorage.removeItem('gtech_student_session');
         }
     }
+
+    syncPageScreenVisibility(false);
 }
 
 function closeStudentDashboardModal() {
     const modal = document.getElementById('student-dashboard-modal');
-    if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
@@ -2513,14 +2283,10 @@ async function handleStudentLogout() {
     state.authUser = null;
     state.currentStudent = null;
     state.financeRecord = null;
-    state.pendingPostLoginAction = null;
     localStorage.removeItem('gtech_student_session');
     resetHeaderToLoggedOut();
     closeStudentDashboardModal();
-    closeScholarshipApplicationModal();
-    closeUniversityStatusModal();
-    applyProtectedPageAccess();
-    openAuthModal('login', 'You have been logged out. Please sign in to continue.');
+    syncPageScreenVisibility(false);
     showToast('Signed Out', 'You have signed out of your student portal.', 'success');
 }
 
@@ -2747,15 +2513,10 @@ function renderStudentDashboard() {
     const gtechCode = (stu.student_id || stu.id || 'GTECH6001').toUpperCase();
     const myRefCode = (stu.referral_code || gtechCode).toUpperCase();
 
-    const setText = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
-    };
-
-    setText('dash-topbar-name', stu.full_name || 'Student Portal');
-    setText('dash-topbar-id', `Gtech ID: ${gtechCode}`);
-    setText('student-welcome-name', `Hello, ${stu.full_name}!`);
-    setText('student-dash-id', gtechCode);
+    document.getElementById('dash-topbar-name').textContent = stu.full_name || 'Student Portal';
+    document.getElementById('dash-topbar-id').textContent = `Gtech ID: ${gtechCode}`;
+    document.getElementById('student-welcome-name').textContent = `Hello, ${stu.full_name}!`;
+    document.getElementById('student-dash-id').textContent = gtechCode;
 
     const offerCard = document.getElementById('dash-early-offer-card');
     if (offerCard) {
@@ -2766,119 +2527,111 @@ function renderStudentDashboard() {
     const uniGroups = getUniversityWiseApplications(stu);
     const uniListEl = document.getElementById('applied-scholarship-universities-list');
 
-    if (uniListEl) {
-        if (uniGroups.length === 0) {
-            uniListEl.innerHTML = `<p class="text-xs text-slate-500 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">No scholarship university applications submitted yet. Click "+ Apply University Scholarship" to get started.</p>`;
-        } else {
-            uniListEl.innerHTML = uniGroups.map(group => {
-                const safeUni = group.uniName.replace(/'/g, "\\'");
-                const coursesText = group.applications
-                    .map(a => `${a.assistance_type || 'Scholarship Based on Marks'} (${a.branch || 'Course'})`)
-                    .join(' • ');
+    if (uniGroups.length === 0) {
+        uniListEl.innerHTML = `<p class="text-xs text-slate-500 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">No scholarship university applications submitted yet. Click "+ Apply University Scholarship" to get started.</p>`;
+    } else {
+        uniListEl.innerHTML = uniGroups.map(group => {
+            const safeUni = group.uniName.replace(/'/g, "\\'");
+            const coursesText = group.applications
+                .map(a => `${a.assistance_type || 'Scholarship Based on Marks'} (${a.branch || 'Course'})`)
+                .join(' • ');
 
-                return `
-                    <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="min-w-0">
-                            <strong class="text-sm font-black text-slate-900 block break-words">${group.uniName}</strong>
-                            <p class="text-[11px] text-slate-600 mt-0.5">${coursesText}</p>
-                        </div>
-                        <button type="button" onclick="openUniversityStatusModal('${safeUni}')" class="self-start sm:self-center px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-xs transition flex items-center gap-1.5 shrink-0">
-                            <i class="fa-solid fa-circle-info text-[11px]"></i>
-                            <span>Status</span>
-                        </button>
+            return `
+                <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <strong class="text-sm font-black text-slate-900 block break-words">${group.uniName}</strong>
+                        <p class="text-[11px] text-slate-600 mt-0.5">${coursesText}</p>
                     </div>
-                `;
-            }).join('');
-        }
+                    <button type="button" onclick="openUniversityStatusModal('${safeUni}')" class="self-start sm:self-center px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold shadow-xs transition flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-circle-info text-[11px]"></i>
+                        <span>Status</span>
+                    </button>
+                </div>
+            `;
+        }).join('');
     }
 
     const admStatusEl = document.getElementById('applied-universities-admission-status');
     const stageBadge = document.getElementById('dash-current-stage-badge');
 
-    if (admStatusEl && stageBadge) {
-        if (uniGroups.length === 0) {
-            stageBadge.textContent = 'No Applications';
-            admStatusEl.innerHTML = `<p class="text-xs text-slate-500 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">Your university admission status will appear here once you apply.</p>`;
-        } else {
-            const latestStatus = uniGroups[0].applications[0]?.status || 'Pending Callback';
-            stageBadge.textContent = latestStatus;
+    if (uniGroups.length === 0) {
+        stageBadge.textContent = 'No Applications';
+        admStatusEl.innerHTML = `<p class="text-xs text-slate-500 p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100">Your university admission status will appear here once you apply.</p>`;
+    } else {
+        const latestStatus = uniGroups[0].applications[0]?.status || 'Pending Callback';
+        stageBadge.textContent = latestStatus;
 
-            admStatusEl.innerHTML = uniGroups.map(group => {
-                const latest = group.applications[0] || {};
-                const admState = latest.admission_status || latest.status || 'Pending Callback';
-                return `
-                    <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                        <div class="min-w-0">
-                            <strong class="text-slate-900 font-extrabold block">${group.uniName}</strong>
-                            <span class="text-[11px] text-slate-600">${latest.branch || 'Program'} • ${latest.assistance_type || 'Application'}</span>
-                        </div>
-                        <span class="self-start sm:self-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] border border-indigo-200 shrink-0">${admState}</span>
+        admStatusEl.innerHTML = uniGroups.map(group => {
+            const latest = group.applications[0] || {};
+            const admState = latest.admission_status || latest.status || 'Pending Callback';
+            return `
+                <div class="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="min-w-0">
+                        <strong class="text-slate-900 font-extrabold block">${group.uniName}</strong>
+                        <span class="text-[11px] text-slate-600">${latest.branch || 'Program'} • ${latest.assistance_type || 'Application'}</span>
                     </div>
-                `;
-            }).join('');
-        }
+                    <span class="self-start sm:self-center px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] border border-indigo-200 shrink-0">${admState}</span>
+                </div>
+            `;
+        }).join('');
     }
 
     const fin = state.financeRecord || {};
     const visibleReferralAmount = Number(fin.referral_earnings || 0);
     const shareLink = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(myRefCode)}`;
 
-    setText('my-referral-code-text', myRefCode);
-    const linkInput = document.getElementById('my-referral-link-input');
-    if (linkInput) linkInput.value = shareLink;
-    setText('ref-tab-amount', formatINR(visibleReferralAmount));
+    document.getElementById('my-referral-code-text').textContent = myRefCode;
+    document.getElementById('my-referral-link-input').value = shareLink;
+    document.getElementById('ref-tab-amount').textContent = formatINR(visibleReferralAmount);
 
     const referralInquiries = state.inquiries.filter(inq =>
         inq.referral_code && String(inq.referral_code).toUpperCase() === myRefCode
     );
 
     const referredCount = Math.max(state.referredStudents.length, referralInquiries.length);
-    setText('ref-tab-pending-count', String(referredCount));
+    document.getElementById('ref-tab-pending-count').textContent = String(referredCount);
 
     const refListEl = document.getElementById('my-referred-students-list');
-    if (refListEl) {
-        if (state.referredStudents.length === 0 && referralInquiries.length === 0) {
-            refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No referred students yet. Share your referral code to earn up to ₹30,000/- added to tuition after your friend's admission is done.</p>`;
-        } else {
-            const items = state.referredStudents.length > 0
-                ? state.referredStudents.map(rs => ({
-                    name: rs.full_name || 'Referred Student',
-                    id: rs.student_id || rs.id || '',
-                    status: 'Registered'
-                }))
-                : referralInquiries.map(ri => ({
-                    name: ri.name || 'Referred Applicant',
-                    id: ri.branch || '',
-                    status: ri.status || 'In Process'
-                }));
+    if (state.referredStudents.length === 0 && referralInquiries.length === 0) {
+        refListEl.innerHTML = `<p class="text-xs text-slate-500 p-3 rounded-xl bg-slate-50 border border-slate-200">No referred students yet. Share your referral code to earn up to ₹30,000/- added to tuition after your friend's admission is done.</p>`;
+    } else {
+        const items = state.referredStudents.length > 0
+            ? state.referredStudents.map(rs => ({
+                name: rs.full_name || 'Referred Student',
+                id: rs.student_id || rs.id || '',
+                status: 'Registered'
+            }))
+            : referralInquiries.map(ri => ({
+                name: ri.name || 'Referred Applicant',
+                id: ri.branch || '',
+                status: ri.status || 'In Process'
+            }));
 
-            refListEl.innerHTML = items.map(item => `
-                <div class="p-3 rounded-xl bg-sky-50/60 border border-sky-200 flex items-center justify-between gap-2 text-xs">
-                    <div>
-                        <strong class="text-slate-900 block">${item.name}</strong>
-                        ${item.id ? `<span class="text-[11px] font-mono text-slate-600">${item.id}</span>` : ''}
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-bold text-[10px]">${item.status}</span>
+        refListEl.innerHTML = items.map(item => `
+            <div class="p-3 rounded-xl bg-sky-50/60 border border-sky-200 flex items-center justify-between gap-2 text-xs">
+                <div>
+                    <strong class="text-slate-900 block">${item.name}</strong>
+                    ${item.id ? `<span class="text-[11px] font-mono text-slate-600">${item.id}</span>` : ''}
                 </div>
-            `).join('');
-        }
+                <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-bold text-[10px]">${item.status}</span>
+            </div>
+        `).join('');
     }
 }
 
 async function openStudentDashboardModal(defaultTab = 'dashboard') {
-    if (!isUserAuthenticated()) {
+    if (!state.currentStudent) {
         openAuthModal('login');
         return;
     }
 
-    const myCode = (state.currentStudent?.referral_code || state.currentStudent?.student_id || state.currentStudent?.id || 'GTECH6001').toUpperCase();
+    const myCode = (state.currentStudent.referral_code || state.currentStudent.student_id || state.currentStudent.id || 'GTECH6001').toUpperCase();
 
     await fetchInquiriesFromSupabase();
     state.financeRecord = await fetchStudentFinancialDetails(state.currentStudent);
     state.referredStudents = await fetchReferredStudents(myCode);
 
     const modal = document.getElementById('student-dashboard-modal');
-    if (!modal) return;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
@@ -2946,7 +2699,7 @@ function subscribeToStudentMailUpdates() {
                     const isApproved = String(updated.status).toLowerCase().includes('approv');
                     await sendMailNotification({
                         to: updated.email,
-                        ccAdmin: true,
+                        ccAdmin: false,
                         eventType: isApproved ? 'application_approved' : 'application_status_updated',
                         subject: isApproved
                             ? `Gtech Admissions: Application Approved (${updated.uni || 'University'})`
@@ -2959,7 +2712,7 @@ function subscribeToStudentMailUpdates() {
                                 : `Your application status for ${updated.uni || 'your chosen university'} (${updated.branch || ''}) has been updated to: ${updated.status}.`,
                             ``,
                             `Sign in to your Gtech Student Portal using your registered email to view your Gtech ID and status.`,
-                            `— Gtech Admissions`
+                            `— Gtech Admissions (Admissions and Guidance Portal)`
                         ].join('\n'),
                         details: updated
                     });
@@ -2986,7 +2739,7 @@ function subscribeToStudentMailUpdates() {
                 if (referralChanged || scholarshipChanged || statusChanged || payload.eventType === 'INSERT') {
                     await sendMailNotification({
                         to: fin.email,
-                        ccAdmin: true,
+                        ccAdmin: false,
                         eventType: referralChanged ? 'referral_amount_updated' : 'scholarship_status_updated',
                         subject: referralChanged
                             ? `Gtech Admissions: Referral Amount Updated (₹${Number(fin.referral_earnings || 0).toLocaleString('en-IN')})`
@@ -3001,7 +2754,7 @@ function subscribeToStudentMailUpdates() {
                                 : '',
                             ``,
                             `Sign in to your Gtech Student Portal with your Gtech ID to view details.`,
-                            `— Gtech Admissions`
+                            `— Gtech Admissions (Admissions and Guidance Portal)`
                         ].filter(Boolean).join('\n'),
                         details: fin
                     });
@@ -3056,16 +2809,12 @@ window.shareReferralInstagram = shareReferralInstagram;
 window.setStateFilter = setStateFilter;
 window.handleGuidanceSubmission = handleGuidanceSubmission;
 window.updateCardScoreAndRefresh = updateCardScoreAndRefresh;
-window.openExpertConcessionCall = openExpertConcessionCall;
 window.nextSlide = nextSlide;
 window.prevSlide = prevSlide;
 
 async function initGtechPortal() {
-    setAuthLoadingState(true);
-    ensureAuthGateElements();
     hideAddedMarksBudgetFilterBar();
     reorderFilterButtonsEntranceFirst();
-    bindRegionFilterButtons();
 
     const searchInput = document.getElementById('uni-search');
     if (searchInput) searchInput.value = '';
@@ -3074,14 +2823,9 @@ async function initGtechPortal() {
     handleScholarshipOptionChange();
     listenToAuthChanges();
     await restoreStudentSession();
-    state.authChecked = true;
-    applyProtectedPageAccess();
-    setAuthLoadingState(false);
-
     await fetchUniversitiesFromSupabase();
     await fetchInquiriesFromSupabase();
     await loadActiveCarousel();
-    bindRegionFilterButtons();
     subscribeToStudentMailUpdates();
     subscribeToUniversityScholarshipChanges();
 

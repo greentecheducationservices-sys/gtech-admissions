@@ -35,6 +35,14 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
+function formatDetailValue(val) {
+  if (val === null || val === undefined || val === '') return 'Not Provided';
+  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  if (Array.isArray(val)) return val.length ? val.join(', ') : 'None';
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
+}
+
 function signOtpPayload({ email, purpose, code, expiresAt }) {
   const payloadObj = {
     email: String(email).trim().toLowerCase(),
@@ -99,6 +107,7 @@ function verifyOtpToken({ token, email, purpose, code }) {
 function buildStyledNotificationHtml({ subject, text, details }) {
   const rows = details && typeof details === 'object'
     ? Object.entries(details)
+        .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '')
         .map(
           ([k, v]) => `
             <tr>
@@ -106,7 +115,7 @@ function buildStyledNotificationHtml({ subject, text, details }) {
                 ${escapeHtml(String(k).replace(/_/g, ' '))}
               </td>
               <td style="padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 13px; font-weight: 600;">
-                ${escapeHtml(v)}
+                ${escapeHtml(formatDetailValue(v))}
               </td>
             </tr>`
         )
@@ -126,7 +135,7 @@ function buildStyledNotificationHtml({ subject, text, details }) {
         </div>
 
         <div style="padding: 22px 24px;">
-          <p style="margin: 0 0 16px; color: #334155; font-size: 14px; line-height: 1.55;">
+          <p style="margin: 0 0 16px; color: #334155; font-size: 14px; line-height: 1.55; white-space: pre-line;">
             ${escapeHtml(text)}
           </p>
 
@@ -212,6 +221,8 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json({
+        ok: true,
+        sent: true,
         success: true,
         message: 'OTP sent successfully',
         otpToken,
@@ -224,20 +235,33 @@ export default async function handler(req, res) {
 
       if (!check.valid) {
         return res.status(400).json({
+          ok: false,
+          verified: false,
           success: false,
           message: check.reason,
         });
       }
 
       return res.status(200).json({
+        ok: true,
+        verified: true,
         success: true,
         message: 'OTP verified successfully',
       });
     }
 
     if (action === 'send-notification') {
-      const to = String(body.to || ADMIN_EMAIL).trim();
-      const adminEmail = body.adminEmail ? String(body.adminEmail).trim() : '';
+      const eventType = String(body.eventType || '').trim().toLowerCase();
+      const isAdminOnlyEvent =
+        eventType === 'new_student_registered_admin' ||
+        eventType === 'application_submitted_admin';
+
+      const to = isAdminOnlyEvent
+        ? ADMIN_EMAIL
+        : String(body.to || ADMIN_EMAIL).trim();
+      const adminEmail = isAdminOnlyEvent
+        ? ''
+        : (body.adminEmail ? String(body.adminEmail).trim() : '');
       const subject = String(body.subject || 'Gtech Admissions Notification').trim();
       const text = String(body.text || '').trim();
       const details = body.details && typeof body.details === 'object' ? body.details : null;
@@ -247,7 +271,8 @@ export default async function handler(req, res) {
       const detailsLines = details
         ? '\n\nDetails:\n' +
           Object.entries(details)
-            .map(([k, v]) => `- ${k}: ${v}`)
+            .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '')
+            .map(([k, v]) => `- ${k}: ${formatDetailValue(v)}`)
             .join('\n')
         : '';
 
@@ -266,6 +291,8 @@ export default async function handler(req, res) {
       await transporter.sendMail(mailOptions);
 
       return res.status(200).json({
+        ok: true,
+        sent: true,
         success: true,
         message: 'Notification sent successfully',
       });

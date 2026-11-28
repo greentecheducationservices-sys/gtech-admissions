@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 var _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_EMAIL = 'admin@gtechadmissions.com';
+const SECONDARY_ADMIN_EMAIL = 'greentecheducationservices@gmail.com';
+const ADMIN_RECIPIENTS = [ADMIN_EMAIL, SECONDARY_ADMIN_EMAIL];
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '/api/mail';
 const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || '/api/mail';
 const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
@@ -558,14 +560,28 @@ function proceedWithScholarshipApplication() {
     openScholarshipModal(offer?.uniName || '', 'Scholarship Based on Marks');
 }
 
+function formatMarksSummaryText({ inter1st = '', inter2nd = '', interTotal = '', pcm600 = '', jeeMarks = '', eamcetRank = '' }) {
+    const parts = [
+        inter1st ? `Inter 1st Year: ${inter1st}` : '',
+        inter2nd ? `Inter 2nd Year: ${inter2nd}` : '',
+        interTotal ? `Total in Intermediate: ${interTotal}` : '',
+        pcm600 ? `PCM Marks (600 with practicals): ${pcm600}` : '',
+        jeeMarks ? `JEE Marks / Percentile: ${jeeMarks}` : '',
+        eamcetRank ? `EAMCET Rank: ${eamcetRank}` : ''
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(' | ') : 'Not Provided';
+}
+
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
     const emailForId = details?.email || to || state.currentStudent?.email || '';
     const gtechId = details?.gtech_id || details?.student_id || getPersistentGtechIdForEmail(emailForId, state.currentStudent?.student_id);
+    const adminList = ccAdmin ? ADMIN_RECIPIENTS : [];
 
     const payload = {
         action: 'send-notification',
         to: to || ADMIN_EMAIL,
         adminEmail: ccAdmin ? ADMIN_EMAIL : null,
+        adminEmails: adminList,
         ccAdmin: Boolean(ccAdmin),
         subject,
         text,
@@ -573,7 +589,8 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
         details: {
             ...details,
             gtech_id: gtechId,
-            student_id: gtechId
+            student_id: gtechId,
+            admin_recipients: adminList
         },
         timestamp: new Date().toISOString()
     };
@@ -598,6 +615,110 @@ async function sendMailNotification({ to, ccAdmin = true, subject, text, eventTy
     }
 
     return false;
+}
+
+async function notifyAdminsRegistration({ studentName, gtechId, phone, email, referralCode = '', marksSummary = 'Not Provided' }) {
+    const cleanName = studentName || 'Student';
+    const cleanId = gtechId || getPersistentGtechIdForEmail(email);
+    const cleanPhone = phone || 'Not Provided';
+    const cleanMarks = marksSummary || 'Not Provided';
+
+    const adminBody = [
+        `New Student Registered on Gtech Admissions`,
+        ``,
+        `• Student Name: ${cleanName}`,
+        `• Gtech ID: ${cleanId}`,
+        `• Phone Number: ${cleanPhone}`,
+        `• Email: ${email || 'Not Provided'}`,
+        `• Marks Applied: ${cleanMarks}`,
+        `• Referral Code Used: ${referralCode || 'None'}`,
+        ``,
+        `— Gtech Admissions Portal`
+    ].join('\n');
+
+    await Promise.allSettled(
+        ADMIN_RECIPIENTS.map(adminAddr =>
+            sendMailNotification({
+                to: adminAddr,
+                ccAdmin: false,
+                eventType: 'new_student_registered_admin',
+                subject: `New Student Registration: ${cleanName} (${cleanId})`,
+                text: adminBody,
+                details: {
+                    student_name: cleanName,
+                    full_name: cleanName,
+                    gtech_id: cleanId,
+                    student_id: cleanId,
+                    phone_number: cleanPhone,
+                    phone: cleanPhone,
+                    mobile: cleanPhone,
+                    email,
+                    marks_applied: cleanMarks,
+                    referral_code: referralCode || 'None'
+                }
+            })
+        )
+    );
+}
+
+async function notifyAdminsApplicationSubmitted({
+    studentName,
+    gtechId,
+    phone,
+    email,
+    course = '',
+    universityOrExam = '',
+    requestType = '',
+    marksApplied = 'Not Provided',
+    status = 'Pending Callback'
+}) {
+    const cleanName = studentName || 'Student';
+    const cleanId = gtechId || getPersistentGtechIdForEmail(email);
+    const cleanPhone = phone || 'Not Provided';
+    const cleanMarks = marksApplied || 'Not Provided';
+    const cleanTarget = universityOrExam || 'General Scholarship Pool';
+
+    const adminBody = [
+        `New Application Submitted on Gtech Admissions`,
+        ``,
+        `• Student Name: ${cleanName}`,
+        `• Gtech ID: ${cleanId}`,
+        `• Phone Number: ${cleanPhone}`,
+        `• Marks Applied: ${cleanMarks}`,
+        `• Email: ${email || 'Not Provided'}`,
+        `• Course: ${course || 'Not Specified'}`,
+        `• University / Exam: ${cleanTarget}`,
+        `• Request Type: ${requestType || 'Application'}`,
+        `• Status: ${status}`,
+        ``,
+        `— Gtech Admissions Portal`
+    ].join('\n');
+
+    await Promise.allSettled(
+        ADMIN_RECIPIENTS.map(adminAddr =>
+            sendMailNotification({
+                to: adminAddr,
+                ccAdmin: false,
+                eventType: 'application_submitted_admin',
+                subject: `New Application (${cleanId}): ${cleanName} — ${cleanTarget}`,
+                text: adminBody,
+                details: {
+                    student_name: cleanName,
+                    name: cleanName,
+                    gtech_id: cleanId,
+                    student_id: cleanId,
+                    phone_number: cleanPhone,
+                    phone: cleanPhone,
+                    marks_applied: cleanMarks,
+                    email,
+                    course,
+                    university_or_exam: cleanTarget,
+                    request_type: requestType,
+                    status
+                }
+            })
+        )
+    );
 }
 
 function sanitizeNumericInput(inputEl, maxLength = 15) {
@@ -1432,8 +1553,8 @@ function renderUniversities() {
                     </div>
 
                     <div class="p-4 sm:p-5 pt-0">
-                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Scholarship Based on Marks')" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
-                            <i class="fa-solid fa-award"></i> Scholarship Form
+                        <button type="button" onclick="openScholarshipModal('${safeUniName}', 'Get Expert Application Help')" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                            <i class="fa-solid fa-file-pen"></i> Apply
                         </button>
                     </div>
                 </div>
@@ -1772,15 +1893,14 @@ async function handleGuidanceSubmission(e) {
     }
 
     const gtechId = getPersistentGtechIdForEmail(email, state.currentStudent?.student_id);
-
-    const marksSummary = [
-        inter1st ? `Inter 1st Year: ${inter1st}` : '',
-        inter2nd ? `Inter 2nd Year: ${inter2nd}` : '',
-        interTotal ? `Total in Intermediate: ${interTotal}` : '',
-        pcm600 ? `PCM Marks (600 with practicals): ${pcm600}` : '',
-        jeeMarks ? `JEE Marks: ${jeeMarks}` : '',
-        eamcetRank ? `EAMCET Rank: ${eamcetRank}` : ''
-    ].filter(Boolean).join(' | ');
+    const marksSummary = formatMarksSummaryText({
+        inter1st,
+        inter2nd,
+        interTotal,
+        pcm600,
+        jeeMarks,
+        eamcetRank
+    });
 
     const payload = {
         id: Date.now(),
@@ -1795,7 +1915,7 @@ async function handleGuidanceSubmission(e) {
         inter_2nd_marks: inter2nd || null,
         inter_marks: interTotal || null,
         pcm_marks: pcm600 || null,
-        jee_score: marksSummary || jeeMarks || null,
+        jee_score: marksSummary,
         eamcet_rank: eamcetRank || null,
         referral_code: state.currentStudent?.referred_by_code || state.incomingReferralCode || null,
         status: 'Pending Callback'
@@ -1819,7 +1939,7 @@ async function handleGuidanceSubmission(e) {
                 email: payload.email,
                 branch: payload.branch,
                 uni: payload.uni,
-                jee_score: `${assistanceType}${marksSummary ? ' • ' + marksSummary : ''} • Gtech ID: ${gtechId}`,
+                jee_score: `${assistanceType} • Marks Applied: ${marksSummary} • Gtech ID: ${gtechId}`,
                 referral_code: payload.referral_code,
                 status: 'Pending Callback'
             };
@@ -1834,31 +1954,44 @@ async function handleGuidanceSubmission(e) {
 
         state.inquiries.unshift(payload);
 
-        await sendMailNotification({
-            to: email,
-            ccAdmin: true,
-            eventType: 'application_submitted',
-            subject: `Gtech Admissions (${gtechId}): ${assistanceType} Submitted (${name})`,
-            text: [
-                `Hello ${name},`,
-                ``,
-                `Your ${assistanceType} has been submitted successfully on Gtech Admissions.`,
-                `Our expert will reach you within 10 mins.`,
-                ``,
-                `Application Details:`,
-                `• Gtech ID: ${gtechId}`,
-                `• Name: ${name}`,
-                `• Phone: ${phone}`,
-                `• Email: ${email}`,
-                `• Course: ${course}`,
-                `• University: ${payload.uni}`,
-                `• Marks Summary: ${marksSummary || 'Not Provided'}`,
-                `• Status: Pending Callback`,
-                ``,
-                `— Gtech Admissions (Admissions and Guidance Portal)`
-            ].join('\n'),
-            details: payload
-        });
+        await Promise.allSettled([
+            sendMailNotification({
+                to: email,
+                ccAdmin: false,
+                eventType: 'application_submitted',
+                subject: `Gtech Admissions (${gtechId}): ${assistanceType} Submitted (${name})`,
+                text: [
+                    `Hello ${name},`,
+                    ``,
+                    `Your ${assistanceType} has been submitted successfully on Gtech Admissions.`,
+                    `Our expert will reach you within 10 mins.`,
+                    ``,
+                    `Application Details:`,
+                    `• Student Name: ${name}`,
+                    `• Gtech ID: ${gtechId}`,
+                    `• Phone Number: ${phone}`,
+                    `• Marks Applied: ${marksSummary}`,
+                    `• Email: ${email}`,
+                    `• Course: ${course}`,
+                    `• University / Exam: ${payload.uni}`,
+                    `• Status: Pending Callback`,
+                    ``,
+                    `— Gtech Admissions (Admissions and Guidance Portal)`
+                ].join('\n'),
+                details: payload
+            }),
+            notifyAdminsApplicationSubmitted({
+                studentName: name,
+                gtechId,
+                phone,
+                email,
+                course,
+                universityOrExam: payload.uni,
+                requestType: assistanceType,
+                marksApplied: marksSummary,
+                status: 'Pending Callback'
+            })
+        ]);
 
         showToast(
             'Application Submitted',
@@ -2199,25 +2332,40 @@ async function handleVerifyRegistrationOtp() {
         prefillGuidanceFormWithStudent();
         syncPageScreenVisibility(true);
 
-        await sendMailNotification({
-            to: profile.email,
-            ccAdmin: true,
-            eventType: 'new_student_registered',
-            subject: `Congrats! Welcome to Gtech Family — Gtech ID: ${profile.student_id}`,
-            text: [
-                `Congrats ${profile.full_name}, Welcome to the Gtech Family!`,
-                ``,
-                `Your Gtech ID is: ${profile.student_id}`,
-                `Your Referral Code is: ${profile.student_id}`,
-                earlyOfferQualified
-                    ? `Special Offer (Registered before March 16, 2027): ₹2,000 OFF total (₹1,000/- off Admission Fee + ₹1,000/- off College Fee).`
-                    : ``,
-                `Refer friends and earn up to ₹30,000/- referral benefit—added to tuition after your friend's admission is done.`,
-                ``,
-                `— Gtech Admissions (Admissions and Guidance Portal)`
-            ].filter(Boolean).join('\n'),
-            details: profile
-        });
+        await Promise.allSettled([
+            sendMailNotification({
+                to: profile.email,
+                ccAdmin: false,
+                eventType: 'new_student_registered',
+                subject: `Congrats! Welcome to Gtech Family — Gtech ID: ${profile.student_id}`,
+                text: [
+                    `Congrats ${profile.full_name}, Welcome to the Gtech Family!`,
+                    ``,
+                    `• Student Name: ${profile.full_name}`,
+                    `• Gtech ID: ${profile.student_id}`,
+                    `• Phone Number: ${profile.mobile}`,
+                    `• Marks Applied: Not Provided (Registration)`,
+                    earlyOfferQualified
+                        ? `Special Offer (Registered before March 16, 2027): ₹2,000 OFF total (₹1,000/- off Admission Fee + ₹1,000/- off College Fee).`
+                        : ``,
+                    `Refer friends and earn up to ₹30,000/- referral benefit—added to tuition after your friend's admission is done.`,
+                    ``,
+                    `— Gtech Admissions (Admissions and Guidance Portal)`
+                ].filter(Boolean).join('\n'),
+                details: {
+                    ...profile,
+                    marks_applied: 'Not Provided (Registration)'
+                }
+            }),
+            notifyAdminsRegistration({
+                studentName: profile.full_name,
+                gtechId: profile.student_id,
+                phone: profile.mobile,
+                email: profile.email,
+                referralCode: profile.referred_by_code || '',
+                marksSummary: 'Not Provided (Registration)'
+            })
+        ]);
 
         showToast(
             'Congrats! Welcome to Gtech Family',

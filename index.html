@@ -126,7 +126,7 @@
                                     <i class="fa-solid fa-envelope-open-text"></i>
                                 </div>
                                 <h2 class="text-xl sm:text-3xl font-black text-[#0c2d57]">Login</h2>
-                                <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">Login with Gmail OTP • Stay logged in for 7 days</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">Login with your Gmail OTP</p>
                             </div>
 
                             <form id="first-login-form" onsubmit="handleFirstLoginSendOtp(event)" class="space-y-2.5 sm:space-y-3.5">
@@ -140,7 +140,7 @@
                                 <div class="flex items-center justify-between text-[11px] sm:text-xs px-1">
                                     <label class="inline-flex items-center gap-1.5 text-slate-600 font-semibold cursor-pointer">
                                         <input type="checkbox" id="first-login-remember" checked class="rounded text-sky-600 focus:ring-0">
-                                        <span>Keep logged in (1 Week)</span>
+                                        <span>Remember Me</span>
                                     </label>
                                     <span class="text-[10px] sm:text-[11px] font-bold text-[#16a34a]">Gmail OTP</span>
                                 </div>
@@ -368,7 +368,6 @@
                 <button type="button" onclick="nextSlide()" aria-label="Next slide" class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 border border-sky-200 text-slate-800 text-xs sm:text-base flex items-center justify-center hover:bg-sky-600 hover:text-white shadow-md transition z-20">❯</button>
             </div>
 
-            <!-- 4-Card Suite: Scholarship Based on Marks shown ONCE; Visiting replaced with Application/Visiting; Loan uses Education Loan Apply Now -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 <div onclick="openGtechFormModal({ mode: 'scholarship' })" class="group relative p-5 sm:p-6 rounded-3xl bg-gradient-to-b from-indigo-50/90 to-white border border-indigo-100 hover:border-indigo-400 cursor-pointer transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div class="space-y-3">
@@ -746,7 +745,7 @@
         </div>
     </div>
 
-    <!-- DYNAMIC FORM MODAL (GTECH SCHOLARSHIP FORM / GTECH APPLICATION FORM / GTECH VISITING APPLICATION FORM / GTECH EDUCATION LOAN FORM) -->
+    <!-- DYNAMIC FORM MODAL -->
     <div id="scholarship-app-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="relative bg-gradient-to-b from-indigo-50 via-white to-sky-50 border-2 border-indigo-200 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden my-auto gtech-pop-in">
             <div id="gtech-form-header" class="bg-gradient-to-r from-indigo-700 via-blue-700 to-sky-600 px-5 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-3 text-white">
@@ -967,7 +966,7 @@
                     <div class="rounded-2xl sm:rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50/90 via-white to-sky-50/90 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="space-y-1">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
-                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal • 7-Day Session
+                                <i class="fa-solid fa-circle-check"></i> Verified Student Portal
                             </span>
                             <h4 class="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">
                                 WELCOME TO GTECH FAMILY!
@@ -1146,38 +1145,24 @@
 
     <script>
         const SESSION_STORAGE_KEY = 'gtech_student_session';
-        const SESSION_COOKIE_NAME = 'gtech_session_7d';
         const GTECH_ID_MAP_KEY = 'gtech_id_by_email';
-        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
         let gtechAuthOtpToken = '';
         let gtechAuthPending = null;
         let gtechAuthTimer = null;
         let currentFormMode = 'scholarship';
 
-        function setSessionCookie(sessionObj) {
+        function getStoredStudentSession() {
             try {
-                const encoded = encodeURIComponent(JSON.stringify(sessionObj));
-                const maxAgeSeconds = 7 * 24 * 60 * 60;
-                document.cookie = `${SESSION_COOKIE_NAME}=${encoded}; max-age=${maxAgeSeconds}; path=/; SameSite=Lax`;
-            } catch (_) {}
-        }
-
-        function readSessionCookie() {
-            try {
-                const parts = document.cookie.split(';').map(p => p.trim());
-                const found = parts.find(p => p.startsWith(`${SESSION_COOKIE_NAME}=`));
-                if (!found) return null;
-                return JSON.parse(decodeURIComponent(found.slice(SESSION_COOKIE_NAME.length + 1)));
+                const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || !parsed.email) return null;
+                parsed.gtech_id = getOrCreateGtechId(parsed.email);
+                return parsed;
             } catch (_) {
                 return null;
             }
-        }
-
-        function clearSessionCookie() {
-            try {
-                document.cookie = `${SESSION_COOKIE_NAME}=; max-age=0; path=/; SameSite=Lax`;
-            } catch (_) {}
         }
 
         function getOrCreateGtechId(email) {
@@ -1193,7 +1178,7 @@
                 return idMap[normalized];
             }
 
-            const existingSession = getValidStudentSession();
+            const existingSession = getStoredStudentSession();
             if (
                 existingSession &&
                 existingSession.gtech_id &&
@@ -1225,56 +1210,21 @@
                 } catch (_) {}
             }
 
-            const now = Date.now();
             const sessionPayload = {
                 ...studentData,
                 email,
                 gtech_id: gtechId,
-                loginAt: studentData?.loginAt || now,
-                expiresAt: now + ONE_WEEK_MS
+                loginAt: studentData?.loginAt || Date.now()
             };
 
             try {
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionPayload));
             } catch (_) {}
-            setSessionCookie(sessionPayload);
             return sessionPayload;
-        }
-
-        function getValidStudentSession() {
-            const now = Date.now();
-            let parsed = null;
-
-            try {
-                const raw = localStorage.getItem(SESSION_STORAGE_KEY);
-                if (raw) parsed = JSON.parse(raw);
-            } catch (_) {}
-
-            if (!parsed || !parsed.email) {
-                parsed = readSessionCookie();
-            }
-
-            if (!parsed || !parsed.email) return null;
-
-            const expiresAt = Number(parsed.expiresAt || (Number(parsed.loginAt || 0) + ONE_WEEK_MS));
-            if (!expiresAt || now > expiresAt) {
-                localStorage.removeItem(SESSION_STORAGE_KEY);
-                clearSessionCookie();
-                return null;
-            }
-
-            parsed.gtech_id = getOrCreateGtechId(parsed.email);
-            parsed.expiresAt = now + ONE_WEEK_MS;
-            try {
-                localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(parsed));
-            } catch (_) {}
-            setSessionCookie(parsed);
-            return parsed;
         }
 
         function handleStudentLogout() {
             localStorage.removeItem(SESSION_STORAGE_KEY);
-            clearSessionCookie();
             const dashBtn = document.getElementById('header-dashboard-btn');
             const loginBtn = document.getElementById('header-login-btn');
             if (dashBtn) dashBtn.classList.add('hidden');
@@ -1282,7 +1232,7 @@
         }
 
         function syncStudentIdentityUI(studentData) {
-            const session = studentData || getValidStudentSession();
+            const session = studentData || getStoredStudentSession();
             if (!session) return null;
 
             const name = session.name || session.email.split('@')[0] || 'Student';
@@ -1346,7 +1296,7 @@
         }
 
         function goToHomePage(studentData) {
-            const saved = studentData ? persistStudentSession(studentData) : getValidStudentSession();
+            const saved = studentData ? persistStudentSession(studentData) : getStoredStudentSession();
             syncStudentIdentityUI(saved);
             showHomePortalView();
             setTimeout(showEarlyOfferPopupIfEligible, 900);
@@ -1463,8 +1413,7 @@
                     details: {
                         student_name: session.name,
                         gtech_id: session.gtech_id,
-                        email: session.email,
-                        session_validity: '7 Days'
+                        email: session.email
                     }
                 }).catch(() => {});
 
@@ -1527,7 +1476,6 @@
                 });
                 errEl?.classList.add('hidden');
 
-                // Save session and go straight to Home Page (never back to login)
                 const session = persistStudentSession(gtechAuthPending);
 
                 await postMailApi({
@@ -1558,14 +1506,12 @@
             }
         }
 
-        // Dynamic Form Modal Controller
         function openGtechFormModal(options = {}) {
             const mode = options.mode || 'scholarship';
             const prefillName = options.targetName || '';
             currentFormMode = mode;
 
-            // Ensure user stays on home portal view if logged in
-            const session = getValidStudentSession();
+            const session = getStoredStudentSession();
             if (session) {
                 showHomePortalView();
                 syncStudentIdentityUI(session);
@@ -1646,7 +1592,7 @@
         }
 
         function openExpertCallbackPopup(targetName) {
-            const session = getValidStudentSession();
+            const session = getStoredStudentSession();
             const gtechId = session?.gtech_id || getOrCreateGtechId(document.getElementById('guide-email')?.value || '');
             const idEl = document.getElementById('expert-callback-gtech-id');
             const targetEl = document.getElementById('expert-callback-target');
@@ -1673,7 +1619,6 @@
             }
         }
 
-        // Intercept form submission so Gtech ID is always consistent and HTML email is sent
         document.addEventListener('submit', async function(e) {
             if (e.target && e.target.id === 'guidance-inquiry-form') {
                 e.preventDefault();
@@ -1690,7 +1635,7 @@
                 const jee = document.getElementById('guide-jee')?.value.trim() || '';
                 const eamcet = document.getElementById('guide-eamcet')?.value.trim() || '';
 
-                const session = getValidStudentSession();
+                const session = getStoredStudentSession();
                 const gtechId = session?.gtech_id || getOrCreateGtechId(email);
                 const formTitle = document.getElementById('gtech-form-title')?.textContent.trim() || 'GTECH FORM';
 
@@ -1736,10 +1681,9 @@
             }
         }, true);
 
-        // Keep Student Dashboard and Home Portal open without redirecting to login screen
         const originalOpenStudentDashboardModal = window.openStudentDashboardModal;
         window.openStudentDashboardModal = function(tabName = 'dashboard') {
-            const session = getValidStudentSession();
+            const session = getStoredStudentSession();
             showHomePortalView();
             if (session) {
                 syncStudentIdentityUI(session);
@@ -1770,7 +1714,6 @@
             }
         }
 
-        // Convert Entrance Exam card CTA buttons into "Apply Now" opening the Gtech Application Form
         function enhanceEntranceExamCards() {
             const grid = document.getElementById('universities-grid');
             if (!grid) return;
@@ -1816,7 +1759,7 @@
                 switchFirstScreenMode('register');
             }
 
-            const existingSession = getValidStudentSession();
+            const existingSession = getStoredStudentSession();
             if (existingSession && existingSession.email) {
                 goToHomePage(existingSession);
             }

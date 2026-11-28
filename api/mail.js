@@ -2,17 +2,27 @@ import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
 const OTP_SECRET = process.env.OTP_SECRET || 'gtech-admissions-2026-secret-key';
-const DEFAULT_SMTP_USER = process.env.SMTP_USER || 'admin@gtechadmissions.com';
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: Number(process.env.SMTP_PORT || 465) === 465,
-    auth: {
-        user: DEFAULT_SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
-});
+function getMailConfig() {
+    const host = process.env.SMTP_HOST || 'smtp.hostinger.com';
+    const port = Number(process.env.SMTP_PORT || 465);
+    const user = (process.env.SMTP_USER || 'admin@gtechadmissions.com').trim();
+    const pass = process.env.SMTP_PASS || '';
+    const from = (process.env.SMTP_FROM || user).trim();
+    return { host, port, user, pass, from };
+}
+
+function createTransporter({ host, port, user, pass }) {
+    return nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000
+    });
+}
 
 function createSignedOtpToken(email, purpose, code, expiresAt) {
     const payload = `${email.toLowerCase()}|${purpose}|${code}|${expiresAt}`;
@@ -25,12 +35,13 @@ function verifySignedOtpToken(token, email, purpose, code) {
         if (!token) return false;
         const decoded = Buffer.from(token, 'base64').toString('utf8');
         const [tokEmail, tokPurpose, tokCode, expiresAt, sig] = decoded.split('|');
+        if (!tokEmail || !tokPurpose || !tokCode || !expiresAt || !sig) return false;
         if (Date.now() > Number(expiresAt)) return false;
         if (tokEmail !== email.toLowerCase() || tokPurpose !== purpose || tokCode !== code) return false;
 
         const expectedPayload = `${tokEmail}|${tokPurpose}|${tokCode}|${expiresAt}`;
         const expectedSig = crypto.createHmac('sha256', OTP_SECRET).update(expectedPayload).digest('hex');
-        const sigBuf = Buffer.from(sig || '', 'utf8');
+        const sigBuf = Buffer.from(sig, 'utf8');
         const expBuf = Buffer.from(expectedSig, 'utf8');
         if (sigBuf.length !== expBuf.length) return false;
         return crypto.timingSafeEqual(sigBuf, expBuf);
@@ -259,16 +270,26 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
-    if (req.method !== 'POST') return res.status(405).json({ ok: false, message: 'Method not allowed' });
+    if (req.method !== 'POST') {
+        return res.status(405).json({ ok: false, message: 'Method not allowed' });
+    }
 
-    if (!process.env.SMTP_PASS) {
+    const config = getMailConfig();
+    if (!config.pass) {
         return res.status(500).json({
             ok: false,
-            message: 'SMTP_PASS is missing in Vercel Environment Variables.'
+            code: 'MISSING_SMTP_PASS',
+            message: 'SMTP_PASS is missing in Vercel Environment Variables. Add it and redeploy.'
         });
     }
 
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    let body = {};
+    try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    } catch {
+        return res.status(400).json({ ok: false, message: 'Invalid JSON request body.' });
+    }
+
     const {
         action,
         type,
@@ -301,7 +322,8 @@ export default async function handler(req, res) {
     const targetEmail = String(email || to || '').trim().toLowerCase();
 
     try {
-        // 1. SEND 6-DIGIT OTP
+        const transporter = createTransporter(config);
+
         if (resolvedAction === 'send-otp') {
             if (!targetEmail) {
                 return res.status(400).json({ ok: false, message: 'Email is required' });
@@ -320,7 +342,7 @@ export default async function handler(req, res) {
             });
 
             await transporter.sendMail({
-                from: `"Gtech Admissions" <${DEFAULT_SMTP_USER}>`,
+                from: `"Gtech Admissions" <${config.from}>`,
                 to: targetEmail,
                 subject: subject || `Your Gtech Admissions OTP: ${otpCode}`,
                 text: `Your Gtech Admissions verification code is: ${otpCode} (valid for 10 minutes).`,
@@ -330,7 +352,6 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true, sent: true, otpToken });
         }
 
-        // 2. VERIFY 6-DIGIT OTP
         if (resolvedAction === 'verify-otp') {
             const codeToCheck = String(code || otp || '').trim();
             const isValid = verifySignedOtpToken(token, targetEmail, resolvedPurpose, codeToCheck);
@@ -340,7 +361,6 @@ export default async function handler(req, res) {
             return res.status(200).json({ ok: true, verified: true });
         }
 
-        // 3. SEND BRANDED HTML NOTIFICATIONS
         if (resolvedAction === 'send-notification') {
             const fallbackText =
                 text ||
@@ -376,7 +396,7 @@ export default async function handler(req, res) {
             const ccTarget = ccAdmin === false ? undefined : (adminEmail || undefined);
 
             await transporter.sendMail({
-                from: `"Gtech Admissions" <${DEFAULT_SMTP_USER}>`,
+                from: `"Gtech Admissions" <${config.from}>`,
                 to: targetEmail,
                 ...(ccTarget ? { cc: ccTarget } : {}),
                 subject: resolvedSubject,
@@ -389,7 +409,15 @@ export default async function handler(req, res) {
 
         return res.status(400).json({ ok: false, message: 'Invalid action' });
     } catch (error) {
-        console.error('Hostinger SMTP Error:', error);
-        return res.status(500).json({ ok: false, message: error.message || 'Failed to send email' });
+        console.error('Hostinger SMTP Error:', {
+            message: error?.message,
+            code: error?.code,
+            response: error?.response
+        });
+        return res.status(500).json({
+            ok: false,
+            code: error?.code || null,
+            message: error?.message || 'Failed to send email'
+        });
     }
 }

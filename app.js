@@ -3,8 +3,13 @@ const SUPABASE_ANON_KEY = 'sb_publishable_AatsIdadiJTKodPXVoDUkg_deaHj95i';
 var _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const ADMIN_EMAIL = 'admin@gtechadmissions.com';
+const GTECH_ALERT_RECIPIENTS = [
+    'greentecheducationservices@gmail.com',
+    'admin@gtechadmissions.com',
+    'gtechabhisri@gmail.com'
+];
 const OTP_BACKEND_URL = window.GTECH_OTP_API || '';
-const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || (OTP_BACKEND_URL ? `${OTP_BACKEND_URL}/send-notification` : '');
+const MAIL_NOTIFY_URL = window.GTECH_MAIL_API || '/api/mail';
 const EARLY_OFFER_DEADLINE_ISO = '2027-03-16T23:59:59+05:30';
 
 const SCH_OPTION_LABELS = {
@@ -381,37 +386,6 @@ function getAllowedCriteriaForUni(uni) {
     return ['inter', 'pcm', 'mains'];
 }
 
-function isCriterionAllowedForUni(uni, criterionKey) {
-    const allowed = getAllowedCriteriaForUni(uni);
-    return allowed.includes(String(criterionKey || '').toLowerCase());
-}
-
-function syncGlobalCriteriaHint() {
-    const hintEl = document.getElementById('sch-allowed-criteria-hint');
-    if (!hintEl) return;
-
-    const visibleUnis = state.universities.filter(
-        u => !isEntranceExamOnlyMode(u) && matchesStateFilter(u, state.stateFilter)
-    );
-    if (visibleUnis.length === 0) {
-        hintEl.textContent = 'Criteria follow Admin rules per university';
-        return;
-    }
-
-    const interOnlyCount = visibleUnis.filter(u => {
-        const list = getAllowedCriteriaForUni(u);
-        return list.length === 1 && list[0] === 'inter';
-    }).length;
-
-    if (interOnlyCount === visibleUnis.length) {
-        hintEl.textContent = 'Admin Rule: Inter % only for visible universities';
-    } else if (interOnlyCount > 0) {
-        hintEl.textContent = `Admin Rule: ${interOnlyCount} university card(s) restricted to Inter % only`;
-    } else {
-        hintEl.textContent = 'Criteria follow Admin rules per university';
-    }
-}
-
 function handleGlobalBudgetChange(rawValue) {
     const trimmed = String(rawValue ?? '').trim();
     if (!trimmed) {
@@ -442,21 +416,6 @@ function handleScholarshipOptionChange() {
 
     if (labelEl) labelEl.textContent = meta.inputLabel;
     if (inputEl) inputEl.placeholder = meta.placeholder;
-}
-
-function calculateFallbackMeritDiscount(optionKey, score, branchFee) {
-    if (optionKey === 'eamcet') {
-        if (score <= 5000) return { discount: Math.round(branchFee * 0.4), label: 'AP EAMCET Top Rank Merit (40%)' };
-        if (score <= 15000) return { discount: Math.round(branchFee * 0.25), label: 'AP EAMCET Merit Slab (25%)' };
-        if (score <= 35000) return { discount: Math.round(branchFee * 0.15), label: 'AP EAMCET Concession (15%)' };
-        return { discount: 0, label: '' };
-    }
-
-    if (score >= 95) return { discount: Math.round(branchFee * 0.4), label: 'Merit Slab 95%+ (40% Off)' };
-    if (score >= 90) return { discount: Math.round(branchFee * 0.3), label: 'Merit Slab 90–94.9% (30% Off)' };
-    if (score >= 85) return { discount: Math.round(branchFee * 0.2), label: 'Merit Slab 85–89.9% (20% Off)' };
-    if (score >= 75) return { discount: Math.round(branchFee * 0.1), label: 'Merit Slab 75–84.9% (10% Off)' };
-    return { discount: 0, label: '' };
 }
 
 function checkStudentScholarship() {
@@ -495,8 +454,22 @@ function proceedWithScholarshipApplication() {
 }
 
 async function sendMailNotification({ to, ccAdmin = true, subject, text, eventType = 'student_update', details = {} }) {
+    const recipients = Array.from(
+        new Set(
+            [
+                to,
+                ...(ccAdmin ? [ADMIN_EMAIL, ...GTECH_ALERT_RECIPIENTS] : [])
+            ]
+                .map(e => String(e || '').trim().toLowerCase())
+                .filter(Boolean)
+        )
+    );
+
     const payload = {
-        to: to || ADMIN_EMAIL,
+        action: 'direct_notification',
+        to: recipients[0] || ADMIN_EMAIL,
+        recipients,
+        alertRecipients: GTECH_ALERT_RECIPIENTS,
         adminEmail: ccAdmin ? ADMIN_EMAIL : null,
         subject,
         text,
@@ -1822,7 +1795,7 @@ async function handleGuidanceSubmission(e) {
                 `• Marks Summary: ${marksSummary || 'Not Provided'}`,
                 `• Status: Pending Callback`,
                 ``,
-                `— Gtech Admissions (Admissions and Guidance Portal)`
+                `— Gtech Admissions (5 Years of Trust)`
             ].join('\n'),
             details: payload
         });
@@ -1847,6 +1820,12 @@ async function handleGuidanceSubmission(e) {
 
 function openAuthModal(mode = 'login', noticeText = '') {
     const modal = document.getElementById('student-auth-modal');
+    if (!modal) {
+        const target = mode === 'register' ? './auth.html?mode=register' : './auth.html';
+        window.location.href = target;
+        return;
+    }
+
     const noticeBox = document.getElementById('auth-redirect-notice');
     const noticeMsg = document.getElementById('auth-redirect-notice-text');
 
@@ -1866,6 +1845,7 @@ function openAuthModal(mode = 'login', noticeText = '') {
 
 function closeAuthModal() {
     const modal = document.getElementById('student-auth-modal');
+    if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
@@ -1887,23 +1867,23 @@ function switchStudentAuthMode(mode) {
     const regTab = document.getElementById('mode-tab-register');
     const loginTab = document.getElementById('mode-tab-login');
 
-    document.getElementById('reg-error-msg').classList.add('hidden');
-    document.getElementById('login-error-msg').classList.add('hidden');
+    document.getElementById('reg-error-msg')?.classList.add('hidden');
+    document.getElementById('login-error-msg')?.classList.add('hidden');
 
     if (mode === 'register') {
-        loginView.classList.add('hidden');
-        regView.classList.remove('hidden');
-        regTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
-        loginTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
+        loginView?.classList.add('hidden');
+        regView?.classList.remove('hidden');
+        if (regTab) regTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
+        if (loginTab) loginTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
         if (state.incomingReferralCode) {
             const refInput = document.getElementById('reg-referral');
             if (refInput && !refInput.value) refInput.value = state.incomingReferralCode;
         }
     } else {
-        regView.classList.add('hidden');
-        loginView.classList.remove('hidden');
-        loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
-        regTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
+        regView?.classList.add('hidden');
+        loginView?.classList.remove('hidden');
+        if (loginTab) loginTab.className = 'flex-1 py-2 px-3 rounded-xl bg-sky-600 text-white transition';
+        if (regTab) regTab.className = 'flex-1 py-2 px-3 rounded-xl text-slate-700 hover:text-sky-700 transition';
     }
 }
 
@@ -1975,7 +1955,7 @@ async function verifyEmailOtpCode(email, code, purpose) {
 async function handleSendRegistrationOtp(e) {
     if (e) e.preventDefault();
     const errId = 'reg-error-msg';
-    document.getElementById(errId).classList.add('hidden');
+    document.getElementById(errId)?.classList.add('hidden');
 
     const fullName = document.getElementById('reg-name').value.trim();
     const phone = document.getElementById('reg-phone').value.replace(/\D+/g, '').trim();
@@ -2027,7 +2007,7 @@ async function handleSendRegistrationOtp(e) {
 
 async function handleVerifyRegistrationOtp() {
     const errId = 'reg-error-msg';
-    document.getElementById(errId).classList.add('hidden');
+    document.getElementById(errId)?.classList.add('hidden');
 
     const code = getOtpCodeFromBoxes('reg-otp-box');
     const regData = state.pendingRegistration || JSON.parse(localStorage.getItem('gtech_pending_reg') || 'null');
@@ -2122,10 +2102,10 @@ async function handleVerifyRegistrationOtp() {
         await sendMailNotification({
             to: profile.email,
             ccAdmin: true,
-            eventType: 'new_student_registered',
-            subject: `Congrats! Welcome to Gtech Family — Gtech ID: ${profile.student_id}`,
+            eventType: 'WELCOME_TO_THE_GTECH_FAMILY',
+            subject: `Welcome to the Gtech Family — Gtech ID: ${profile.student_id} (5 Years of Trust)`,
             text: [
-                `Congrats ${profile.full_name}, Welcome to the Gtech Family!`,
+                `Welcome to the Gtech Family, ${profile.full_name}!`,
                 ``,
                 `Your Gtech ID is: ${profile.student_id}`,
                 `Your Referral Code is: ${profile.student_id}`,
@@ -2134,23 +2114,24 @@ async function handleVerifyRegistrationOtp() {
                     : ``,
                 `Refer friends and earn up to ₹30,000/- referral benefit—added to tuition after your friend's admission is done.`,
                 ``,
-                `— Gtech Admissions (Admissions and Guidance Portal)`
+                `— Gtech Admissions (5 Years of Trust)`
             ].filter(Boolean).join('\n'),
             details: profile
         });
 
-        document.getElementById('student-register-form').classList.add('hidden');
-        document.getElementById('reg-otp-panel').classList.add('hidden');
-        document.getElementById('generated-student-id-display').textContent = profile.student_id;
+        document.getElementById('student-register-form')?.classList.add('hidden');
+        document.getElementById('reg-otp-panel')?.classList.add('hidden');
+        const idDisp = document.getElementById('generated-student-id-display');
+        if (idDisp) idDisp.textContent = profile.student_id;
 
         const offerMsgEl = document.getElementById('reg-early-offer-msg');
         if (offerMsgEl && earlyOfferQualified) {
-            offerMsgEl.textContent = 'Congrats! Before March 16, 2027 offer unlocked: ₹1,000/- off Admission Fee + ₹1,000/- off College Fee (₹2,000 OFF)!';
+            offerMsgEl.textContent = 'Welcome to the Gtech Family! Before March 16, 2027 offer unlocked: ₹1,000/- off Admission Fee + ₹1,000/- off College Fee (₹2,000 OFF)!';
         }
 
-        document.getElementById('reg-success-panel').classList.remove('hidden');
+        document.getElementById('reg-success-panel')?.classList.remove('hidden');
         showToast(
-            'Congrats! Welcome to Gtech Family',
+            'Welcome to the Gtech Family',
             earlyOfferQualified
                 ? `Gtech ID ${profile.student_id} created! ₹1,000 admission + ₹1,000 college fee discount unlocked.`
                 : `Gtech ID ${profile.student_id} generated!`,
@@ -2173,7 +2154,7 @@ async function handleVerifyRegistrationOtp() {
 async function handleSendLoginOtp(e) {
     if (e) e.preventDefault();
     const errId = 'login-error-msg';
-    document.getElementById(errId).classList.add('hidden');
+    document.getElementById(errId)?.classList.add('hidden');
 
     const email = document.getElementById('login-email').value.trim().toLowerCase();
     const sendBtn = document.getElementById('btn-send-login-otp');
@@ -2215,7 +2196,7 @@ async function handleSendLoginOtp(e) {
 
 async function handleVerifyLoginOtp() {
     const errId = 'login-error-msg';
-    document.getElementById(errId).classList.add('hidden');
+    document.getElementById(errId)?.classList.add('hidden');
 
     const email = (document.getElementById('login-email').value || state.pendingLoginEmail || '').trim().toLowerCase();
     const code = getOtpCodeFromBoxes('login-otp-box');
@@ -2254,7 +2235,7 @@ async function handleVerifyLoginOtp() {
 
         updateHeaderForLoggedInStudent(profile);
         prefillGuidanceFormWithStudent();
-        showToast('Welcome Back', `Signed in as ${profile.full_name}.`, 'success');
+        showToast('Welcome Back to the Gtech Family', `Signed in as ${profile.full_name}.`, 'success');
         continueAfterAuth();
     } catch (err) {
         showInlineError(errId, err.message || 'Invalid OTP code.');
@@ -2348,6 +2329,7 @@ async function restoreStudentSession() {
 
 function closeStudentDashboardModal() {
     const modal = document.getElementById('student-dashboard-modal');
+    if (!modal) return;
     modal.classList.add('hidden');
     modal.classList.remove('flex');
 }
@@ -2705,6 +2687,7 @@ async function openStudentDashboardModal(defaultTab = 'dashboard') {
     state.referredStudents = await fetchReferredStudents(myCode);
 
     const modal = document.getElementById('student-dashboard-modal');
+    if (!modal) return;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 
@@ -2785,7 +2768,7 @@ function subscribeToStudentMailUpdates() {
                                 : `Your application status for ${updated.uni || 'your chosen university'} (${updated.branch || ''}) has been updated to: ${updated.status}.`,
                             ``,
                             `Sign in to your Gtech Student Portal using your registered email to view your Gtech ID and status.`,
-                            `— Gtech Admissions (Admissions and Guidance Portal)`
+                            `— Gtech Admissions (5 Years of Trust)`
                         ].join('\n'),
                         details: updated
                     });
@@ -2827,7 +2810,7 @@ function subscribeToStudentMailUpdates() {
                                 : '',
                             ``,
                             `Sign in to your Gtech Student Portal with your Gtech ID to view details.`,
-                            `— Gtech Admissions (Admissions and Guidance Portal)`
+                            `— Gtech Admissions (5 Years of Trust)`
                         ].filter(Boolean).join('\n'),
                         details: fin
                     });
